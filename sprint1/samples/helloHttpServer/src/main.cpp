@@ -38,31 +38,48 @@ void DumpRequest(const StringRequest& req) {
         std::cout << "  "sv << header.name_string() << ": "sv << header.value() << std::endl;
     }
 } 
+// Структура ContentType задаёт область видимости для констант,
+// задающий значения HTTP-заголовка Content-Type
+struct ContentType {
+    ContentType() = delete;
+    constexpr static std::string_view TEXT_HTML = "text/html"sv;
+    // При необходимости внутрь ContentType можно добавить и другие типы контента
+};
 
-void HandleConnection(tcp::socket& socket) {
+// Создаёт StringResponse с заданными параметрами
+StringResponse MakeStringResponse(
+        http::status status, std::string_view body, unsigned http_version,
+        bool keep_alive, std::string_view content_type = ContentType::TEXT_HTML) {
+    StringResponse response(status, http_version);
+    response.set(http::field::content_type, content_type);
+    response.body() = body;
+    response.content_length(body.size());
+    response.keep_alive(keep_alive);
+    return response;
+}
+
+StringResponse HandleRequest(StringRequest&& req) {
+    const auto text_response = [&req](http::status status, std::string_view text) {
+        return MakeStringResponse(status, text, req.version(), req.keep_alive());
+    };
+
+    // Здесь можно обработать запрос и сформировать ответ, но пока всегда отвечаем: Hello
+    return text_response(http::status::ok, "<strong>Hello</strong>"sv);
+}
+template <typename RequestHandler>
+void HandleConnection(tcp::socket& socket, RequestHandler&& handle_request) {
     try {
         // Буфер для чтения данных в рамках текущей сессии.
         beast::flat_buffer buffer;
         // Продолжаем обработку запросов, пока клиент их отправляет
         while (auto request = ReadRequest(socket, buffer)) {
-            // Обрабатываем запрос и формируем ответ сервера
             DumpRequest(*request);
-            // Формируем ответ со статусом 200 и версией равной версии запроса
-            StringResponse response(http::status::ok, request->version());
-            // Добавляем заголовок Content-Type: text/html
-            response.set(http::field::content_type, "text/html"sv);
-            response.body() = "<strong>Hello</strong>"sv;
-            // Формируем заголовок Content-Length, сообщающий длину тела ответа
-            response.content_length(response.body().size());
-            // Формируем заголовок Connection в зависимости от значения заголовка в запросе
-            response.keep_alive(request->keep_alive());
-            // Отправляем ответ сервера клиенту
+            StringResponse response = handle_request(*std::move(request));
             http::write(socket, response);
-            // Прекращаем обработку запросов, если семантика ответа требует это
             if (response.need_eof()) {
                 break;
             }
-    }
+        }
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }
@@ -84,7 +101,7 @@ int main() {
         acceptor.accept(socket);
         // run requests of client in thread
         std::thread t( [] (tcp::socket socket) {
-            HandleConnection(socket);
+            HandleConnection(socket, HandleRequest);
         }, 
         std::move(socket));
         t.detach();
