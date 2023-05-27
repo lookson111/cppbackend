@@ -4,6 +4,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp> 
 #include <iostream> 
+#include <thread>
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -81,6 +82,11 @@ int main() {
     while (true) {
         tcp::socket socket(ioc);
         acceptor.accept(socket);
-        HandleConnection(socket);
+        // run requests of client in thread
+        std::thread t( [] (tcp::socket socket) {
+            HandleConnection(socket);
+        }, 
+        std::move(socket));
+        t.detach();
     }
 } 
