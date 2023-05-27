@@ -16,4 +16,4 @@ add_executable(asyncRest src/main.cpp src/hamburger.h)
 # Просим компоновщик подключить библиотеку для поддержки потоков
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(asyncRest PRIVATE Threads::Threads dl)
+target_link_libraries(asyncRest PRIVATE Threads::Threads)
