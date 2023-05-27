@@ -1,13 +1,19 @@
+#ifdef WIN32
+#include <sdkddkver.h>
+#endif
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp> 
+#include <iostream> 
 
 namespace beast = boost::beast;
 namespace http = beast::http;
+namespace net = boost::asio;
+using tcp = net::ip::tcp;
 // Запрос, тело которого представлено в виде строки
 using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>; 
-
+using namespace std::literals;
 std::optional<StringRequest> ReadRequest(tcp::socket& socket, beast::flat_buffer& buffer) {
     beast::error_code ec;
     StringRequest req;
