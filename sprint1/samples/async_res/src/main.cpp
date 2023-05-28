@@ -6,6 +6,8 @@
 #include <chrono>
 #include <syncstream>
 #include <memory>
+#include <thread>
+#include <atomic>
 #include "hamburger.h"
 namespace net = boost::asio;
 namespace sys = boost::system;
@@ -14,6 +16,28 @@ using Timer = net::steady_timer;
 // Функция, которая будет вызвана по окончании обработки заказа
 using OrderHandler = std::function<void(sys::error_code ec, int id, Hamburger* hamburger)>;
 namespace ph = std::placeholders;
+
+#include <atomic>
+
+class ThreadChecker {
+public:
+    explicit ThreadChecker(std::atomic_int& counter)
+        : counter_{ counter } {
+    }
+
+    ThreadChecker(const ThreadChecker&) = delete;
+    ThreadChecker& operator=(const ThreadChecker&) = delete;
+
+    ~ThreadChecker() {
+        // assert выстрелит, если между вызовом конструктора и деструктора
+        // значение expected_counter_ изменится
+        assert(expected_counter_ == counter_);
+    }
+
+private:
+    std::atomic_int& counter_;
+    int expected_counter_ = ++counter_;
+};
 
 class Logger {
 public:
@@ -60,13 +84,19 @@ private:
     Timer roast_timer_{ io_, 1s };
     Timer marinade_timer_{ io_, 2s };
     Logger logger_{ std::to_string(id_) };
+    std::atomic_int counter_{0};
+    net::strand<net::io_context::executor_type> strand_{net::make_strand(io_)};
+
     void RoastCutlet() {
         logger_.LogMessage("Start roasting cutlet"sv);
-        roast_timer_.async_wait([self = shared_from_this()](sys::error_code ec) {
-            self->OnRoasted(ec);
-            });
+        roast_timer_.async_wait(
+            // OnRoasted будет вызван последовательным исполнителем strand_
+            net::bind_executor(strand_, [self = shared_from_this()](sys::error_code ec) {
+                self->OnRoasted(ec);
+            }));
     }
     void OnRoasted(sys::error_code ec) {
+        ThreadChecker checker{ counter_ };
         if (ec) {
             logger_.LogMessage("Roast error : "s + ec.what());
         }
@@ -78,12 +108,15 @@ private:
     }
     void MarinadeOnion() {
         logger_.LogMessage("Start marinading onion"sv);
-        marinade_timer_.async_wait([self = shared_from_this()](sys::error_code ec) {
-            self->OnOnionMarinaded(ec);
-            });
+        marinade_timer_.async_wait(
+            // OnOnionMarinaded будет вызван последовательным исполнителем strand_
+            net::bind_executor(strand_, [self = shared_from_this()](sys::error_code ec) {
+                self->OnOnionMarinaded(ec);
+        }));
     }
 
     void OnOnionMarinaded(sys::error_code ec) {
+        ThreadChecker checker{ counter_ };
         if (ec) {
             logger_.LogMessage("Marinade onion error: "s + ec.what());
         }
@@ -162,16 +195,24 @@ private:
     int next_order_id_ = 0;
 };
 
+// Run func fn in n thread, with this
+template <typename Fn>
+void RunWorkers(unsigned n, const Fn& fn) {
+    n = std::max(1u, n);
+    std::vector<std::jthread> workers;
+    workers.reserve(n - 1);
+    while (--n) {
+        workers.emplace_back(fn);
+    }
+    fn();
+} 
 
 int main() {
-    net::io_context io;
+
+    const unsigned num_workers = 4;
+    net::io_context io(num_workers);
 
     Restaurant restaurant{ io };
- //   restaurant.MakeHamburger(false, [](sys::error_code ec, int order_id, Hamburger* h) {
- //       });
- //   restaurant.MakeHamburger(true, [](sys::error_code ec, int order_id, Hamburger* h) {});
- //   restaurant.MakeHamburger(true, [](sys::error_code ec, int order_id, Hamburger* h) {});
- //   restaurant.MakeHamburger(false, [](sys::error_code ec, int order_id, Hamburger* h) {});
     Logger logger{ "main"s };
     auto print_result = [&logger](sys::error_code ec, int order_id, Hamburger* hamburger) {
         std::ostringstream os;
@@ -186,6 +227,7 @@ int main() {
     for (int i = 0; i < 16; ++i) {
         restaurant.MakeHamburger(i % 2 == 0, print_result);
     }
-    io.run();
-    io.run();
+    RunWorkers(num_workers, [&io]{
+        io.run();
+    });
 }
