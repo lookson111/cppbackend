@@ -26,12 +26,15 @@ public:
     // Асинхронно готовит хот-дог и вызывает handler, как только хот-дог будет готов.
     // Этот метод может быть вызван из произвольного потока
     void OrderHotDog(HotDogHandler handler) {
+        const int oid = order_id++;
+        HotDog hd(order_id++, store_.GetSausage(), store_.GetBread());
         // TODO: Реализуйте метод самостоятельно
         // При необходимости реализуйте дополнительные классы
     }
 
 private:
     net::io_context& io_;
+    std::atomic<int> order_id;
     // Используется для создания ингредиентов хот-дога
     Store store_;
     // Газовая плита. По условию задачи в кафетерии есть только одна газовая плита на 8 горелок

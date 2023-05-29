@@ -25,7 +25,7 @@ public:
     void StartFry(GasCooker& cooker, Handler handler) {
         // Метод StartFry можно вызвать только один раз
         if (frying_start_time_) {
-            throw std::logic_error("Frying already started");
+            throw std::logic_error("Sausage frying already started");
         }
 
         // Запрещаем повторный вызов StartFry
@@ -46,10 +46,10 @@ public:
     // Завершает приготовление и освобождает горелку
     void StopFry() {
         if (!frying_start_time_) {
-            throw std::logic_error("Frying has not started");
+            throw std::logic_error("Sausage frying has not started");
         }
         if (frying_end_time_) {
-            throw std::logic_error("Frying has already stopped");
+            throw std::logic_error("Sausage frying has already stopped");
         }
         frying_end_time_ = Clock::now();
         // Освобождаем горелку
@@ -90,34 +90,69 @@ public:
     // Начинает приготовление хлеба на газовой плите. Как только горелка будет занята, вызовет
     // handler
     void StartBake(GasCooker& cooker, Handler handler) {
+        // Метод StartFry можно вызвать только один раз
+        if (frying_start_time_) {
+            throw std::logic_error("Bread frying already started");
+        }
+        // Запрещаем повторный вызов StartFry
+        frying_start_time_ = Clock::now();
+
+        // Готовимся занять газовую плиту
+        gas_cooker_lock_ = GasCookerLock{ cooker.shared_from_this() };
+
+        // Занимаем горелку для начала обжаривания.
+        // Чтобы продлить жизнь текущего объекта, захватываем shared_ptr в лямбде
+        cooker.UseBurner([self = shared_from_this(), handler = std::move(handler)] {
+            // Запоминаем время фактического начала обжаривания
+            self->frying_start_time_ = Clock::now();
+            handler();
+            });
+
         // Реализуйте этот метод аналогично Sausage::StartFry
-        assert(!"Bread::StartBake is not implemented");
-        throw std::logic_error("Bread::StartBake is not implemented");
+        //assert(!"Bread::StartBake is not implemented");
+        //throw std::logic_error("Bread::StartBake is not implemented");
     }
 
     // Останавливает приготовление хлеба и освобождает горелку.
     void StopBaking() {
+        if (!frying_start_time_) {
+            throw std::logic_error("Bread frying has not started");
+        }
+        if (frying_end_time_) {
+            throw std::logic_error("Bread frying has already stopped");
+        }
+        frying_end_time_ = Clock::now();
+        // Освобождаем горелку
+        gas_cooker_lock_.Unlock();
         // Реализуйте этот метод по аналогии с Sausage::StopFry
-        assert(!"Bread::StopBaking is not implemented");
-        throw std::logic_error("Bread::StopBaking is not implemented");
+        //assert(!"Bread::StopBaking is not implemented");
+        //throw std::logic_error("Bread::StopBaking is not implemented");
     }
 
     // Информирует, испечён ли хлеб
     bool IsCooked() const noexcept {
+        return frying_start_time_.has_value() && frying_end_time_.has_value();
         // Реализуйте этот метод аналогично Sausage::IsCooked
-        assert(!"Bread::IsCooked is not implemented");
-        return false;
+        //assert(!"Bread::IsCooked is not implemented");
+        //return false;
     }
 
     // Возвращает продолжительность выпекания хлеба. Бросает исключение, если хлеб не был испечён
     Clock::duration GetBakingDuration() const {
+        if (!frying_start_time_ || !frying_end_time_) {
+            throw std::logic_error("Bread has not been cooked");
+        }
+        return *frying_end_time_ - *frying_start_time_;
         // Реализуйте этот метод аналогично Sausage::GetCookDuration
-        assert(!"Bread::GetBakingDuration is not implemented");
-        throw std::logic_error("Bread::GetBakingDuration is not implemented");
+        //assert(!"Bread::GetBakingDuration is not implemented");
+        //throw std::logic_error("Bread::GetBakingDuration is not implemented");
     }
 
 private:
     int id_;
+    GasCookerLock gas_cooker_lock_;
+    std::optional<Clock::time_point> frying_start_time_;
+    std::optional<Clock::time_point> frying_end_time_;
 };
 
 // Склад ингредиентов (возвращает ингредиенты с уникальным id)
