@@ -29,6 +29,73 @@ int main() {
     using osync = std::osyncstream;
 
     net::io_context io;
+    auto strand1 = net::make_strand(io);
+
+    net::post(strand1, [strand1] {  // (1)
+        net::post(strand1, [] {     // (2)
+            osync(std::cout) << 'A';
+        });
+        net::dispatch(strand1, [] {  // (3)
+            osync(std::cout) << 'B';
+        });
+        osync(std::cout) << 'C';
+    });
+
+    auto strand2 = net::make_strand(io);
+    // Эти функции выполняются в strand2
+    net::post(strand2, [strand2] {  // (4)
+        net::post(strand2, [] {     // (5)
+            osync(std::cout) << 'D';
+        });
+        net::dispatch(strand2, [] {  // (6)
+            osync(std::cout) << 'E';
+        });
+        osync(std::cout) << 'F';
+    });
+
+    RunWorkers(2, [&io] {
+        io.run();
+    });
+}
+// ---3---
+/*
+int main() {
+    using osync = std::osyncstream;
+
+    net::io_context io;
+    auto strand = net::make_strand(io);
+
+    net::post(strand, [strand] {  // (1)
+        net::post(strand, [] {    // (2)
+            osync(std::cout) << 'A';
+        });
+        net::dispatch(strand, [] {  // (3)
+            osync(std::cout) << 'B';
+        });
+        osync(std::cout) << 'C';
+    });
+
+    // Теперь тут используется strand, а не io
+    net::post(strand, [strand] {  // (4)
+        net::post(strand, [] {    // (5)
+            osync(std::cout) << 'D';
+        });
+        net::dispatch(strand, [] {  // (6)
+            osync(std::cout) << 'E';
+        });
+        osync(std::cout) << 'F';
+    });
+
+    RunWorkers(2, [&io] {
+        io.run();
+    });
+} */
+// ---2---
+/*
+int main() {
+    using osync = std::osyncstream;
+
+    net::io_context io;
     auto strand = net::make_strand(io);
 
     net::post(strand, [strand] {
@@ -54,7 +121,7 @@ int main() {
     RunWorkers(2, [&io] {
         io.run();
     });
-} 
+} */
 // --- 1 ----
 /*
 int main() {
