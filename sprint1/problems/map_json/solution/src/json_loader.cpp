@@ -78,11 +78,6 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
         std::cout << "Json parse ptree error: " << e.what();
         throw;
     }
-    /*std::stringstream s;
-    write_json(s, pt);
-    std::cout << s.str();*/
-
     return game;
 }
-
 }  // namespace json_loader
