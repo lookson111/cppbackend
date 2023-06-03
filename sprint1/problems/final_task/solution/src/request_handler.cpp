@@ -105,6 +105,7 @@ std::string RequestHandler::GetMapBodyJson(std::string_view requestTarget, http:
             return StatusToJson("mapNotFound", "Map not found");
         }
     }
+    status = http::status::ok;
     return body;
 }
 // Создаёт StringResponse с заданными параметрами
