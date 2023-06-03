@@ -25,7 +25,7 @@ public:
         : game_{game} {
     }
     std::string GetMaps();
-    std::string GetMap(std::string_view nameMap);
+    std::string GetMap(std::string nameMap);
 private:
     model::Game& game_;
 };
@@ -48,6 +48,8 @@ public:
 private:
     model::Game& game_;
     StringResponse HandleRequest(StringRequest&& req);
+    std::string GetMapBodyJson(std::string_view requestTarget, http::status& status);
+    std::string StatusToJson(std::string_view code, std::string_view message);
     StringResponse MakeStringResponse(
         http::status status, std::string_view requestTarget, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APPLICATION_JSON);

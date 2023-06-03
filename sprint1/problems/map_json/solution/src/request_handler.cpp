@@ -1,66 +1,121 @@
 #include "request_handler.h"
-//	Основные	заголовочные	файлы	для	Boost.Spirit.
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
-//	Мы	будем	использовать	функцию	bind()	из	Boost.Spirit,	потому	что	она	лучше
-//	взаимодействует	с	парсерами.
-#include <boost/spirit/include/phoenix_bind.hpp>
-
+#include "iostream"
+//#include "boost/property_tree/ptree.hpp"
+//#include "boost/property_tree/json_parser.hpp"
+#include <boost/json.hpp>
 namespace http_handler {
-using boost::spirit::qi;
-void parse_target() {
-     qi::rule<const char*, void()> timezone_parser
-	    =	-(	//	унарный	минус	значит	“опциональное”	правило
-		        //	Нулевое	смещение
-				char_('Z')[	bind(
-                    &datetime::set_zone_offset, &ret, datetime::OFFSET_Z
-                    ) ]
-                |	//	ИЛИ
-				//	Смещение	задано	цифрами
-				((char_('+')|char_('-'))	>>	u2_	>>	':'	>>	u2_)	[
-                    bind(&set_zone_offset, ref(ret), _1, _2, _3)
-                ]
-        );
+namespace js = boost::json;
+bool parse_target(std::string_view target, std::string &map) {
+    std::string_view pr = "/api/v1/maps";
+    map = "";
+    auto pos = target.find(pr);
+    if (pos == target.npos)
+        return false;
+    if (target.size() == pr.size())
+        return true;
+    map = target.substr(pr.size()+1, target.size() - pr.size());
+    //std::cout << "target: " << target << std::endl;
+    //std::cout << "map: " << map << std::endl;
+    return true;
 }
 
 std::string ModelToJson::GetMaps() {
-    std::string mapsStr;
-    const auto &maps = game_.GetMaps();
-
-    return mapsStr;
+    const auto& maps = game_.GetMaps();
+    js::array obj;
+    for (auto& map : maps) {
+        js::object mapEl;
+        mapEl["id"] = *map.GetId();
+        mapEl["name"] = map.GetName();
+        obj.emplace_back(mapEl);
+    }
+    //std::cout << serialize(obj) << std::endl;
+    return serialize(obj);
 }
-std::string ModelToJson::GetMap(std::string_view nameMap) {
-    std::string mapStr;
+
+std::string ModelToJson::GetMap(std::string nameMap) {
     model::Map::Id idmap{nameMap};
-    const auto &map = game_.FindMap({idmap});
-
-    return mapStr;
+    auto map = game_.FindMap({idmap});
+    if (map == nullptr)
+        return "";
+    js::object mapEl;
+    mapEl["id"] = *map->GetId();
+    mapEl["name"] = map->GetName();
+    js::array arr;
+    for (auto& r : map->GetRoads()) {
+        js::object road;
+        road["x0"] = r.GetStart().x;
+        road["y0"] = r.GetStart().y;
+        if (r.IsHorizontal()) {
+            road["x1"] = r.GetEnd().x;
+        } else {
+            road["y1"] = r.GetEnd().y;
+        }
+        arr.emplace_back(road);
+    }
+    mapEl["roads"] = arr;
+    arr.clear();
+    for (auto& b : map->GetBuildings()) {
+        js::object building;
+        building["x"] = b.GetBounds().position.x;
+        building["y"] = b.GetBounds().position.y;
+        building["w"] = b.GetBounds().size.width;
+        building["h"] = b.GetBounds().size.height;
+        arr.emplace_back(building);
+    }
+    mapEl["buildings"] = arr;
+    arr.clear();
+    for (auto& o : map->GetOffices()) {
+        js::object office;
+        office["id"] = *o.GetId();
+        office["x"] = o.GetPosition().x;
+        office["y"] = o.GetPosition().y;
+        office["offsetX"] = o.GetOffset().dx;
+        office["offsetY"] = o.GetOffset().dy;
+        arr.emplace_back(office);
+    }
+    mapEl["buildings"] = arr;
+    //std::cout << serialize(mapEl) << std::endl;
+    return serialize(mapEl);
+}
+std::string RequestHandler::StatusToJson(std::string_view code, std::string_view message) {
+    js::object msg;
+    msg["code"] = code.data();
+    msg["message"] = message.data();
+    //std::cout << serialize(msg) << std::endl;
+    return serialize(msg);
 }
 
+std::string RequestHandler::GetMapBodyJson(std::string_view requestTarget, http::status &status) {
+    ModelToJson jmodel(game_);
+    std::string mapName;
+    std::string body;
+    // if bad URI
+    if (!parse_target(requestTarget, mapName)) {
+        status = http::status::bad_request;
+        return StatusToJson("badRequest", "Bad request");
+    }
+    if (mapName.empty()) {
+        body = jmodel.GetMaps();
+    }
+    else {
+        body = jmodel.GetMap(mapName);
+        // if map not found
+        if (!body.size()) {
+            status = http::status::not_found;
+            return StatusToJson("mapNotFound", "Map not found");
+        }
+    }
+    return body;
+}
 // Создаёт StringResponse с заданными параметрами
 StringResponse RequestHandler::MakeStringResponse(
-        http::status status, std::string_view requestTarget, unsigned http_version,
+        http::status status, std::string_view responseText, unsigned http_version,
         bool keep_alive, std::string_view content_type) {
+
     StringResponse response(status, http_version);
-    ModelToJson jmodel(game_);
-    constexpr auto svTarget = "/api/v1/maps"sv;
-/*
     response.set(http::field::content_type, content_type);
-    if (requestTarget.find(svTarget) == requestTarget.npos) {
-        // TODO bad respose
-    }
-    std::string_view mapStr = requestTarget.substr(svTarget.size(), 
-        requestTarget.size() - svTarget.size());
-    
-    if (mapStr == ""sv) {
-        response.body() = jmodel.GetMaps();
-    } else {
-        std::string_view mapName = mapStr.substr(reqStr);
-        response.body() = jmodel.GetMap();
-    }
-*/
-    response.content_length(body.size());
+    response.body() = responseText;
+    response.content_length(responseText.size());
     response.keep_alive(keep_alive);
     return response;
 }
@@ -89,10 +144,11 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     // Format response
     switch (req.method()) {
     case http::verb::get:
-        return text_response(http::status::ok, "Hello, "s + 
-            std::string{req.target().substr(1)});
-    case http::verb::head:
-        return text_response(http::status::ok, "");
+    {
+        http::status stat;
+        auto str = GetMapBodyJson(req.target(), stat);
+        return text_response(stat, str);
+    }
     default:
         return text_bad_response(http::status::method_not_allowed);
     }

@@ -62,7 +62,7 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
     model::Office office();
     ptree pt;
     try {
-        read_json(json_path, pt);
+        read_json(json_path.generic_string(), pt);
     } 
     catch (ptree_error &e) {
         std::cout << "Json file read error: " << e.what();
