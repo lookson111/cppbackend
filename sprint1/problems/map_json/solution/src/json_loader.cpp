@@ -59,7 +59,6 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
     // Распарсить строку как JSON, используя boost::json::parse
     // Загрузить модель игры из файла
     model::Game game;
-    model::Office office();
     ptree pt;
     try {
         read_json(json_path.generic_string(), pt);

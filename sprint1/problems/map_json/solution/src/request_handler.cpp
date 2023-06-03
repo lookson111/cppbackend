@@ -73,7 +73,7 @@ std::string ModelToJson::GetMap(std::string nameMap) {
         office["offsetY"] = o.GetOffset().dy;
         arr.emplace_back(office);
     }
-    mapEl["buildings"] = arr;
+    mapEl["offices"] = arr;
     //std::cout << serialize(mapEl) << std::endl;
     return serialize(mapEl);
 }
@@ -147,6 +147,7 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     {
         http::status stat;
         auto str = GetMapBodyJson(req.target(), stat);
+        std::cout << str << std::endl;
         return text_response(stat, str);
     }
     default:
