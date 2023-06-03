@@ -19,6 +19,17 @@ struct ContentType {
     // При необходимости внутрь ContentType можно добавить и другие типы контента
 };
 
+class ModelToJson {
+public:
+    explicit ModelToJson(model::Game& game)
+        : game_{game} {
+    }
+    std::string GetMaps();
+    std::string GetMap(std::string_view nameMap);
+private:
+    model::Game& game_;
+};
+
 class RequestHandler {
 public:
     explicit RequestHandler(model::Game& game)
@@ -38,7 +49,7 @@ private:
     model::Game& game_;
     StringResponse HandleRequest(StringRequest&& req);
     StringResponse MakeStringResponse(
-        http::status status, std::string_view body, unsigned http_version,
+        http::status status, std::string_view requestTarget, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APPLICATION_JSON);
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,

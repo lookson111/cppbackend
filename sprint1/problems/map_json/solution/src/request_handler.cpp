@@ -1,16 +1,65 @@
 #include "request_handler.h"
+//	Основные	заголовочные	файлы	для	Boost.Spirit.
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
+//	Мы	будем	использовать	функцию	bind()	из	Boost.Spirit,	потому	что	она	лучше
+//	взаимодействует	с	парсерами.
+#include <boost/spirit/include/phoenix_bind.hpp>
 
 namespace http_handler {
-//using namespace std::literals;
+using boost::spirit::qi;
+void parse_target() {
+     qi::rule<const char*, void()> timezone_parser
+	    =	-(	//	унарный	минус	значит	“опциональное”	правило
+		        //	Нулевое	смещение
+				char_('Z')[	bind(
+                    &datetime::set_zone_offset, &ret, datetime::OFFSET_Z
+                    ) ]
+                |	//	ИЛИ
+				//	Смещение	задано	цифрами
+				((char_('+')|char_('-'))	>>	u2_	>>	':'	>>	u2_)	[
+                    bind(&set_zone_offset, ref(ret), _1, _2, _3)
+                ]
+        );
+}
 
+std::string ModelToJson::GetMaps() {
+    std::string mapsStr;
+    const auto &maps = game_.GetMaps();
+
+    return mapsStr;
+}
+std::string ModelToJson::GetMap(std::string_view nameMap) {
+    std::string mapStr;
+    model::Map::Id idmap{nameMap};
+    const auto &map = game_.FindMap({idmap});
+
+    return mapStr;
+}
 
 // Создаёт StringResponse с заданными параметрами
 StringResponse RequestHandler::MakeStringResponse(
-        http::status status, std::string_view body, unsigned http_version,
+        http::status status, std::string_view requestTarget, unsigned http_version,
         bool keep_alive, std::string_view content_type) {
     StringResponse response(status, http_version);
+    ModelToJson jmodel(game_);
+    constexpr auto svTarget = "/api/v1/maps"sv;
+/*
     response.set(http::field::content_type, content_type);
-    response.body() = body;
+    if (requestTarget.find(svTarget) == requestTarget.npos) {
+        // TODO bad respose
+    }
+    std::string_view mapStr = requestTarget.substr(svTarget.size(), 
+        requestTarget.size() - svTarget.size());
+    
+    if (mapStr == ""sv) {
+        response.body() = jmodel.GetMaps();
+    } else {
+        std::string_view mapName = mapStr.substr(reqStr);
+        response.body() = jmodel.GetMap();
+    }
+*/
     response.content_length(body.size());
     response.keep_alive(keep_alive);
     return response;
