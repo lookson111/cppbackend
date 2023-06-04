@@ -149,5 +149,5 @@ public:
     }
 
 private:
-    std::atomic<int> next_id_ = 0;
+    int next_id_ = 0;
 };

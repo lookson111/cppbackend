@@ -198,14 +198,19 @@ public:
     // Асинхронно готовит хот-дог и вызывает handler, как только хот-дог будет готов.
     // Этот метод может быть вызван из произвольного потока
     void OrderHotDog(HotDogHandler handler) {
-        const int order_id = ++next_order_id_;
-        std::make_shared<Order>(io_, order_id, gas_cooker_, store_.GetBread(), 
-            store_.GetSausage(), std::move(handler))->Execute();
+        
+        net::dispatch(strand_, [this, handler = std::move(handler)]() mutable {
+            std::make_shared<Order>(io_, ++next_order_id_, gas_cooker_, store_.GetBread(),
+                store_.GetSausage(), std::move(handler))->Execute();
+        });
+
     }
 
 private:
+    using Strand = net::strand<net::io_context::executor_type>;
     net::io_context& io_;
-    std::atomic<int> next_order_id_ = 0;
+    Strand strand_{ net::make_strand(io_) };
+    int next_order_id_ = 0;
    // std::mutex mut;
     // Используется для создания ингредиентов хот-дога
     Store store_;
