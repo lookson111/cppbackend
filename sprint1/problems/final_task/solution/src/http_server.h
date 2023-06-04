@@ -43,52 +43,17 @@ protected:
                               self->OnWrite(safe_response->need_eof(), ec, bytes_written);
                           });
     }
-    ~SessionBase() = default;
+    virtual ~SessionBase() = default;
 private:
     // tcp_stream содержит внутри себя сокет и добавляет поддержку таймаутов
     beast::tcp_stream stream_;
     beast::flat_buffer buffer_;
     HttpRequest request_;
     virtual std::shared_ptr<SessionBase> GetSharedThis() = 0;
-    void Read() {
-        using namespace std::literals;
-        // Очищаем запрос от прежнего значения (метод Read может быть вызван несколько раз)
-        request_ = {};
-        stream_.expires_after(30s);
-        // Считываем request_ из stream_, используя buffer_ для хранения считанных данных
-        http::async_read(stream_, buffer_, request_,
-                         // По окончании операции будет вызван метод OnRead
-                         beast::bind_front_handler(&SessionBase::OnRead, GetSharedThis()));
-    }
-    void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read) {
-        using namespace std::literals;
-        if (ec == http::error::end_of_stream) {
-            // Нормальная ситуация - клиент закрыл соединение
-            return Close();
-        }
-        if (ec) {
-            return ReportError(ec, "read"sv);
-        }
-        HandleRequest(std::move(request_));
-    }
-    void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
-        if (ec) {
-            return ReportError(ec, "write"sv);
-        }
-
-        if (close) {
-            // Семантика ответа требует закрыть соединение
-            return Close();
-        }
-
-        // Считываем следующий запрос
-        Read();
-    }
-    void Close() {
-        beast::error_code ec;
-        stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
-    }
-
+    void Read();
+    void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read);
+    void OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written);
+    void Close();
     // Обработку запроса делегируем подклассу
     virtual void HandleRequest(HttpRequest&& request) = 0;
 };
@@ -129,7 +94,6 @@ public:
         , request_handler_(std::forward<Handler>(request_handler)) {
         // Открываем acceptor, используя протокол (IPv4 или IPv6), указанный в endpoint
         acceptor_.open(endpoint.protocol());
-
         // После закрытия TCP-соединения сокет некоторое время может считаться занятым,
         // чтобы компьютеры могли обменяться завершающими пакетами данных.
         // Однако это может помешать повторно открыть сокет в полузакрытом состоянии.
@@ -187,7 +151,7 @@ private:
 };
 
 template <typename RequestHandler>
-void ServeHttp(net::io_context& ioc, const tcp::endpoint& endpoint, RequestHandler&& handler) {
+void ServerHttp(net::io_context& ioc, const tcp::endpoint& endpoint, RequestHandler&& handler) {
     // Напишите недостающий код, используя информацию из урока
     // При помощи decay_t исключим ссылки из типа RequestHandler,
     // чтобы Listener хранил RequestHandler по значению
