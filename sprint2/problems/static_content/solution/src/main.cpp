@@ -37,9 +37,10 @@ fs::path check_static_path(const fs::path& path_static) {
     // Проверяем, что все компоненты base содержатся внутри path
     for (auto b = path.begin(), p = apppath.begin(); b != path.end(); ++b, ++p) {
         if (p == path.end() || *p != *b) {
-            return "";
+            throw std::exception("This path is not in app path.");
         }
     }
+    //if (path.)
     return path;
 }
 
@@ -55,7 +56,7 @@ int main(int argc, const char* argv[]) {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(argv[1]);
         // 1.a Get and check path
-        fs::path stitic_files = check_static_path(argv[2]);
+        fs::path static_files = check_static_path(argv[2]);
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
