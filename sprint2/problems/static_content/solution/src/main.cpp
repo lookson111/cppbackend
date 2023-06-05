@@ -12,6 +12,7 @@
 using namespace std::literals;
 namespace sys = boost::system;
 namespace net = boost::asio;
+namespace fs = std::filesystem;
 
 namespace {
 
@@ -28,17 +29,33 @@ void RunWorkers(unsigned n, const Fn& fn) {
     fn();
 }
 
+fs::path check_static_path(const fs::path& path_static) {
+    std::cout << path_static.generic_string() << std::endl;
+    auto path = fs::weakly_canonical(path_static);
+    auto apppath = fs::weakly_canonical("..");
+    std::cout << path.generic_string() << std::endl;
+    // Проверяем, что все компоненты base содержатся внутри path
+    for (auto b = path.begin(), p = apppath.begin(); b != path.end(); ++b, ++p) {
+        if (p == path.end() || *p != *b) {
+            return "";
+        }
+    }
+    return path;
+}
+
 }  // namespace
 
+
 int main(int argc, const char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: game_server <game-config-json>"sv << std::endl;
+    if (argc != 3) {
+        std::cerr << "Usage: game_server <game-config-json> <static-files>"sv << std::endl;
         return EXIT_FAILURE;
     }
     try {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(argv[1]);
-
+        // 1.a Get and check path
+        fs::path stitic_files = check_static_path(argv[2]);
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
