@@ -29,11 +29,11 @@ struct Offset {
 
 class Road {
     struct HorizontalTag {
-        explicit HorizontalTag() = default;
+        HorizontalTag() = default;
     };
 
     struct VerticalTag {
-        explicit VerticalTag() = default;
+        VerticalTag() = default;
     };
 
 public:
@@ -153,7 +153,7 @@ public:
         buildings_.emplace_back(building);
     }
 
-    void AddOffice(Office office);
+    void AddOffice(const Office &office);
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -171,7 +171,7 @@ class Game {
 public:
     using Maps = std::vector<Map>;
 
-    void AddMap(Map map);
+    void AddMap(const Map &map);
 
     const Maps& GetMaps() const noexcept {
         return maps_;

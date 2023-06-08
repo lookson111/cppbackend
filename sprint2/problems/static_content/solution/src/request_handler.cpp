@@ -1,10 +1,6 @@
 #include "request_handler.h"
 #include "iostream"
-//#include "boost/property_tree/ptree.hpp"
-//#include "boost/property_tree/json_parser.hpp"
-#include <boost/json.hpp>
 namespace http_handler {
-namespace js = boost::json;
 bool parse_target(std::string_view target, std::string &map) {
     std::string_view pr = "/api/v1/maps";
     map = "";
@@ -14,8 +10,6 @@ bool parse_target(std::string_view target, std::string &map) {
     if (target.size() == pr.size())
         return true;
     map = target.substr(pr.size()+1, target.size() - pr.size());
-    //std::cout << "target: " << target << std::endl;
-    //std::cout << "map: " << map << std::endl;
     return true;
 }
 
@@ -28,7 +22,6 @@ std::string ModelToJson::GetMaps() {
         mapEl["name"] = map.GetName();
         obj.emplace_back(mapEl);
     }
-    //std::cout << serialize(obj) << std::endl;
     return serialize(obj);
 }
 
@@ -40,48 +33,63 @@ std::string ModelToJson::GetMap(std::string nameMap) {
     js::object mapEl;
     mapEl["id"] = *map->GetId();
     mapEl["name"] = map->GetName();
+    mapEl["roads"] = GetRoads(map->GetRoads());
+    mapEl["buildings"] = GetBuildings(map->GetBuildings());
+    mapEl["offices"] = GetOffice(map->GetOffices());
+    return serialize(mapEl);
+}
+
+js::array ModelToJson::GetRoads(const model::Map::Roads& roads)
+{
     js::array arr;
-    for (auto& r : map->GetRoads()) {
+    for (auto& r : roads) {
         js::object road;
         road["x0"] = r.GetStart().x;
         road["y0"] = r.GetStart().y;
         if (r.IsHorizontal()) {
             road["x1"] = r.GetEnd().x;
-        } else {
+        }
+        else {
             road["y1"] = r.GetEnd().y;
         }
-        arr.emplace_back(road);
+        arr.emplace_back(std::move(road));
     }
-    mapEl["roads"] = arr;
-    arr.clear();
-    for (auto& b : map->GetBuildings()) {
+    return arr;
+}
+
+js::array ModelToJson::GetBuildings(const model::Map::Buildings& buildings)
+{
+    js::array arr;
+    for (auto& b : buildings) {
         js::object building;
         building["x"] = b.GetBounds().position.x;
         building["y"] = b.GetBounds().position.y;
         building["w"] = b.GetBounds().size.width;
         building["h"] = b.GetBounds().size.height;
-        arr.emplace_back(building);
+        arr.emplace_back(std::move(building));
     }
-    mapEl["buildings"] = arr;
-    arr.clear();
-    for (auto& o : map->GetOffices()) {
+    return arr;
+}
+
+js::array ModelToJson::GetOffice(const model::Map::Offices& offices)
+{
+    js::array arr;
+    for (auto& o : offices) {
         js::object office;
         office["id"] = *o.GetId();
         office["x"] = o.GetPosition().x;
         office["y"] = o.GetPosition().y;
         office["offsetX"] = o.GetOffset().dx;
         office["offsetY"] = o.GetOffset().dy;
-        arr.emplace_back(office);
+        arr.emplace_back(std::move(office));
     }
-    mapEl["offices"] = arr;
-    //std::cout << serialize(mapEl) << std::endl;
-    return serialize(mapEl);
+    return arr;
 }
+
 std::string RequestHandler::StatusToJson(std::string_view code, std::string_view message) {
     js::object msg;
     msg["code"] = code.data();
     msg["message"] = message.data();
-    //std::cout << serialize(msg) << std::endl;
     return serialize(msg);
 }
 
@@ -108,6 +116,7 @@ std::string RequestHandler::GetMapBodyJson(std::string_view requestTarget, http:
     status = http::status::ok;
     return body;
 }
+
 // Создаёт StringResponse с заданными параметрами
 StringResponse RequestHandler::MakeStringResponse(
         http::status status, std::string_view responseText, unsigned http_version,
@@ -133,9 +142,9 @@ StringResponse RequestHandler::MakeBadResponse(
     response.keep_alive(keep_alive);
     return response;
 }
+
 StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
-    // Подставьте сюда код из синхронной версии HTTP-сервера
-    //return MakeStringResponse(http::status::ok, "OK"sv, req.version(), req.keep_alive());
+    // код из синхронной версии HTTP-сервера
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
@@ -148,11 +157,11 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     {
         http::status stat;
         auto str = GetMapBodyJson(req.target(), stat);
-        std::cout << str << std::endl;
         return text_response(stat, str);
     }
     default:
         return text_bad_response(http::status::method_not_allowed);
     }
 }
+
 }  // namespace http_handler

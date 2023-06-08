@@ -1,10 +1,13 @@
 #pragma once
+#include <boost/json.hpp>
+
 #include "http_server.h"
 #include "model.h"
 
 namespace http_handler {
 namespace beast = boost::beast;
 namespace http = beast::http;
+namespace js = boost::json;
 using namespace std::literals;
 // Запрос, тело которого представлено в виде строки
 using StringRequest = http::request<http::string_body>;
@@ -28,6 +31,9 @@ public:
     std::string GetMap(std::string nameMap);
 private:
     model::Game& game_;
+    static js::array GetRoads(const model::Map::Roads& roads);
+    static js::array GetBuildings(const model::Map::Buildings& buildings);
+    static js::array GetOffice(const model::Map::Offices& offices);
 };
 
 class RequestHandler {
