@@ -1,5 +1,7 @@
 #pragma once
 #include <boost/json.hpp>
+#include <filesystem>
+#include <iostream>
 
 #include "http_server.h"
 #include "model.h"
@@ -8,11 +10,19 @@ namespace http_handler {
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace js = boost::json;
+namespace fs = std::filesystem;
 using namespace std::literals;
 // Запрос, тело которого представлено в виде строки
 using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
+
+enum class TypeRequest {
+    None,
+    StaticFiles,
+    Maps,
+    Map
+};
 
 struct ContentType {
     
@@ -38,8 +48,9 @@ private:
 
 class RequestHandler {
 public:
-    explicit RequestHandler(model::Game& game)
-        : game_{game} {
+    explicit RequestHandler(model::Game& game, const fs::path &static_path)
+        : game_{ game }, static_path_{ check_static_path(static_path)} {
+
     }
 
     RequestHandler(const RequestHandler&) = delete;
@@ -53,6 +64,7 @@ public:
 
 private:
     model::Game& game_;
+    const fs::path& static_path_;
     StringResponse HandleRequest(StringRequest&& req);
     std::string GetMapBodyJson(std::string_view requestTarget, http::status& status);
     std::string StatusToJson(std::string_view code, std::string_view message);
@@ -62,6 +74,8 @@ private:
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APPLICATION_JSON);
+
+    static fs::path check_static_path(const fs::path& path_static);
 
 };
 

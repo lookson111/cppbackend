@@ -1,16 +1,23 @@
 #include "request_handler.h"
 #include "iostream"
 namespace http_handler {
-bool parse_target(std::string_view target, std::string &map) {
-    std::string_view pr = "/api/v1/maps";
-    map = "";
+TypeRequest parse_target(std::string_view target, std::string &res) {
+    std::string_view api = "/api/"sv;
+    std::string_view pr = "/api/v1/maps"sv;
+    res = "";
+    auto pos = target.find(api);
+    if (pos == target.npos) {
+        // request stitic files
+        res = target;
+        return TypeRequest::StaticFiles;
+    }
     auto pos = target.find(pr);
     if (pos == target.npos)
-        return false;
+        return TypeRequest::None;
     if (target.size() == pr.size())
-        return true;
-    map = target.substr(pr.size()+1, target.size() - pr.size());
-    return true;
+        return TypeRequest::Maps;
+    res = target.substr(pr.size() + 1, target.size() - pr.size());
+    return TypeRequest::Map;
 }
 
 std::string ModelToJson::GetMaps() {
@@ -97,11 +104,6 @@ std::string RequestHandler::GetMapBodyJson(std::string_view requestTarget, http:
     ModelToJson jmodel(game_);
     std::string mapName;
     std::string body;
-    // if bad URI
-    if (!parse_target(requestTarget, mapName)) {
-        status = http::status::bad_request;
-        return StatusToJson("badRequest", "Bad request");
-    }
     if (mapName.empty()) {
         body = jmodel.GetMaps();
     }
@@ -156,12 +158,36 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     case http::verb::get:
     {
         http::status stat;
-        auto str = GetMapBodyJson(req.target(), stat);
-        return text_response(stat, str);
+        std::string target;
+        std::string text;
+        // if bad URI
+        switch (parse_target(req.target(), target)) {
+        case TypeRequest::Maps:
+        case TypeRequest::Map:
+            text = GetMapBodyJson(target, stat);
+            break;
+        // TODO
+        //case TypeRequest::StaticFiles:
+        //    return StaticFilesResponse(target);
+        default:
+            stat = http::status::bad_request;
+            text = StatusToJson("badRequest", "Bad request");
+        }
+        return text_response(stat, text);
     }
     default:
         return text_bad_response(http::status::method_not_allowed);
     }
+}
+
+fs::path RequestHandler::check_static_path(const fs::path& path_static) {
+    auto path = fs::weakly_canonical(path_static);
+    if (!fs::is_directory(path)) {
+        auto msgError = "Static path "s + path.generic_string() + " is not exist";
+        throw std::exception(msgError.c_str());
+    }
+    std::cout << path.generic_string() << std::endl;
+    return path;
 }
 
 }  // namespace http_handler

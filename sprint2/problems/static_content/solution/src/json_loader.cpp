@@ -7,6 +7,8 @@
 
 namespace json_loader {
 using namespace boost::property_tree;
+namespace fs = std::filesystem;
+
 model::Road LoadRoad(ptree &ptreeRoad) {
     model::Point start;
     if (ptreeRoad.to_iterator(ptreeRoad.find("y1")) == ptreeRoad.end()) {
@@ -54,7 +56,7 @@ model::Map LoadMap(ptree &ptreeMap) {
     return map;
 }
 
-model::Game LoadGame(const std::filesystem::path& json_path) {
+model::Game LoadGame(const fs::path& json_path) {
     // Загрузить содержимое файла json_path, например, в виде строки
     // Распарсить строку как JSON, используя boost::json::parse
     // Загрузить модель игры из файла
