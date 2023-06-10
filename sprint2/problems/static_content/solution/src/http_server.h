@@ -36,7 +36,6 @@ protected:
     void Write(http::response<Body, Fields>&& response) {
         // Запись выполняется асинхронно, поэтому response перемещаем в область кучи
         auto safe_response = std::make_shared<http::response<Body, Fields>>(std::move(response));
-
         auto self = GetSharedThis();
         http::async_write(stream_, *safe_response,
                           [safe_response, self](beast::error_code ec, std::size_t bytes_written) {
@@ -71,7 +70,7 @@ private:
     RequestHandler request_handler_;
     std::shared_ptr<SessionBase> GetSharedThis() override {
         return this->shared_from_this();
-    } 
+    }
     void HandleRequest(HttpRequest&& request) override {
         // Захватываем умный указатель на текущий объект Session в лямбде,
         // чтобы продлить время жизни сессии до вызова лямбды.
@@ -133,14 +132,11 @@ private:
     // Метод socket::async_accept создаст сокет и передаст его передан в OnAccept
     void OnAccept(sys::error_code ec, tcp::socket socket) {
         using namespace std::literals;
-
         if (ec) {
             return ReportError(ec, "accept"sv);
         }
-
         // Асинхронно обрабатываем сессию
         AsyncRunSession(std::move(socket));
-
         // Принимаем новое соединение
         DoAccept();
     }
@@ -156,7 +152,6 @@ void ServerHttp(net::io_context& ioc, const tcp::endpoint& endpoint, RequestHand
     // При помощи decay_t исключим ссылки из типа RequestHandler,
     // чтобы Listener хранил RequestHandler по значению
     using MyListener = Listener<std::decay_t<RequestHandler>>;
-
     std::make_shared<MyListener>(ioc, endpoint, std::forward<RequestHandler>(handler))->Run();
 }
 
