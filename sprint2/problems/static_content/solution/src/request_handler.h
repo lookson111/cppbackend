@@ -2,6 +2,7 @@
 #include <boost/json.hpp>
 #include <filesystem>
 #include <iostream>
+#include <variant>
 
 #include "http_server.h"
 #include "model.h"
@@ -17,6 +18,8 @@ using namespace std::literals;
 using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
+using VariantResponse = std::variant<http::response<http::string_body>,
+    http::response<http::file_body>>;
 
 enum class TypeRequest {
     None,
@@ -64,6 +67,10 @@ struct ContentType {
     constexpr static std::string_view FE_AUDIO_MP3   = ".mp3"sv;
     constexpr static std::string_view FE_EMPTY       = ""sv;
 
+    static std::string_view get(std::string_view key) {
+        return type.at(key);
+    }
+private:
     static std::unordered_map<std::string_view, std::string_view> type;
 };
 
@@ -99,7 +106,7 @@ public:
 
 private:
     model::Game& game_;
-    const fs::path& static_path_;
+    const fs::path static_path_;
     StringResponse HandleRequest(StringRequest&& req);
     std::pair<std::string, http::status> GetMapBodyJson(std::string_view requestTarget);
     std::string StatusToJson(std::string_view code, std::string_view message);
@@ -116,7 +123,7 @@ private:
     StringResponse StaticFilesHeadResponse(std::string_view responseText, 
         unsigned http_version, bool keep_alive);
     static fs::path CheckStaticPath(const fs::path& path_static);
-    static bool CheckFileExist(std::string_view file);
+    bool CheckFileExist(std::string_view file) const;
     bool FileInRootStaticDir(std::string_view file) const;
 };
 

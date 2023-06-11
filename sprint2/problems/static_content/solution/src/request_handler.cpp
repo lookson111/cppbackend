@@ -192,41 +192,32 @@ StringResponse RequestHandler::MakeBadResponse(
 StringResponse RequestHandler::StaticFilesResponse(
         std::string_view target, unsigned http_version,
         bool keep_alive) {
-    if (!CheckFileExist(target))
-        MakeStringResponse(http::status::not_found,
-            "File not found", http_version, keep_alive,
-            ContentType::TEXT_PLAIN);
-    if (!FileInRootStaticDir(target))
-        MakeStringResponse(http::status::bad_request,
-            "Bad Request", http_version, keep_alive,
-            ContentType::TEXT_PLAIN);
-
-    http::status status = http::status::ok;
-    std::string_view content_type = ContentType::TEXT_PLAIN;
-    
+    const auto text_response = [&](http::status status, std::string_view text) {
+        return MakeStringResponse(status, text, http_version, 
+            keep_alive, ContentType::TEXT_PLAIN);
+    };
+    std::string fullName = static_path_.string() + target.data();
+    if (!FileInRootStaticDir(fullName))
+        return text_response(http::status::bad_request, "Bad Request");
+    if (!CheckFileExist(fullName))
+        return text_response(http::status::not_found, "File not found");
+    http::file_body::value_type file;
+    if (sys::error_code ec; file.open(fullName.data(), beast::file_mode::read, ec), ec) {
+        std::cout << "Failed to open file "sv << fullName << std::endl;
+        return text_response(http::status::gone, 
+            "Failed to open file "s + fullName);
+    }
+    std::cout << "Send file 2: "sv << fullName << std::endl;
     http::response<http::file_body> res;
     res.version(http_version);
     res.result(http::status::ok);
-    res.insert(http::field::content_type, "text/plain"sv);
-
-    http::file_body::value_type file;
-    if (sys::error_code ec; file.open(target.data(), beast::file_mode::read, ec), ec) {
-        std::cout << "Failed to open file "sv << target.data() << std::endl;
-        return MakeStringResponse(http::status::gone,
-            "Failed to open file "s + target.data(), 
-            http_version, keep_alive,
-            ContentType::TEXT_PLAIN);
-    }
-
+    std::string ext = fs::path(fullName).extension().string();
+    res.set(http::field::content_type, ContentType::get(ext));
     res.body() = std::move(file);
     // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
     // в зависимости от свойств тела сообщения
     res.prepare_payload();
-    res.set(http::field::content_type, content_type);
-
-
-    StringResponse response(status, http_version);
-    return response;
+    return StringResponse(res);
 }
 
 StringResponse RequestHandler::StaticFilesHeadResponse(
@@ -305,16 +296,15 @@ fs::path RequestHandler::CheckStaticPath(const fs::path& path_static) {
     std::cout << path.generic_string() << std::endl;
     return path;
 }
-bool RequestHandler::CheckFileExist(std::string_view file) {
+bool RequestHandler::CheckFileExist(std::string_view file) const {
     fs::path filePath(file);
     if (fs::exists(filePath))
         return true;
     return false;
 }
 bool RequestHandler::FileInRootStaticDir(std::string_view file) const {
-    std::string f = static_path_.string() + file.data();
-    auto path = fs::weakly_canonical(f).string();
-    if (path.find(f) == 0)
+    auto path = fs::weakly_canonical(file).string();
+    if (path.find(static_path_.string()) == 0)
         return true;
     return false;
 }
