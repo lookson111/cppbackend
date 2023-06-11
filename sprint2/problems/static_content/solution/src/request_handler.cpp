@@ -78,8 +78,8 @@ std::string ModelToJson::GetMaps() {
     return serialize(obj);
 }
 
-std::string ModelToJson::GetMap(std::string nameMap) {
-    model::Map::Id idmap{nameMap};
+std::string ModelToJson::GetMap(std::string_view nameMap) {
+    model::Map::Id idmap{nameMap.data()};
     auto map = game_.FindMap({idmap});
     if (map == nullptr)
         return "";
@@ -144,9 +144,8 @@ std::string RequestHandler::StatusToJson(std::string_view code, std::string_view
 }
 
 std::pair<std::string, http::status> 
-RequestHandler::GetMapBodyJson(std::string_view requestTarget) {
+RequestHandler::GetMapBodyJson(std::string_view mapName) {
     ModelToJson jmodel(game_);
-    std::string mapName;
     std::string body;
     http::status status;
     if (mapName.empty()) {
@@ -161,7 +160,7 @@ RequestHandler::GetMapBodyJson(std::string_view requestTarget) {
         }
     }
     status = http::status::ok;
-    return std::make_pair(body, status);
+    return std::make_pair(std::move(body), status);
 }
 
 // Создаёт StringResponse с заданными параметрами
@@ -203,11 +202,9 @@ VariantResponse RequestHandler::StaticFilesResponse(
         return text_response(http::status::not_found, "File not found");
     http::file_body::value_type file;
     if (sys::error_code ec; file.open(fullName.data(), beast::file_mode::read, ec), ec) {
-        std::cout << "Failed to open file "sv << fullName << std::endl;
         return text_response(http::status::gone, 
             "Failed to open file "s + fullName);
     }
-    std::cout << "Send file 2: "sv << fullName << std::endl;
     http::response<http::file_body> res;
     res.version(http_version);
     res.result(http::status::ok);
@@ -271,13 +268,21 @@ VariantResponse RequestHandler::MakeHeadResponse(StringRequest& req) {
 
 VariantResponse RequestHandler::HandleRequest(StringRequest&& req) {
     // Format response
-    switch (req.method()) {
-    case http::verb::get:
-        return MakeGetResponse(req);
-    case http::verb::head:
-        return MakeHeadResponse(req);
-    default:
-        return MakeBadResponse(http::status::method_not_allowed, 
+    try {
+        switch (req.method()) {
+        case http::verb::get:
+            return MakeGetResponse(req);
+        case http::verb::head:
+            return MakeHeadResponse(req);
+        default:
+            return MakeBadResponse(http::status::method_not_allowed,
+                req.version(), req.keep_alive());
+        }
+    }
+    catch (std::exception ex) {
+        std::cout << "Server error:" << ex.what() << std::endl;
+        return MakeStringResponse(http::status::bad_request,
+            "Server error"s + ex.what(),
             req.version(), req.keep_alive());
     }
 }
@@ -285,7 +290,8 @@ VariantResponse RequestHandler::HandleRequest(StringRequest&& req) {
 fs::path RequestHandler::CheckStaticPath(const fs::path& path_static) {
     auto path = fs::weakly_canonical(path_static);
     if (!fs::is_directory(path)) {
-	std::string msgError = "Static path "s + path.generic_string() + " is not exist";
+	    std::string msgError = "Static path "s + path.generic_string() + 
+            " is not exist";
         throw std::invalid_argument(msgError);
     }
     std::cout << path.generic_string() << std::endl;

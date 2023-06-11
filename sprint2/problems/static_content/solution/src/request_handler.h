@@ -68,6 +68,8 @@ struct ContentType {
     constexpr static std::string_view FE_EMPTY       = ""sv;
 
     static std::string_view get(std::string_view key) {
+        if (!type.contains(key))
+            return EMPTY;
         return type.at(key);
     }
 private:
@@ -80,7 +82,7 @@ public:
         : game_{game} {
     }
     std::string GetMaps();
-    std::string GetMap(std::string nameMap);
+    std::string GetMap(std::string_view nameMap);
 private:
     model::Game& game_;
     static js::array GetRoads(const model::Map::Roads& roads);
