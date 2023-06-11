@@ -192,8 +192,8 @@ StringResponse RequestHandler::MakeBadResponse(
 }
 
 VariantResponse RequestHandler::StaticFilesResponse(
-        std::string_view target, unsigned http_version,
-        bool keep_alive) {
+        std::string_view target, bool with_body, 
+        unsigned http_version, bool keep_alive) {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, http_version, 
             keep_alive, ContentType::TEXT_PLAIN);
@@ -215,25 +215,15 @@ VariantResponse RequestHandler::StaticFilesResponse(
     res.result(http::status::ok);
     std::string ext = fs::path(fullName).extension().string();
     res.set(http::field::content_type, ContentType::get(ext));
-    res.body() = std::move(file);
+    if (with_body)
+        res.body() = std::move(file);
     // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
     // в зависимости от свойств тела сообщения
     res.prepare_payload();
     return std::move(res);
 }
 
-StringResponse RequestHandler::StaticFilesHeadResponse(
-        std::string_view target, unsigned http_version,
-        bool keep_alive) {
-    http::status status = http::status::ok;
-    std::string_view content_type = ContentType::TEXT_PLAIN;
-
-    StringResponse response(status, http_version);
-    response.set(http::field::content_type, content_type);
-    return response;
-}
-
-VariantResponse RequestHandler::MakeGetResponse(StringRequest& req) {
+VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_body) {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
@@ -248,26 +238,11 @@ VariantResponse RequestHandler::MakeGetResponse(StringRequest& req) {
         return text_response(stat, text);
     }
     case TypeRequest::StaticFiles:
-        return StaticFilesResponse(target, req.version(), 
+        return StaticFilesResponse(target, with_body, req.version(),
             req.keep_alive());
     default:
         return text_response(http::status::bad_request,
             StatusToJson("badRequest", "Bad request"));
-    }
-}
-
-VariantResponse RequestHandler::MakeHeadResponse(StringRequest& req) {
-    std::string target;
-    std::string uriDecode = urlDecode(req.target());
-    // if bad URI
-    switch (parse_target(uriDecode, target)) {
-    case TypeRequest::StaticFiles:
-        return StaticFilesHeadResponse(target, req.version(), 
-            req.keep_alive());
-    default:
-        return MakeStringResponse(http::status::bad_request,
-            StatusToJson("badRequest", "Bad request"),
-            req.version(), req.keep_alive());
     }
 }
 
@@ -276,9 +251,9 @@ VariantResponse RequestHandler::HandleRequest(StringRequest&& req) {
     try {
         switch (req.method()) {
         case http::verb::get:
-            return MakeGetResponse(req);
+            return MakeGetResponse(req, true);
         case http::verb::head:
-            return MakeHeadResponse(req);
+            return MakeGetResponse(req, false);
         default:
             return MakeBadResponse(http::status::method_not_allowed,
                 req.version(), req.keep_alive());

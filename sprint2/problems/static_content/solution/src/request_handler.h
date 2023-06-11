@@ -122,11 +122,9 @@ private:
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON);
-    VariantResponse MakeGetResponse(StringRequest& req);
-    VariantResponse MakeHeadResponse(StringRequest& req);
-    VariantResponse StaticFilesResponse(std::string_view responseText,
-        unsigned http_version, bool keep_alive);
-    StringResponse StaticFilesHeadResponse(std::string_view responseText, 
+    VariantResponse MakeGetResponse(StringRequest& req, bool with_body);
+    VariantResponse StaticFilesResponse(
+        std::string_view responseText, bool with_body,
         unsigned http_version, bool keep_alive);
     static fs::path CheckStaticPath(const fs::path& path_static);
     bool CheckFileExist(std::string_view file) const;
