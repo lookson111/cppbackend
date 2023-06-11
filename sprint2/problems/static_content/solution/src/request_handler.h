@@ -18,8 +18,8 @@ using namespace std::literals;
 using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
-using VariantResponse = std::variant<http::response<http::string_body>,
-    http::response<http::file_body>>;
+using FileResponse = http::response<http::file_body>;
+using VariantResponse = std::variant<StringResponse, FileResponse>;
 
 enum class TypeRequest {
     None,
@@ -101,13 +101,17 @@ public:
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
         // Обработать запрос request и отправить ответ, используя send
-        send(HandleRequest(std::forward<decltype(req)>(req)));
+        auto res = HandleRequest(std::forward<decltype(req)>(req));
+        if (std::holds_alternative<StringResponse>(res))
+            send(std::get<StringResponse>(res));
+        else
+            send(std::get<FileResponse>(res));
     }
 
 private:
     model::Game& game_;
     const fs::path static_path_;
-    StringResponse HandleRequest(StringRequest&& req);
+    VariantResponse HandleRequest(StringRequest&& req);
     std::pair<std::string, http::status> GetMapBodyJson(std::string_view requestTarget);
     std::string StatusToJson(std::string_view code, std::string_view message);
     StringResponse MakeStringResponse(
@@ -116,9 +120,9 @@ private:
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON);
-    StringResponse MakeGetResponse(StringRequest& req);
-    StringResponse MakeHeadResponse(StringRequest& req);
-    StringResponse StaticFilesResponse(std::string_view responseText, 
+    VariantResponse MakeGetResponse(StringRequest& req);
+    VariantResponse MakeHeadResponse(StringRequest& req);
+    VariantResponse StaticFilesResponse(std::string_view responseText,
         unsigned http_version, bool keep_alive);
     StringResponse StaticFilesHeadResponse(std::string_view responseText, 
         unsigned http_version, bool keep_alive);

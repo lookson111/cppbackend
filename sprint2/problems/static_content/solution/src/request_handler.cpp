@@ -189,7 +189,7 @@ StringResponse RequestHandler::MakeBadResponse(
     return response;
 }
 
-StringResponse RequestHandler::StaticFilesResponse(
+VariantResponse RequestHandler::StaticFilesResponse(
         std::string_view target, unsigned http_version,
         bool keep_alive) {
     const auto text_response = [&](http::status status, std::string_view text) {
@@ -217,7 +217,7 @@ StringResponse RequestHandler::StaticFilesResponse(
     // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
     // в зависимости от свойств тела сообщения
     res.prepare_payload();
-    return StringResponse(res);
+    return std::move(res);
 }
 
 StringResponse RequestHandler::StaticFilesHeadResponse(
@@ -231,7 +231,7 @@ StringResponse RequestHandler::StaticFilesHeadResponse(
     return response;
 }
 
-StringResponse RequestHandler::MakeGetResponse(StringRequest& req) {
+VariantResponse RequestHandler::MakeGetResponse(StringRequest& req) {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
@@ -246,7 +246,6 @@ StringResponse RequestHandler::MakeGetResponse(StringRequest& req) {
         return text_response(stat, text);
     }
     case TypeRequest::StaticFiles:
-        std::cout << "StaticFiles" << std::endl;
         return StaticFilesResponse(target, req.version(), 
             req.keep_alive());
     default:
@@ -255,7 +254,7 @@ StringResponse RequestHandler::MakeGetResponse(StringRequest& req) {
     }
 }
 
-StringResponse RequestHandler::MakeHeadResponse(StringRequest& req) {
+VariantResponse RequestHandler::MakeHeadResponse(StringRequest& req) {
     std::string target;
     std::string uriDecode = urlDecode(req.target());
     // if bad URI
@@ -270,16 +269,12 @@ StringResponse RequestHandler::MakeHeadResponse(StringRequest& req) {
     }
 }
 
-StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
-    std::cout << "Target code  : " << req.target() << std::endl;
-    std::cout << "Target decode: " << urlDecode(req.target()) << std::endl;
+VariantResponse RequestHandler::HandleRequest(StringRequest&& req) {
     // Format response
     switch (req.method()) {
     case http::verb::get:
-        std::cout << "GET" << std::endl;
         return MakeGetResponse(req);
     case http::verb::head:
-        std::cout << "HEAD" << std::endl;
         return MakeHeadResponse(req);
     default:
         return MakeBadResponse(http::status::method_not_allowed, 

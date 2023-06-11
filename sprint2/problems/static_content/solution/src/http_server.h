@@ -20,7 +20,6 @@ using namespace std::literals;
 void ReportError(beast::error_code ec, std::string_view what);
 
 class SessionBase {
-    // Напишите недостающий код, используя информацию из урока
 public:
     // Запрещаем копирование и присваивание объектов SessionBase и его наследников
     SessionBase(const SessionBase&) = delete;
