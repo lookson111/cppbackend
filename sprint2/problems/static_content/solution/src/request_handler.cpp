@@ -31,7 +31,7 @@ std::string urlDecode(std::string_view src) {
     int i, ii;
     for (i = 0; i < src.length(); i++) {
         if (src[i] == '%') {
-            [[maybe_unused]] auto s = sscanf_s(src.substr(i + 1, 2).data(), "%x", &ii);
+            [[maybe_unused]] auto s = sscanf(src.substr(i + 1, 2).data(), "%x", &ii);
             ch = static_cast<char>(ii);
             ret += ch;
             i = i + 2;
@@ -285,8 +285,8 @@ VariantResponse RequestHandler::HandleRequest(StringRequest&& req) {
 fs::path RequestHandler::CheckStaticPath(const fs::path& path_static) {
     auto path = fs::weakly_canonical(path_static);
     if (!fs::is_directory(path)) {
-        auto msgError = "Static path "s + path.generic_string() + " is not exist";
-        throw std::exception(msgError.c_str());
+	std::string msgError = "Static path "s + path.generic_string() + " is not exist";
+        throw std::invalid_argument(msgError);
     }
     std::cout << path.generic_string() << std::endl;
     return path;
