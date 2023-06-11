@@ -40,6 +40,9 @@ std::string urlDecode(std::string_view src) {
             ret += ' ';
             i = i + 1;
         }
+        else if (src[i]>= 'A' && src[i] <= 'Z') {
+            ret += src[i]-'A'+'a';
+        }
         else {
             ret += src[i];
         }
@@ -195,6 +198,8 @@ VariantResponse RequestHandler::StaticFilesResponse(
         return MakeStringResponse(status, text, http_version, 
             keep_alive, ContentType::TEXT_PLAIN);
     };
+    if (target == "/")
+        target = "/index.html";
     std::string fullName = static_path_.string() + target.data();
     if (!FileInRootStaticDir(fullName))
         return text_response(http::status::bad_request, "Bad Request");
@@ -255,7 +260,7 @@ VariantResponse RequestHandler::MakeHeadResponse(StringRequest& req) {
     std::string target;
     std::string uriDecode = urlDecode(req.target());
     // if bad URI
-    switch (parse_target(req.target(), target)) {
+    switch (parse_target(uriDecode, target)) {
     case TypeRequest::StaticFiles:
         return StaticFilesHeadResponse(target, req.version(), 
             req.keep_alive());
