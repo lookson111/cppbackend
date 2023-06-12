@@ -40,7 +40,7 @@ class Logger {
         auto t_c = std::chrono::system_clock::to_time_t(tp);
         std::ostringstream oss;
         oss << std::put_time(std::localtime(&t_c), "%Y_%m_%d");
-        return "sample_log_"s + oss.str() + ".log";
+        return "/var/log/sample_log_"s + oss.str() + ".log";
     }
     // Для имени файла возьмите дату с форматом "%Y_%m_%d"
     std::string GetFileTimeStamp() const {
@@ -77,22 +77,21 @@ public:
     void SetTimestamp(std::chrono::system_clock::time_point ts) {
         using namespace std::chrono;
         const std::unique_lock lock(mutex);
-        auto tp = zoned_time{ current_zone(), ts }.get_local_time();
-        auto dp = floor<days>(tp);
+	auto str = GetStringDate(ts);
         manual_ts_ = ts;
-        if (manual_ts_day_ != dp) {
-            manual_ts_day_ = dp;
+	if (manual_str_day_ != str) {
+	    manual_str_day_ = str;
             //sync_stream.flush();
             // flush не работает приходится затирать поток
             sync_stream = std::osyncstream{ std::ref(log_file_) };
-            std::osyncstream{std::cout} << GetStringDate(ts) << std::endl;
+            //std::osyncstream{std::cout} << manual_str_day_ << std::endl;
             log_file_.close();
-            log_file_.open(GetStringDate(ts), std::ios::out | std::ios::app);
+            log_file_.open(manual_str_day_, std::ios::out | std::ios::app);
             sync_stream = std::osyncstream{ std::ref(log_file_) };
          }
     }
 
 private:
     std::optional<std::chrono::system_clock::time_point> manual_ts_;
-    std::chrono::time_point<std::chrono::local_t, std::chrono::days> manual_ts_day_;
+    std::string manual_str_day_;
 };
