@@ -18,14 +18,10 @@ using namespace std::literals;
 #define LOG(...) Logger::GetInstance().Log(__VA_ARGS__)
 
 class Logger {
-    typedef std::shared_mutex mutex_t;
-    mutable mutex_t mutex;
+    mutable std::mutex mutex;
     std::ofstream log_file_;
-    std::osyncstream sync_stream { std::ref(log_file_) };
-    //std::ofstream sync_stream;
     auto GetTime() const {
         if (manual_ts_) {
-            std::shared_lock lock(mutex);
             return *manual_ts_;
         }
         return std::chrono::system_clock::now();
@@ -40,7 +36,7 @@ class Logger {
         auto t_c = std::chrono::system_clock::to_time_t(tp);
         std::ostringstream oss;
         oss << std::put_time(std::localtime(&t_c), "%Y_%m_%d");
-        return "/var/log/sample_log_"s + oss.str() + ".log";
+        return "sample_log_"s + oss.str() + ".log";
     }
     // Для имени файла возьмите дату с форматом "%Y_%m_%d"
     std::string GetFileTimeStamp() const {
@@ -58,17 +54,16 @@ public:
     }
     template<class... T>
     void LogArgs(const T&... args) {
-        ((sync_stream << args), ...);
+        ((log_file_ << args), ...);
     }
     // Выведите в поток все аргументы.
     template<class... Ts>
     void Log(const Ts&... args) {
-        std::shared_lock lock(mutex);
-        //std::cout << "lock\n";
+        std::lock_guard<std::mutex> lock(mutex);
         auto d = GetTimeStamp();
-        sync_stream << d << ": "sv;
+        log_file_ << d << ": "sv;
         LogArgs(args...);
-        sync_stream << std::endl;
+        log_file_ << std::endl;
     }
 
     // Установите manual_ts_. Учтите, что эта операция может выполняться
@@ -76,19 +71,15 @@ public:
     // синхронизацию.
     void SetTimestamp(std::chrono::system_clock::time_point ts) {
         using namespace std::chrono;
-        const std::unique_lock lock(mutex);
-	auto str = GetStringDate(ts);
+        std::lock_guard<std::mutex> lock(mutex);
+	    auto fileName = GetStringDate(ts);
         manual_ts_ = ts;
-	if (manual_str_day_ != str) {
-	    manual_str_day_ = str;
-            //sync_stream.flush();
-            // flush не работает приходится затирать поток
-            sync_stream = std::osyncstream{ std::ref(log_file_) };
-            //std::osyncstream{std::cout} << manual_str_day_ << std::endl;
+	    if (manual_str_day_ != fileName) {
+            std::cout << fileName << std::endl;
+	        manual_str_day_ = fileName;
             log_file_.close();
             log_file_.open(manual_str_day_, std::ios::out | std::ios::app);
-            sync_stream = std::osyncstream{ std::ref(log_file_) };
-         }
+        }
     }
 
 private:
