@@ -7,6 +7,7 @@
 
 #include "json_loader.h"
 #include "request_handler.h"
+#include "log.h"
 
 using namespace std::literals;
 namespace sys = boost::system;
@@ -37,6 +38,7 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Usage: game_server <game-config-json> <static-files>"sv << std::endl;
         return EXIT_FAILURE;
     }
+    Logger::InitBoostLogFilter();
     try {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(argv[1]);
@@ -50,6 +52,7 @@ int main(int argc, const char* argv[]) {
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
             if (!ec) {
+                Logger::Log::info("{\"code\":0}", "server exited");
                 ioc.stop();
             }
         });
@@ -63,7 +66,8 @@ int main(int argc, const char* argv[]) {
             handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-	    std::cout << "Server has started..."sv << std::endl;
+	    //std::cout << "Server has started..."sv << std::endl;
+        Logger::Log::info("{\"port\":8080, \"address\" : \"0.0.0.0\"}", "server started");
         // 6. Запускаем обработку асинхронных операций
         RunThreads(std::max(1u, num_threads), [&ioc] {
             ioc.run();

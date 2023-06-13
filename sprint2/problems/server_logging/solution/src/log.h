@@ -1,15 +1,26 @@
-#pragme once 
+#pragma once 
+#include <ostream>
+#include <boost/json.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/system.hpp>
+
+namespace Logger {
+namespace sys = boost::system;
 namespace net = boost::asio;
+namespace json = boost::json;
+
+    
+void InitBoostLogFilter();
 
 // Для синхронного вывода в Boost.Asio могут использовать любой тип, удовлетворяющий требованиям,
 // описанным в документе:
 // https://www.boost.org/doc/libs/1_78_0/doc/html/boost_asio/reference/SyncWriteStream.html
-class SyncWriteOStreamAdapter {
+class Log {
 public:
-    explicit SyncWriteOStreamAdapter(std::ostream& os)
-        : os_{os} {
+    explicit Log(std::ostream& os)
+        : os_{ os } {
     }
-
+    static void info(std::string_view data, std::string_view message);
     template <typename ConstBufferSequence>
     size_t write_some(const ConstBufferSequence& cbs, sys::error_code& ec) {
         const size_t total_size = net::buffer_size(cbs);
@@ -46,9 +57,4 @@ public:
 private:
     std::ostream& os_;
 };
-
-class Logger {
-
-
-}
-
+} // namespace logger
