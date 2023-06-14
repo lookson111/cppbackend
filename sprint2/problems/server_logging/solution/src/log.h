@@ -4,6 +4,8 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/system.hpp>
 
+#define LOG(...) Logger::GetInstance().Log(__VA_ARGS__)
+
 namespace Logger {
 namespace sys = boost::system;
 namespace net = boost::asio;
@@ -16,9 +18,13 @@ void InitBoostLogFilter();
 // описанным в документе:
 // https://www.boost.org/doc/libs/1_78_0/doc/html/boost_asio/reference/SyncWriteStream.html
 class Log {
+    Log() = default;
+    Log(const Log&) = delete;
+
 public:
-    explicit Log(std::ostream& os)
-        : os_{ os } {
+    static Log& GetInstance() {
+        static Log obj;
+        return obj;
     }
     static void info(std::string_view data, std::string_view message);
     template <typename ConstBufferSequence>
