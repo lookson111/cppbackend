@@ -5,8 +5,29 @@
 
 namespace http_server {
 
-void ReportError(beast::error_code ec, std::string_view what) {
-    std::cerr << what << ": "sv << ec.message() << std::endl;
+std::string uriDecode(std::string_view src) {
+    std::string ret;
+    char ch;
+    int i, ii;
+    for (i = 0; i < src.length(); i++) {
+        if (src[i] == '%') {
+            [[maybe_unused]] auto s = sscanf(src.substr(i + 1, 2).data(), "%x", &ii);
+            ch = static_cast<char>(ii);
+            ret += ch;
+            i = i + 2;
+        }
+        else if (src[i] == '+') {
+            ret += ' ';
+            i = i + 1;
+        }
+        else if (src[i] >= 'A' && src[i] <= 'Z') {
+            ret += src[i] - 'A' + 'a';
+        }
+        else {
+            ret += src[i];
+        }
+    }
+    return (ret);
 }
 
 void SessionBase::Run() {
@@ -34,14 +55,21 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
         return Close();
     }
     if (ec) {
-        return ReportError(ec, "read"sv);
+        LOGSRV().error(ec, Logger::Server::Where::read);
+        return;
     }
+    std::string uri = uriDecode(request_.target());
+    auto rmeth = http::to_string(request_.method());
+    LOGSRV().request(stream_.socket().remote_endpoint().address().to_string(),
+        uri, std::string_view(rmeth.data(), rmeth.size()));
+    start_time_ = steady_clock::now();
     HandleRequest(std::move(request_));
 }
 
 void SessionBase::OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
     if (ec) {
-        return ReportError(ec, "write"sv);
+        LOGSRV().error(ec, Logger::Server::Where::write);
+        return;
     }
     if (close) {
         // Семантика ответа требует закрыть соединение

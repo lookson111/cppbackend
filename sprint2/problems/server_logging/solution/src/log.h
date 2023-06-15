@@ -69,25 +69,22 @@ private:
 class Server {
 private:
     Log& log_; 
-/*    struct StartTag   {StartTag() = default;};
-    struct RequestTag {RequsetTag() = default;}; 
-    struct ResponseTag{ResponseTag() = default;};
-    struct EndTag     {EndTag() = default;};
-    struct ErrorTag   {ErrorTag() = default;};*/
     Server() : log_(Log::GetInstance()) {}
 public:
-/*    constexpr static StartTag START{};
-    constexpr static EndTag END{};*/
-
+    enum class Where {
+        read,
+        write,
+        accept
+    };
     static Server& GetInstance() {
         static Server obj;
         return obj;
     }
     void start(std::string_view address, int port);
-    void end(const boost::system::error_code& ec);
-    void error() {};
-    void request() {};
-    void response() {};
+    void end(const sys::error_code& ec);
+    void error(const sys::error_code& ec, Where where);
+    void request(std::string_view address, std::string_view uri, std::string_view method);
+    void response(long long response_time, unsigned status_code, std::string_view content_type);
 };
 
 

@@ -7,6 +7,8 @@
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <chrono>
+#include "log.h"
 
 namespace http_server {
 
@@ -16,8 +18,9 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 namespace sys = boost::system;
 using namespace std::literals;
+using namespace std::chrono;
 
-void ReportError(beast::error_code ec, std::string_view what);
+std::string uriDecode(std::string_view src);
 
 class SessionBase {
 public:
@@ -33,6 +36,9 @@ protected:
     }
     template <typename Body, typename Fields>
     void Write(http::response<Body, Fields>&& response) {
+        auto time = steady_clock::now() - start_time_;
+        LOGSRV().response(std::chrono::round<milliseconds>(time).count(), 
+            response.result_int(), response[http::field::content_type]);
         // Запись выполняется асинхронно, поэтому response перемещаем в область кучи
         auto safe_response = std::make_shared<http::response<Body, Fields>>(std::move(response));
         auto self = GetSharedThis();
@@ -47,6 +53,8 @@ private:
     beast::tcp_stream stream_;
     beast::flat_buffer buffer_;
     HttpRequest request_;
+    steady_clock::time_point start_time_;
+
     virtual std::shared_ptr<SessionBase> GetSharedThis() = 0;
     void Read();
     void OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read);
@@ -132,7 +140,8 @@ private:
     void OnAccept(sys::error_code ec, tcp::socket socket) {
         using namespace std::literals;
         if (ec) {
-            return ReportError(ec, "accept"sv);
+            LOGSRV().error(ec, Logger::Server::Where::accept);
+            return;
         }
         // Асинхронно обрабатываем сессию
         AsyncRunSession(std::move(socket));

@@ -6,6 +6,7 @@
 
 #include "http_server.h"
 #include "model.h"
+#include "log.h"
 
 namespace http_handler {
 namespace beast = boost::beast;

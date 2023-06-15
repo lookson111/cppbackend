@@ -41,9 +41,9 @@ static void JsonFormatter(logging::record_view const& rec, logging::formatting_o
     // Для получения истинного значения атрибута нужно добавить
     // разыменование. 
     auto ts = *rec[timestamp];
-    strm << "{\"timestamp\":\"" << to_iso_extended_string(ts) << "\", ";
-    strm << "\"data\" : " << rec[data] << ", ";
-    strm << "\"message\" : \"" << rec[msg] << "\"}";
+    strm << "{\"timestamp\":\"" << to_iso_extended_string(ts) << "\",";
+    strm << "\"data\":" << rec[data] << ",";
+    strm << "\"message\":\"" << rec[msg] << "\"}";
 }
 
 void InitBoostLogFilter() {
@@ -83,10 +83,59 @@ void Server::start(std::string_view address, int port) {
 void Server::end(const boost::system::error_code& err) {
     json::object mapEl;
     mapEl["code"] = err.value();
+    
+    if (err)
+        mapEl["exception"] = err.what();
     log_.info(serialize(mapEl), "server exited"sv);
 }
 
+void Server::error(const sys::error_code& ec, Where where)
+{
+    boost::string_view svWhere;
+    switch (where) {
+    case Where::read:
+        svWhere = "read";
+        break;
+    case Where::write:
+        svWhere = "write";
+        break;
+    case Where::accept:
+        svWhere = "accept";
+        break;
+    }
+    json::object mapEl;
+    mapEl["code"] = ec.value();
+    mapEl["text"] = ec.message();
+    mapEl["where"] = svWhere;
+    log_.info(serialize(mapEl), "error"sv);
+}
 
+static auto to_booststr = [](std::string_view str) {
+    return boost::string_view(str.data(), str.size());
+};
+
+void Server::request(std::string_view address, std::string_view uri, std::string_view method)
+{
+    json::object mapEl;
+    mapEl["address"] = to_booststr(address);
+    mapEl["URI"] = to_booststr(uri);
+    mapEl["method"] = to_booststr(method);
+    log_.info(serialize(mapEl), "request received"sv);
+}
+
+void Server::response(long long response_time, unsigned status_code, std::string_view content_type)
+{
+    json::object mapEl;
+    mapEl["response_time"] = response_time;
+    mapEl["code"] = status_code;
+    if (content_type.empty())
+        mapEl["content_type"] = "null";
+    else {
+        auto ct = content_type.substr(0, content_type.find("\\r"));
+        mapEl["content_type"] = to_booststr(ct);
+    }
+    log_.info(serialize(mapEl), "response sent"sv);
+}
 
 
 }

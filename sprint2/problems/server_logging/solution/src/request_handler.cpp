@@ -25,31 +25,6 @@ std::unordered_map<std::string_view, std::string_view> ContentType::type{
     { FE_EMPTY,         EMPTY },
 };
 
-std::string urlDecode(std::string_view src) {
-    std::string ret;
-    char ch;
-    int i, ii;
-    for (i = 0; i < src.length(); i++) {
-        if (src[i] == '%') {
-            [[maybe_unused]] auto s = sscanf(src.substr(i + 1, 2).data(), "%x", &ii);
-            ch = static_cast<char>(ii);
-            ret += ch;
-            i = i + 2;
-        }
-        else if (src[i] == '+') {
-            ret += ' ';
-            i = i + 1;
-        }
-        else if (src[i]>= 'A' && src[i] <= 'Z') {
-            ret += src[i]-'A'+'a';
-        }
-        else {
-            ret += src[i];
-        }
-    }
-    return (ret);
-}
-
 TypeRequest parse_target(std::string_view target, std::string &res) {
     std::string_view api = "/api/"sv;
     std::string_view pr = "/api/v1/maps"sv;
@@ -214,7 +189,8 @@ VariantResponse RequestHandler::StaticFilesResponse(
     res.version(http_version);
     res.result(http::status::ok);
     std::string ext = fs::path(fullName).extension().string();
-    res.set(http::field::content_type, ContentType::get(ext));
+    res.set(http::field::content_type, ContentType::get(ext).data());
+    
     if (with_body)
         res.body() = std::move(file);
     // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
@@ -228,7 +204,7 @@ VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_bo
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
     std::string target;
-    std::string uriDecode = urlDecode(req.target());
+    std::string uriDecode = http_server::uriDecode(req.target());
     // if bad URI
     switch (parse_target(uriDecode, target)) {
     case TypeRequest::Maps:
