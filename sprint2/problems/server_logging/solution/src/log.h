@@ -1,16 +1,18 @@
 #pragma once 
 #include <ostream>
+#include <iostream>
 #include <boost/json.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/system.hpp>
 
-#define LOG(...) Logger::GetInstance().Log(__VA_ARGS__)
+#define LOG() Logger::Log::GetInstance()
+#define LOGSRV() Logger::Server::GetInstance()
 
 namespace Logger {
+
 namespace sys = boost::system;
 namespace net = boost::asio;
 namespace json = boost::json;
-
     
 void InitBoostLogFilter();
 
@@ -20,13 +22,13 @@ void InitBoostLogFilter();
 class Log {
     Log() = default;
     Log(const Log&) = delete;
-
 public:
     static Log& GetInstance() {
         static Log obj;
         return obj;
     }
     static void info(std::string_view data, std::string_view message);
+
     template <typename ConstBufferSequence>
     size_t write_some(const ConstBufferSequence& cbs, sys::error_code& ec) {
         const size_t total_size = net::buffer_size(cbs);
@@ -61,6 +63,33 @@ public:
     }
 
 private:
-    std::ostream& os_;
+    std::ostream& os_ = std::cout;
 };
+
+class Server {
+private:
+    Log& log_; 
+/*    struct StartTag   {StartTag() = default;};
+    struct RequestTag {RequsetTag() = default;}; 
+    struct ResponseTag{ResponseTag() = default;};
+    struct EndTag     {EndTag() = default;};
+    struct ErrorTag   {ErrorTag() = default;};*/
+    Server() : log_(Log::GetInstance()) {}
+public:
+/*    constexpr static StartTag START{};
+    constexpr static EndTag END{};*/
+
+    static Server& GetInstance() {
+        static Server obj;
+        return obj;
+    }
+    void start(std::string_view address, int port);
+    void end(const boost::system::error_code& ec);
+    void error() {};
+    void request() {};
+    void response() {};
+};
+
+
+
 } // namespace logger

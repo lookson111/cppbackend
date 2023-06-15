@@ -52,7 +52,7 @@ int main(int argc, const char* argv[]) {
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
             if (!ec) {
-                Logger::Log::info("{\"code\":0}", "server exited");
+                LOGSRV().end(ec);
                 ioc.stop();
             }
         });
@@ -66,8 +66,7 @@ int main(int argc, const char* argv[]) {
             handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-	    //std::cout << "Server has started..."sv << std::endl;
-        Logger::Log::info("{\"port\":8080, \"address\" : \"0.0.0.0\"}", "server started");
+        LOGSRV().start(address.to_string(), port);
         // 6. Запускаем обработку асинхронных операций
         RunThreads(std::max(1u, num_threads), [&ioc] {
             ioc.run();

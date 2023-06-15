@@ -73,4 +73,20 @@ void Log::info(std::string_view data_, std::string_view message_) {
         << logging::add_value(msg, message_);
 }
 
+void Server::start(std::string_view address, int port) {
+    json::object mapEl;
+    mapEl["port"] = std::to_string(port);
+    mapEl["address"] = address.data();
+    log_.info(serialize(mapEl), "server started"sv);
+}
+
+void Server::end(const boost::system::error_code& err) {
+    json::object mapEl;
+    mapEl["code"] = err.value();
+    log_.info(serialize(mapEl), "server exited"sv);
+}
+
+
+
+
 }
