@@ -251,7 +251,6 @@ fs::path RequestHandler::CheckStaticPath(const fs::path& path_static) {
             " is not exist";
         throw std::invalid_argument(msgError);
     }
-    std::cout << path.generic_string() << std::endl;
     return path;
 }
 bool RequestHandler::CheckFileExist(std::string &file) const {

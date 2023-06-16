@@ -75,7 +75,7 @@ void Log::info(std::string_view data_, std::string_view message_) {
 
 void Server::start(std::string_view address, int port) {
     json::object mapEl;
-    mapEl["port"] = std::to_string(port);
+    mapEl["port"] = port;
     mapEl["address"] = address.data();
     log_.info(serialize(mapEl), "server started"sv);
 }
