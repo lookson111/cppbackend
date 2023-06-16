@@ -1,4 +1,5 @@
 #include "request_handler.h"
+#include <boost/algorithm/string.hpp>
 #include <iostream>
 
 namespace http_handler {
@@ -253,10 +254,18 @@ fs::path RequestHandler::CheckStaticPath(const fs::path& path_static) {
     std::cout << path.generic_string() << std::endl;
     return path;
 }
-bool RequestHandler::CheckFileExist(std::string_view file) const {
-    fs::path filePath(file);
-    if (fs::exists(filePath))
-        return true;
+bool RequestHandler::CheckFileExist(std::string &file) const {
+    std::string fileName = fs::path(file).filename().string();  
+    auto path = fs::path(file).parent_path();
+    for (const auto & entry : fs::directory_iterator{path}) {
+        std::string fn = entry.path().filename().string();
+        if (boost::iequals(fn, fileName)) {
+            file = entry.path().string();
+            return true;
+        }
+    }
+//    if (fs::exists(filePath))
+//        return true;
     return false;
 }
 bool RequestHandler::FileInRootStaticDir(std::string_view file) const {

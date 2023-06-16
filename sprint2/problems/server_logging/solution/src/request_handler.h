@@ -128,7 +128,7 @@ private:
         std::string_view responseText, bool with_body,
         unsigned http_version, bool keep_alive);
     static fs::path CheckStaticPath(const fs::path& path_static);
-    bool CheckFileExist(std::string_view file) const;
+    bool CheckFileExist(std::string& file) const;
     bool FileInRootStaticDir(std::string_view file) const;
 };
 

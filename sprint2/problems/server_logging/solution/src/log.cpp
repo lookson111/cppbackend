@@ -52,7 +52,7 @@ void InitBoostLogFilter() {
     );
     logging::add_common_attributes();
     logging::add_file_log(
-        keywords::file_name = "sample_%N.log",
+        keywords::file_name = "/var/log/sample_%N.log",
         keywords::format = &JsonFormatter,
         keywords::open_mode = std::ios_base::app | std::ios_base::out,
         // ротируем по достижению размера 10 мегабайт
