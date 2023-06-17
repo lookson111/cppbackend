@@ -43,7 +43,7 @@ static void JsonFormatter(logging::record_view const& rec, logging::formatting_o
     auto ts = *rec[timestamp];
     strm << "{\"timestamp\":\"" << to_iso_extended_string(ts) << "\",";
     strm << "\"data\":" << rec[data] << ",";
-    strm << "\"message\":\"" << rec[msg] << "\"}";
+    strm << "\"message\":\"" << rec[msg] << "\"}" << std::endl;
 }
 
 void InitBoostLogFilter() {

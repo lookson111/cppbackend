@@ -43,7 +43,7 @@ static void JsonFormatter(logging::record_view const& rec, logging::formatting_o
     auto ts = *rec[timestamp];
     strm << "{\"timestamp\":\"" << to_iso_extended_string(ts) << "\",";
     strm << "\"data\":" << rec[data] << ",";
-    strm << "\"message\":\"" << rec[msg] << "\"}";
+    strm << "\"message\":\"" << rec[msg] << "\"}" << std::endl;
 }
 
 void InitBoostLogFilter() {
@@ -61,7 +61,7 @@ void InitBoostLogFilter() {
         keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
     );
     logging::add_console_log(
-        std::clog,
+        std::cout,
         keywords::format = &JsonFormatter,
         keywords::auto_flush = true
     );

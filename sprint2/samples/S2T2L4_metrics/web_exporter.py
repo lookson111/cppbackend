@@ -12,6 +12,9 @@ import json
 # Создаём три метрики
 good_lines = prom.Counter('webexporter_good_lines', 'Good JSON records')
 wrong_lines = prom.Counter('webexporter_wrong_lines', 'Wrong JSON records')
+error_read = prom.Counter('webexporter_error_read', 'Server game errors')
+error_write = prom.Counter('webexporter_error_write', 'Server game errors')
+error_acceptor = prom.Counter('webexporter_error_acceptor', 'Server game errors')
 
 response_time = prom.Histogram('webserver_request_duration', 'Response time', ['code', 'content_type'], 
     buckets=(.001, .002, .005, .010, .020, .050, .100, .200, .500, float("inf")))
@@ -43,8 +46,15 @@ def my_main():
                 error_code = data["data"]["code"]
                 request_code.labels(
                     code=data["data"]["code"], 
-                    content_type=data["data"]["where"]).observe(error_code)
+                    where=data["data"]["where"]).observe(error_code)
 
+            if data["message"] == "error":
+                if data["data"]["where"] == "read":
+                    error_read.inc()
+                if data["data"]["where"] == "write":
+                    error_write.inc()
+                if data["data"]["where"] == "acceptor":
+                    error_acceptor.inc()
             # Регистрирум успешно разобранную строку
             good_lines.inc()
         except (ValueError, KeyError):
