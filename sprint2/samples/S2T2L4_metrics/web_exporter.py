@@ -16,6 +16,9 @@ wrong_lines = prom.Counter('webexporter_wrong_lines', 'Wrong JSON records')
 response_time = prom.Histogram('webserver_request_duration', 'Response time', ['code', 'content_type'], 
     buckets=(.001, .002, .005, .010, .020, .050, .100, .200, .500, float("inf")))
 
+request_code = prom.Histogram('webserver_response_type_and_code', 'Response code', ['code', 'where'], 
+    buckets=(.001, .002, .005, .010, .020, .050, .100, .200, .500, float("inf")))
+
 # Определим функцию, которую мы будем использовать как main:
 def my_main():
     prom.start_http_server(9200)
@@ -35,6 +38,12 @@ def my_main():
                 response_time.labels(
                     code=data["data"]["code"], 
                     content_type=data["data"]["content_type"]).observe(total_time_seconds)
+
+            if data["message"] == "error":
+                error_code = data["data"]["code"]
+                request_code.labels(
+                    code=data["data"]["code"], 
+                    content_type=data["data"]["where"]).observe(error_code)
 
             # Регистрирум успешно разобранную строку
             good_lines.inc()
