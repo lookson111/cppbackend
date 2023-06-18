@@ -1,5 +1,4 @@
 #pragma once
-#include <boost/json.hpp>
 #include <filesystem>
 #include <iostream>
 #include <variant>
@@ -7,11 +6,11 @@
 #include "http_server.h"
 #include "model.h"
 #include "log.h"
+#include "app.h"
 
 namespace http_handler {
 namespace beast = boost::beast;
 namespace http = beast::http;
-namespace js = boost::json;
 namespace fs = std::filesystem;
 namespace sys = boost::system;
 using namespace std::literals;
@@ -26,9 +25,33 @@ enum class TypeRequest {
     None,
     StaticFiles,
     Maps,
-    Map
+    Map,
+    Join
 };
 
+struct FileExtension {
+    // file extension
+    constexpr static std::string_view TEXT_HTML_1 = ".htm"sv;
+    constexpr static std::string_view TEXT_HTML_2 = ".html"sv;
+    constexpr static std::string_view TEXT_CSS = ".css"sv;
+    constexpr static std::string_view TEXT_PLAIN = ".txt"sv;
+    constexpr static std::string_view TEXT_JS = ".js"sv;
+    constexpr static std::string_view APP_JSON = ".json"sv;
+    constexpr static std::string_view APP_XML = ".xml"sv;
+    constexpr static std::string_view IMAGE_PNG = ".png"sv;
+    constexpr static std::string_view IMAGE_JPG_1 = ".jpg"sv;
+    constexpr static std::string_view IMAGE_JPG_2 = ".jpe"sv;
+    constexpr static std::string_view IMAGE_JPG_3 = ".jpeg"sv;
+    constexpr static std::string_view IMAGE_GIF = ".gif"sv;
+    constexpr static std::string_view IMAGE_BMP = ".bmp"sv;
+    constexpr static std::string_view IMAGE_ICO = ".ico"sv;
+    constexpr static std::string_view IMAGE_TIFF_1 = ".tiff"sv;
+    constexpr static std::string_view IMAGE_TIFF_2 = ".tif"sv;
+    constexpr static std::string_view IMAGE_SVG_1 = ".svg"sv;
+    constexpr static std::string_view IMAGE_SVG_2 = ".svgz"sv;
+    constexpr static std::string_view AUDIO_MP3 = ".mp3"sv;
+    constexpr static std::string_view EMPTY = ""sv;
+};
 struct ContentType {
     ContentType() = delete;
     constexpr static std::string_view TEXT_HTML  = "text/html"sv; // .htm, .html
@@ -46,27 +69,6 @@ struct ContentType {
     constexpr static std::string_view IMAGE_SVG  = "image/svg+xml"sv; // .svg, .svgz
     constexpr static std::string_view AUDIO_MP3  = "audio/mpeg"sv; // .mp3
     constexpr static std::string_view EMPTY      = "application/octet-stream"sv;
-    // file extension
-    constexpr static std::string_view FE_TEXT_HTML_1 = ".htm"sv;
-    constexpr static std::string_view FE_TEXT_HTML_2 = ".html"sv;
-    constexpr static std::string_view FE_TEXT_CSS    = ".css"sv;
-    constexpr static std::string_view FE_TEXT_PLAIN  = ".txt"sv;
-    constexpr static std::string_view FE_TEXT_JS     = ".js"sv;
-    constexpr static std::string_view FE_APP_JSON    = ".json"sv;
-    constexpr static std::string_view FE_APP_XML     = ".xml"sv;
-    constexpr static std::string_view FE_IMAGE_PNG   = ".png"sv;
-    constexpr static std::string_view FE_IMAGE_JPG_1 = ".jpg"sv;
-    constexpr static std::string_view FE_IMAGE_JPG_2 = ".jpe"sv;
-    constexpr static std::string_view FE_IMAGE_JPG_3 = ".jpeg"sv;
-    constexpr static std::string_view FE_IMAGE_GIF   = ".gif"sv;
-    constexpr static std::string_view FE_IMAGE_BMP   = ".bmp"sv;
-    constexpr static std::string_view FE_IMAGE_ICO   = ".ico"sv;
-    constexpr static std::string_view FE_IMAGE_TIFF_1 = ".tiff"sv;
-    constexpr static std::string_view FE_IMAGE_TIFF_2 = ".tif"sv;
-    constexpr static std::string_view FE_IMAGE_SVG_1 = ".svg"sv;
-    constexpr static std::string_view FE_IMAGE_SVG_2 = ".svgz"sv;
-    constexpr static std::string_view FE_AUDIO_MP3   = ".mp3"sv;
-    constexpr static std::string_view FE_EMPTY       = ""sv;
 
     static std::string_view get(std::string_view key) {
         if (!type.contains(key))
@@ -74,27 +76,14 @@ struct ContentType {
         return type.at(key);
     }
 private:
+    typedef FileExtension FE;
     static std::unordered_map<std::string_view, std::string_view> type;
-};
-
-class ModelToJson {
-public:
-    explicit ModelToJson(model::Game& game)
-        : game_{game} {
-    }
-    std::string GetMaps();
-    std::string GetMap(std::string_view nameMap);
-private:
-    model::Game& game_;
-    static js::array GetRoads(const model::Map::Roads& roads);
-    static js::array GetBuildings(const model::Map::Buildings& buildings);
-    static js::array GetOffice(const model::Map::Offices& offices);
 };
 
 class RequestHandler {
 public:
     explicit RequestHandler(model::Game& game, const fs::path &static_path)
-        : game_{ game }, static_path_{ CheckStaticPath(static_path)} {
+        : app_(game), static_path_{ CheckStaticPath(static_path)} {
 
     }
 
@@ -112,18 +101,18 @@ public:
     }
 
 private:
-    model::Game& game_;
+    app::App app_;
     const fs::path static_path_;
     VariantResponse HandleRequest(StringRequest&& req);
-    std::pair<std::string, http::status> GetMapBodyJson(std::string_view requestTarget);
-    std::string StatusToJson(std::string_view code, std::string_view message);
     StringResponse MakeStringResponse(
         http::status status, std::string_view requestTarget, unsigned http_version,
-        bool keep_alive, std::string_view content_type = ContentType::APP_JSON);
+        bool keep_alive, std::string_view content_type = ContentType::APP_JSON,
+        bool no_cache = false);
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON);
     VariantResponse MakeGetResponse(StringRequest& req, bool with_body);
+    VariantResponse MakePostResponse(StringRequest& req);
     VariantResponse StaticFilesResponse(
         std::string_view responseText, bool with_body,
         unsigned http_version, bool keep_alive);
