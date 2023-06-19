@@ -96,8 +96,7 @@ App::GetMapBodyJson(std::string_view mapName) {
 }
 //
 std::pair<std::string, JoinError>
-App::ResponseJoin(std::string_view jsonBody)
-{
+App::ResponseJoin(std::string_view jsonBody) {
     auto parseError = std::make_pair(
         JsonMessage("invalidArgument", "Join game request parse error"),
         JoinError::BadJson
@@ -114,10 +113,10 @@ App::ResponseJoin(std::string_view jsonBody)
         userName = jv.at("userName").as_string();
         mapId = jv.at("mapId").as_string();
     }
-    catch (const std::system_error& e) {
+    catch (const std::system_error&) {
         return parseError;
     }
-    catch (const std::invalid_argument& ia) {
+    catch (const std::invalid_argument&) {
         return parseError;
     }
     if (userName.empty())
@@ -140,5 +139,16 @@ App::ResponseJoin(std::string_view jsonBody)
         JoinError::None
     );
 }
+
+std::pair<std::string, error_code> App::GetPlayers(std::string_view token) {
+    js::object msg;
+    msg["authToken"] = "";
+    msg["plauerId"] = 0;
+    return std::make_pair(
+        serialize(msg),
+        error_code::None
+    );
+}
+
 
 };

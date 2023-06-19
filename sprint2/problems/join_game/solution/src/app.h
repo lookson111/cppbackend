@@ -12,6 +12,11 @@ enum class JoinError {
     MapNotFound,
     InvalidName
 };
+enum class error_code {
+    None,
+    InvalidToken,
+    UnknownToken
+};
 
 class ModelToJson {
 public:
@@ -29,6 +34,13 @@ private:
 
 std::string JsonMessage(std::string_view code, std::string_view message);
 
+
+
+
+class Players {
+
+};
+
 class App
 {
 public:
@@ -37,7 +49,8 @@ public:
     }
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget);
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
-
+    std::pair<std::string, error_code> GetPlayers(std::string_view token);
+    
 private:
     model::Game& game_;
 };

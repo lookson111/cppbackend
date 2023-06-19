@@ -126,41 +126,53 @@ VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_bo
     std::string target;
     // if bad URI
     switch (parse_target(req.target(), target)) {
-    case TypeRequest::Maps:
-    case TypeRequest::Map:
-    {
-        http::status stat;
-        auto [text, flag] = app_.GetMapBodyJson(target);
-        stat = flag ? http::status::ok : http::status::not_found;
-        return text_response(stat, text);
-    }
     case TypeRequest::StaticFiles:
         return StaticFilesResponse(target, with_body, req.version(),
             req.keep_alive());
+    case TypeRequest::Maps:
+    case TypeRequest::Map: {
+        http::status stat;
+        auto [text, flag] = app_.GetMapBodyJson(target);
+        stat = flag ? http::status::ok : http::status::not_found;
+        return text_response(stat, with_body ? text : ""sv);
+    }
     case TypeRequest::Join: {
-        auto text = app::JsonMessage("invalidArgument", 
-            "Join game request parse error");
-        auto resp = MakeStringResponse(http::status::method_not_allowed, text, 
+        auto text = app::JsonMessage("invalidArgument"sv, 
+            "Join game request parse error"sv);
+        auto resp = MakeStringResponse(http::status::method_not_allowed, with_body ? text : ""sv,
             req.version(), req.keep_alive(), ContentType::APP_JSON, true);
         resp.set(http::field::allow, "POST"sv);
         return resp;
     }
     case TypeRequest::Players: {
-        auto [body, err] = app_.PlayersList(token);
+        const auto invalid = [&](std::string_view text) {
+            return MakeStringResponse(http::status::unauthorized, text, req.version(), req.keep_alive());
+        };
+        const auto invalidToken = invalid(app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv));
+        std::string token;
+        auto it = req.find(http::field::authorization);
+        if (it == req.end())
+            return invalidToken;
+        token = it->value().data();
+        auto [body, err] = app_.GetPlayers(token);
         http::status stat;
         switch (err) {
         case app::error_code::InvalidToken:
+            return invalidToken;
         case app::error_code::UnknownToken:
-        case app::error_code::InvalidMethod:
+            return invalid(app::JsonMessage("unknownToken"sv, "Player token has not been found"sv));
         case app::error_code::None:
             stat = http::status::ok;
             break; 
-        }
-        break;
+        }        
+        auto resp = MakeStringResponse(http::status::ok, with_body ? body : ""sv,
+            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
+        return resp;    
     }
     default:
-        return text_response(http::status::bad_request,
-            app::JsonMessage("badRequest", "Bad request"));
+        return text_response(http::status::bad_request, 
+            with_body ? app::JsonMessage("badRequest", "Bad request") : ""s
+            );
     }
 }
 
@@ -188,6 +200,13 @@ VariantResponse RequestHandler::MakePostResponse(StringRequest& req) {
         }
         return text_response(stat, body);
         
+    }
+    case TypeRequest::Players: {
+        auto text = app::JsonMessage("invalidMethod"sv, "Invalid method"sv);
+        auto resp = MakeStringResponse(http::status::method_not_allowed, text,
+            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
+        resp.set(http::field::allow, "GET, HEAD"sv);
+        return resp;
     }
     default:
         return text_response(http::status::bad_request,
