@@ -62,7 +62,7 @@ TypeRequest parse_target(std::string_view target, std::string &res) {
 StringResponse RequestHandler::MakeStringResponse(
         http::status status, std::string_view responseText, unsigned http_version,
         bool keep_alive, std::string_view content_type,
-        bool no_cache) {
+        bool no_cache) const {
     StringResponse response(status, http_version);
     response.set(http::field::content_type, content_type);
     if (no_cache)
@@ -75,7 +75,7 @@ StringResponse RequestHandler::MakeStringResponse(
 
 StringResponse RequestHandler::MakeBadResponse(
         http::status status, unsigned http_version,
-        bool keep_alive, std::string_view content_type) {
+        bool keep_alive, std::string_view content_type) const {
     StringResponse response(status, http_version);
     response.set(http::field::content_type, content_type);
     response.set(http::field::allow, "GET, HEAD"sv);
@@ -86,7 +86,7 @@ StringResponse RequestHandler::MakeBadResponse(
     return response;
 }
 
-VariantResponse RequestHandler::StaticFilesResponse(
+FileRequestResult RequestHandler::StaticFilesResponse(
         std::string_view target, bool with_body, 
         unsigned http_version, bool keep_alive) {
     const auto text_response = [&](http::status status, std::string_view text) {
@@ -119,7 +119,7 @@ VariantResponse RequestHandler::StaticFilesResponse(
     return std::move(res);
 }
 
-VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_body) {
+FileRequestResult RequestHandler::MakeGetResponse(const StringRequest& req, bool with_body) const {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
@@ -164,7 +164,7 @@ VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_bo
         case app::error_code::None:
             stat = http::status::ok;
             break; 
-        }        
+        }
         auto resp = MakeStringResponse(http::status::ok, with_body ? body : ""sv,
             req.version(), req.keep_alive(), ContentType::APP_JSON, true);
         return resp;    
@@ -176,7 +176,7 @@ VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_bo
     }
 }
 
-VariantResponse RequestHandler::MakePostResponse(StringRequest& req) {
+FileRequestResult RequestHandler::MakePostResponse(const StringRequest& req) {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive(),
             ContentType::APP_JSON, true);
@@ -214,7 +214,58 @@ VariantResponse RequestHandler::MakePostResponse(StringRequest& req) {
     }
 }
 
-VariantResponse RequestHandler::HandleRequest(StringRequest&& req) {
+FileRequestResult RequestHandler::HandleFileRequest(const StringRequest& req) const
+{
+    // Format response
+    try {
+        switch (req.method()) {
+        case http::verb::get:
+            return MakeGetResponse(req, true);
+        case http::verb::head:
+            return MakeGetResponse(req, false);
+        case http::verb::post:
+            return MakePostResponse(req);
+        default:
+            return MakeBadResponse(http::status::method_not_allowed,
+                req.version(), req.keep_alive());
+        }
+    }
+    catch (std::exception ex) {
+        return MakeStringResponse(http::status::bad_request,
+            app::JsonMessage("badRequest", "Server error"s + ex.what()),
+            req.version(), req.keep_alive());
+    }
+}
+
+StringResponse RequestHandler::HandleApiRequest(const StringRequest& req) const
+{
+    // Format response
+    try {
+        switch (req.method()) {
+        case http::verb::get:
+            return MakeGetResponse(req, true);
+        case http::verb::head:
+            return MakeGetResponse(req, false);
+        case http::verb::post:
+            return MakePostResponse(req);
+        default:
+            return MakeBadResponse(http::status::method_not_allowed,
+                req.version(), req.keep_alive());
+        }
+    }
+    catch (std::exception ex) {
+        return MakeStringResponse(http::status::bad_request,
+            app::JsonMessage("badRequest", "Server error"s + ex.what()),
+            req.version(), req.keep_alive());
+    }
+}
+
+StringResponse RequestHandler::ReportServerError(unsigned version, bool keep_alive) const
+{
+    return StringResponse();
+}
+
+FileRequestResult RequestHandler::HandleRequest(StringRequest&& req) {
     // Format response
     try {
         switch (req.method()) {

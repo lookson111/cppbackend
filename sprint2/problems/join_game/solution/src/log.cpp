@@ -9,7 +9,7 @@
 #include <boost/date_time.hpp>
 #include <string_view>
 
-namespace Logger {
+namespace server_logging {
 using namespace std::literals;
 namespace logging = boost::log;
 namespace keywords = boost::log::keywords;

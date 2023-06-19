@@ -55,7 +55,7 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
         return Close();
     }
     if (ec) {
-        LOGSRV().error(ec, Logger::Server::Where::read);
+        LOGSRV().error(ec, server_logging::Server::Where::read);
         return;
     }
     std::string uri = uriDecode(request_.target());
@@ -68,7 +68,7 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
 
 void SessionBase::OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
     if (ec) {
-        LOGSRV().error(ec, Logger::Server::Where::write);
+        LOGSRV().error(ec, server_logging::Server::Where::write);
         return;
     }
     if (close) {

@@ -38,7 +38,7 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Usage: game_server <game-config-json> <static-files>"sv << std::endl;
         return EXIT_FAILURE;
     }
-    Logger::InitBoostLogFilter();
+    server_logging::InitBoostLogFilter();
     try {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(argv[1]);
@@ -56,14 +56,26 @@ int main(int argc, const char* argv[]) {
                 ioc.stop();
             }
         });
+        auto api_strand = net::make_strand(ioc);
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        http_handler::RequestHandler handler{game, static_path};
-
+        auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game);
+        // Оборачиваем его в логирующий декоратор
+        /*server_logging::LoggingRequestHandler logging_handler{
+            [handler](auto&& endpoint, auto&& req, auto&& send) {
+                // Обрабатываем запрос
+                (*handler)(std::forward<decltype(endpoint)>(endpoint),
+                    std::forward<decltype(req)>(req),
+                    std::forward<decltype(send)>(send));
+            }};*/
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");
         constexpr net::ip::port_type port = 8080;
-        http_server::ServerHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) {
-            handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+        // Запускаем обработку запросов
+        //http_server::ServerHttp(ioc, { address, port }, logging_handler);
+        http_server::ServerHttp(ioc, {address, port}, [handler](auto&& endpoint, auto&& req, auto&& send) {
+            (*handler)(std::forward<decltype(endpoint)>(endpoint),
+                std::forward<decltype(req)>(req), 
+                std::forward<decltype(send)>(send));
         });
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         LOGSRV().start(address.to_string(), port);

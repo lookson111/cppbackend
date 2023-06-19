@@ -5,10 +5,10 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/system.hpp>
 
-#define LOG() Logger::Log::GetInstance()
-#define LOGSRV() Logger::Server::GetInstance()
+#define LOG() server_logging::Log::GetInstance()
+#define LOGSRV() server_logging::Server::GetInstance()
 
-namespace Logger {
+namespace server_logging {
 
 namespace sys = boost::system;
 namespace net = boost::asio;
@@ -86,7 +86,21 @@ public:
     void request(std::string_view address, std::string_view uri, std::string_view method);
     void response(long long response_time, unsigned status_code, std::string_view content_type);
 };
+/*
+template<class SomeRequestHandler>
+class LoggingRequestHandler {
+    static void LogRequest(const Request& r);
+    static void LogResponse(const Response& r);
+public:
+    Response operator () (Request req) {
+        LogRequest(req);
+        Response resp = decorated_(std::move(req));
+        LogResponse(resp);
+        return resp;
+    }
 
-
+private:
+    SomeRequestHandler& decorated_;
+};*/
 
 } // namespace logger

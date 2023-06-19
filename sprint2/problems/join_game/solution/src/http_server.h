@@ -82,7 +82,8 @@ private:
         // Захватываем умный указатель на текущий объект Session в лямбде,
         // чтобы продлить время жизни сессии до вызова лямбды.
         // Используется generic-лямбда функция, способная принять response произвольного типа
-        request_handler_(std::move(request), [self = this->shared_from_this()](auto&& response) {
+        tcp::endpoint ep;
+        request_handler_(ep, std::move(request), [self = this->shared_from_this()](auto&& response) {
             self->Write(std::move(response));
         });
     }
@@ -140,7 +141,7 @@ private:
     void OnAccept(sys::error_code ec, tcp::socket socket) {
         using namespace std::literals;
         if (ec) {
-            LOGSRV().error(ec, Logger::Server::Where::accept);
+            LOGSRV().error(ec, server_logging::Server::Where::accept);
             return;
         }
         // Асинхронно обрабатываем сессию
