@@ -130,9 +130,15 @@ App::ResponseJoin(std::string_view jsonBody)
     if (map == nullptr)
         return std::make_pair(
             JsonMessage("mapNotFound", "Map not found"),
-            JoinError::mapNotFound
+            JoinError::MapNotFound
         );
-
+    js::object msg;
+    msg["authToken"] = "6516861d89ebfff147bf2eb2b5153ae1";
+    msg["plauerId"]  = 0;
+    return std::make_pair(
+        serialize(msg),
+        JoinError::None
+    );
 }
 
 };

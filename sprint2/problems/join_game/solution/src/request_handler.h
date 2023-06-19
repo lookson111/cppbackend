@@ -26,7 +26,8 @@ enum class TypeRequest {
     StaticFiles,
     Maps,
     Map,
-    Join
+    Join,
+    Players
 };
 
 struct FileExtension {

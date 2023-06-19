@@ -9,7 +9,7 @@ namespace js = boost::json;
 enum class JoinError {
     None,
     BadJson,
-    mapNotFound,
+    MapNotFound,
     InvalidName
 };
 

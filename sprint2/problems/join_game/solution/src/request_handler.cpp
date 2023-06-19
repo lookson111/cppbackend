@@ -30,6 +30,7 @@ TypeRequest parse_target(std::string_view target, std::string &res) {
     std::string_view api  = "/api/"sv;
     std::string_view maps = "/api/v1/maps"sv;
     std::string_view join = "/api/v1/game/join"sv;
+    std::string_view players = "/api/v1/game/players"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
     // request stitic files
@@ -49,7 +50,10 @@ TypeRequest parse_target(std::string_view target, std::string &res) {
     // join game
     pos = target.find(join);
     if (pos != target.npos) {
-        TypeRequest::Join;
+        return TypeRequest::Join;
+    }
+    if (target.find(players) != target.npos) {
+        return TypeRequest::Players;
     }
     return TypeRequest::None;
 }
@@ -133,11 +137,33 @@ VariantResponse RequestHandler::MakeGetResponse(StringRequest& req, bool with_bo
     case TypeRequest::StaticFiles:
         return StaticFilesResponse(target, with_body, req.version(),
             req.keep_alive());
+    case TypeRequest::Join: {
+        auto text = app::JsonMessage("invalidArgument", 
+            "Join game request parse error");
+        auto resp = MakeStringResponse(http::status::method_not_allowed, text, 
+            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
+        resp.set(http::field::allow, "POST"sv);
+        return resp;
+    }
+    case TypeRequest::Players: {
+        auto [body, err] = app_.PlayersList(token);
+        http::status stat;
+        switch (err) {
+        case app::error_code::InvalidToken:
+        case app::error_code::UnknownToken:
+        case app::error_code::InvalidMethod:
+        case app::error_code::None:
+            stat = http::status::ok;
+            break; 
+        }
+        break;
+    }
     default:
         return text_response(http::status::bad_request,
             app::JsonMessage("badRequest", "Bad request"));
     }
 }
+
 VariantResponse RequestHandler::MakePostResponse(StringRequest& req) {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive(),
@@ -146,9 +172,23 @@ VariantResponse RequestHandler::MakePostResponse(StringRequest& req) {
     std::string target;
     // if bad URI
     switch (parse_target(req.target(), target)) {
-    case TypeRequest::Join:
-        auto body = app.ResponseJoin(req.body());
-        return text_response(http::status::ok, "body");
+    case TypeRequest::Join: {
+        auto [body, err] = app_.ResponseJoin(req.body());
+        http::status stat;
+        switch (err) {
+        case app::JoinError::BadJson:
+        case app::JoinError::InvalidName:
+            stat = http::status::bad_request;
+            break;
+        case app::JoinError::MapNotFound:
+            stat = http::status::not_found;
+            break;
+        default:
+            stat = http::status::ok;            
+        }
+        return text_response(stat, body);
+        
+    }
     default:
         return text_response(http::status::bad_request,
             app::JsonMessage("badRequest", "Bad request"));
