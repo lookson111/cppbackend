@@ -86,12 +86,13 @@ public:
     void request(std::string_view address, std::string_view uri, std::string_view method);
     void response(long long response_time, unsigned status_code, std::string_view content_type);
 };
-/*
+
 template<class SomeRequestHandler>
 class LoggingRequestHandler {
     static void LogRequest(const Request& r);
     static void LogResponse(const Response& r);
 public:
+    LoggingRequestHandler(SomeRequestHandler&& requestHandler) : decorated_(requestHandler) {}
     Response operator () (Request req) {
         LogRequest(req);
         Response resp = decorated_(std::move(req));
@@ -101,6 +102,6 @@ public:
 
 private:
     SomeRequestHandler& decorated_;
-};*/
+};
 
 } // namespace logger

@@ -12,7 +12,7 @@ public:
 		: static_path_{ CheckStaticPath(static_path) } {}
 
 private: 
-    TypeRequest parse_target(std::string_view target, std::string& res) const;
+    TypeRequest ParseTarget(std::string_view target, std::string& res) const;
 	FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const;
 	FileRequestResult MakePostResponse(const StringRequest& req);
 	static fs::path CheckStaticPath(const fs::path& path_static);

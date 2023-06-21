@@ -9,7 +9,7 @@ private:
 	app::App app_;
 	FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const;
 	FileRequestResult MakePostResponse(const StringRequest& req);
-    TypeRequest parse_target(std::string_view target, std::string& res) const;
+    TypeRequest ParseTarget(std::string_view target, std::string& res) const;
 
 public:
 	Api(model::Game& game)

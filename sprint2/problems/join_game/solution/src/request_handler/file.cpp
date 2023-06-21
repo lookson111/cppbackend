@@ -6,7 +6,7 @@
 namespace http_handler {
 
 
-TypeRequest File::parse_target(std::string_view target, std::string& res) const {
+TypeRequest File::ParseTarget(std::string_view target, std::string& res) const {
     std::string_view api = "/api/"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
@@ -89,7 +89,7 @@ FileRequestResult File::MakeGetResponse(const StringRequest& req, bool with_body
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
     std::string target;
-    switch (parse_target(req.target(), target)) {
+    switch (ParseTarget(req.target(), target)) {
     case TypeRequest::StaticFiles:
         return StaticFilesResponse(target, with_body, req.version(),
             req.keep_alive());
@@ -108,7 +108,7 @@ FileRequestResult File::MakePostResponse(const StringRequest& req) {
     };
     std::string target;
     // if bad URI
-    switch (parse_target(req.target(), target)) {
+    switch (ParseTarget(req.target(), target)) {
     default:
         return text_response(http::status::bad_request,
             app::JsonMessage("badRequest", "Bad request"));

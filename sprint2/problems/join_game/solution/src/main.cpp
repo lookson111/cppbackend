@@ -15,7 +15,6 @@ namespace net = boost::asio;
 namespace fs = std::filesystem;
 
 namespace {
-
 // Запускает функцию fn на n потоках, включая текущий
 template <typename Fn>
 void RunThreads(unsigned n, const Fn& fn) {
@@ -28,9 +27,6 @@ void RunThreads(unsigned n, const Fn& fn) {
     }
     fn();
 }
-
-
-
 }  // namespace
 
 int main(int argc, const char* argv[]) {
@@ -47,7 +43,6 @@ int main(int argc, const char* argv[]) {
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
-
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
@@ -60,23 +55,19 @@ int main(int argc, const char* argv[]) {
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game);
         // Оборачиваем его в логирующий декоратор
-        /*server_logging::LoggingRequestHandler logging_handler{
+        server_logging::LoggingRequestHandler logging_handler{
             [handler](auto&& endpoint, auto&& req, auto&& send) {
                 // Обрабатываем запрос
                 (*handler)(std::forward<decltype(endpoint)>(endpoint),
                     std::forward<decltype(req)>(req),
                     std::forward<decltype(send)>(send));
-            }};*/
+            }
+        };
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         const auto address = net::ip::make_address("0.0.0.0");
         constexpr net::ip::port_type port = 8080;
         // Запускаем обработку запросов
-        //http_server::ServerHttp(ioc, { address, port }, logging_handler);
-        http_server::ServerHttp(ioc, {address, port}, [handler](auto&& endpoint, auto&& req, auto&& send) {
-            (*handler)(std::forward<decltype(endpoint)>(endpoint),
-                std::forward<decltype(req)>(req), 
-                std::forward<decltype(send)>(send));
-        });
+        http_server::ServerHttp(ioc, { address, port }, logging_handler);
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         LOGSRV().start(address.to_string(), port);
         // 6. Запускаем обработку асинхронных операций

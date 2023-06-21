@@ -3,7 +3,7 @@
 
 namespace http_handler {
 
-TypeRequest Api::parse_target(std::string_view target, std::string& res) const {
+TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
     std::string_view maps = "/api/v1/maps"sv;
     std::string_view join = "/api/v1/game/join"sv;
     std::string_view players = "/api/v1/game/players"sv;
@@ -32,7 +32,7 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
     };
     std::string target;
     // if bad URI
-    switch (parse_target(req.target(), target)) {
+    switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Maps:
     case TypeRequest::Map: {
         http::status stat;
@@ -86,7 +86,7 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) {
     };
     std::string target;
     // if bad URI
-    switch (parse_target(req.target(), target)) {
+    switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Join: {
         auto [body, err] = app_.ResponseJoin(req.body());
         http::status stat;
