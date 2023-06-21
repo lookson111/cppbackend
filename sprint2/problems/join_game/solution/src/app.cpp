@@ -79,7 +79,7 @@ js::array ModelToJson::GetOffice(const model::Map::Offices& offices) {
 }
 
 std::pair<std::string, bool>
-App::GetMapBodyJson(std::string_view mapName) {
+App::GetMapBodyJson(std::string_view mapName) const {
     ModelToJson jmodel(game_);
     std::string body;
     if (mapName.empty()) {
@@ -140,7 +140,7 @@ App::ResponseJoin(std::string_view jsonBody) {
     );
 }
 
-std::pair<std::string, error_code> App::GetPlayers(std::string_view token) {
+std::pair<std::string, error_code> App::GetPlayers(std::string_view token) const {
     js::object msg;
     msg["authToken"] = "";
     msg["plauerId"] = 0;

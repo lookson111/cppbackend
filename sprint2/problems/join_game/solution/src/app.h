@@ -47,9 +47,9 @@ public:
     explicit App(model::Game& game)
         : game_{ game } {
     }
-    std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget);
+    std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
-    std::pair<std::string, error_code> GetPlayers(std::string_view token);
+    std::pair<std::string, error_code> GetPlayers(std::string_view token) const;
     
 private:
     model::Game& game_;

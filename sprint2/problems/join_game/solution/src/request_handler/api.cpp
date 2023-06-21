@@ -1,35 +1,26 @@
 #include "api.h"
-
+#include "../http_server.h"
 
 namespace http_handler {
 
-TypeRequest parse_target(std::string_view target, std::string& res) {
-    std::string_view api = "/api/"sv;
+TypeRequest Api::parse_target(std::string_view target, std::string& res) const {
     std::string_view maps = "/api/v1/maps"sv;
     std::string_view join = "/api/v1/game/join"sv;
     std::string_view players = "/api/v1/game/players"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
-    // request stitic files
-    auto pos = target.find(api);
-    if (pos == target.npos) {
-        res = target;
-        return TypeRequest::StaticFiles;
-    }
     // finded maps
-    pos = target.find(maps);
-    if (pos != target.npos) {
-        if (target.size() == maps.size())
+    if (uriDecode.find(maps) != uriDecode.npos) {
+        if (uriDecode.size() == maps.size())
             return TypeRequest::Maps;
-        res = target.substr(maps.size() + 1, target.size() - maps.size());
+        res = uriDecode.substr(maps.size() + 1, uriDecode.size() - maps.size());
         return TypeRequest::Map;
     }
     // join game
-    pos = target.find(join);
-    if (pos != target.npos) {
+    if (uriDecode.find(join) != uriDecode.npos) {
         return TypeRequest::Join;
     }
-    if (target.find(players) != target.npos) {
+    if (uriDecode.find(players) != uriDecode.npos) {
         return TypeRequest::Players;
     }
     return TypeRequest::None;
@@ -42,9 +33,6 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
     std::string target;
     // if bad URI
     switch (parse_target(req.target(), target)) {
-    case TypeRequest::StaticFiles:
-        return StaticFilesResponse(target, with_body, req.version(),
-            req.keep_alive());
     case TypeRequest::Maps:
     case TypeRequest::Map: {
         http::status stat;
@@ -65,11 +53,10 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
             return MakeStringResponse(http::status::unauthorized, text, req.version(), req.keep_alive());
         };
         const auto invalidToken = invalid(app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv));
-        std::string token;
         auto it = req.find(http::field::authorization);
         if (it == req.end())
             return invalidToken;
-        token = it->value().data();
+        std::string token{it->value()};
         auto [body, err] = app_.GetPlayers(token);
         http::status stat;
         switch (err) {

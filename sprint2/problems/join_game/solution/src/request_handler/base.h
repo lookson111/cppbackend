@@ -87,9 +87,8 @@ private:
 class Base {
 public:
     virtual ~Base() {}
-
-
     FileRequestResult HandleRequest(StringRequest&& req);
+
 protected:
     virtual FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const = 0;
     virtual FileRequestResult MakePostResponse(const StringRequest& req) = 0;

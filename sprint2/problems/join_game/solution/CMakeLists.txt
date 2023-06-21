@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
 conan_basic_setup(TARGETS)
-
+add_definitions(-DBOOST_BEAST_USE_STD_STRING_VIEW)
 # find_package(Boost 1.78.0 REQUIRED)
 # if(Boost_FOUND)
   # include_directories(${Boost_INCLUDE_DIRS})

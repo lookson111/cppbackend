@@ -45,7 +45,8 @@ public:
                     try {
                         // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
                         assert(self->api_strand_.running_in_this_thread());
-                        return send(self->api.HandleRequest(req));
+                        return send(self->api.HandleRequest(
+                            std::forward<decltype(req)>(req)));
                     }
                     catch (...) {
                         send(self->ReportServerError(version, keep_alive));

@@ -1,15 +1,13 @@
 #include "file.h"
 #include <boost/algorithm/string.hpp>
 #include "../app.h"
+#include "../http_server.h"
 
 namespace http_handler {
 
 
-TypeRequest parse_target(std::string_view target, std::string& res) {
+TypeRequest File::parse_target(std::string_view target, std::string& res) const {
     std::string_view api = "/api/"sv;
-    std::string_view maps = "/api/v1/maps"sv;
-    std::string_view join = "/api/v1/game/join"sv;
-    std::string_view players = "/api/v1/game/players"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
     // request stitic files
@@ -17,22 +15,6 @@ TypeRequest parse_target(std::string_view target, std::string& res) {
     if (pos == target.npos) {
         res = target;
         return TypeRequest::StaticFiles;
-    }
-    // finded maps
-    pos = target.find(maps);
-    if (pos != target.npos) {
-        if (target.size() == maps.size())
-            return TypeRequest::Maps;
-        res = target.substr(maps.size() + 1, target.size() - maps.size());
-        return TypeRequest::Map;
-    }
-    // join game
-    pos = target.find(join);
-    if (pos != target.npos) {
-        return TypeRequest::Join;
-    }
-    if (target.find(players) != target.npos) {
-        return TypeRequest::Players;
     }
     return TypeRequest::None;
 }
@@ -70,7 +52,7 @@ bool File::FileInRootStaticDir(std::string_view file) const {
 
 FileRequestResult File::StaticFilesResponse(
     std::string_view target, bool with_body,
-    unsigned http_version, bool keep_alive) {
+    unsigned http_version, bool keep_alive) const {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, http_version,
             keep_alive, ContentType::TEXT_PLAIN);
@@ -107,12 +89,12 @@ FileRequestResult File::MakeGetResponse(const StringRequest& req, bool with_body
         return MakeStringResponse(status, text, req.version(), req.keep_alive());
     };
     std::string target;
-    // if bad URI
     switch (parse_target(req.target(), target)) {
     case TypeRequest::StaticFiles:
         return StaticFilesResponse(target, with_body, req.version(),
             req.keep_alive());
     default:
+        // if bad URI
         return text_response(http::status::bad_request,
             with_body ? app::JsonMessage("badRequest", "Bad request") : ""s
         );
@@ -127,30 +109,6 @@ FileRequestResult File::MakePostResponse(const StringRequest& req) {
     std::string target;
     // if bad URI
     switch (parse_target(req.target(), target)) {
-    case TypeRequest::Join: {
-        auto [body, err] = app_.ResponseJoin(req.body());
-        http::status stat;
-        switch (err) {
-        case app::JoinError::BadJson:
-        case app::JoinError::InvalidName:
-            stat = http::status::bad_request;
-            break;
-        case app::JoinError::MapNotFound:
-            stat = http::status::not_found;
-            break;
-        default:
-            stat = http::status::ok;
-        }
-        return text_response(stat, body);
-
-    }
-    case TypeRequest::Players: {
-        auto text = app::JsonMessage("invalidMethod"sv, "Invalid method"sv);
-        auto resp = MakeStringResponse(http::status::method_not_allowed, text,
-            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
-        resp.set(http::field::allow, "GET, HEAD"sv);
-        return resp;
-    }
     default:
         return text_response(http::status::bad_request,
             app::JsonMessage("badRequest", "Bad request"));
