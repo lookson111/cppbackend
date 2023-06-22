@@ -101,7 +101,7 @@ FileRequestResult File::MakeGetResponse(const StringRequest& req, bool with_body
     }
 }
 
-FileRequestResult File::MakePostResponse(const StringRequest& req) {
+FileRequestResult File::MakePostResponse(const StringRequest& req) const {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive(),
             ContentType::APP_JSON, true);

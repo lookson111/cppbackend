@@ -79,7 +79,7 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
     }
 }
 
-FileRequestResult Api::MakePostResponse(const StringRequest& req) {
+FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
     const auto text_response = [&](http::status status, std::string_view text) {
         return MakeStringResponse(status, text, req.version(), req.keep_alive(),
             ContentType::APP_JSON, true);

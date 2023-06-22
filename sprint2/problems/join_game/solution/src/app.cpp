@@ -96,7 +96,7 @@ App::GetMapBodyJson(std::string_view mapName) const {
 }
 //
 std::pair<std::string, JoinError>
-App::ResponseJoin(std::string_view jsonBody) {
+App::ResponseJoin(std::string_view jsonBody) const {
     auto parseError = std::make_pair(
         JsonMessage("invalidArgument", "Join game request parse error"),
         JoinError::BadJson

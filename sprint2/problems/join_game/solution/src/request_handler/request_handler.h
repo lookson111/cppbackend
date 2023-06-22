@@ -45,7 +45,15 @@ public:
                     try {
                         // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
                         assert(self->api_strand_.running_in_this_thread());
-                        return send(self->api.HandleRequest(req));
+                        return send(std::get<StringResponse>(
+                            self->api.HandleRequest(req)));
+                        /*return std::visit(
+                            [&send](auto&& result) {
+                                send(std::forward<decltype(result)>(result));
+                            },
+                            file.HandleRequest(req)
+                        );*/
+                            //std::forward<decltype(req)>(req)));
                     }
                     catch (...) {
                         send(self->ReportServerError(version, keep_alive));
@@ -58,10 +66,11 @@ public:
                 [&send](auto&& result) {
                     send(std::forward<decltype(result)>(result));
                 },
-                HandleFileRequest(req));
+                file.HandleRequest(req));
+                    //std::forward<decltype(req)>(req)));
         }
         catch (...) {
-            send(ReportServerError(version, keep_alive));
+            //send(ReportServerError(version, keep_alive));
         }
     }
 
@@ -79,8 +88,8 @@ public:
 private:
     //using VariantResponse = std::variant<StringResponse, FileResponse>;
 
-    FileRequestResult HandleFileRequest(const StringRequest& req) const;
-    StringResponse HandleApiRequest(const StringRequest& req) const;
+    //FileRequestResult HandleFileRequest(const StringRequest& req) const;
+    //StringResponse HandleApiRequest(const StringRequest& req) const;
     StringResponse ReportServerError(unsigned version, bool keep_alive) const;
 
     Api api;

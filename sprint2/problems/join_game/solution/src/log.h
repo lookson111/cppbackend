@@ -4,6 +4,8 @@
 #include <boost/json.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/system.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/http.hpp>
 
 #define LOG() server_logging::Log::GetInstance()
 #define LOGSRV() server_logging::Server::GetInstance()
@@ -13,6 +15,9 @@ namespace server_logging {
 namespace sys = boost::system;
 namespace net = boost::asio;
 namespace json = boost::json;
+using tcp = net::ip::tcp;
+namespace beast = boost::beast;
+namespace http = beast::http;
     
 void InitBoostLogFilter();
 
@@ -89,19 +94,25 @@ public:
 
 template<class SomeRequestHandler>
 class LoggingRequestHandler {
-    static void LogRequest(const Request& r);
-    static void LogResponse(const Response& r);
+    //static void LogRequest(const Request& r);
+    //static void LogResponse(const Response& r);
 public:
-    LoggingRequestHandler(SomeRequestHandler&& requestHandler) : decorated_(requestHandler) {}
-    Response operator () (Request req) {
-        LogRequest(req);
-        Response resp = decorated_(std::move(req));
-        LogResponse(resp);
-        return resp;
+    LoggingRequestHandler(SomeRequestHandler&& requestHandler) : 
+        decorated_(std::forward<SomeRequestHandler>(requestHandler)) {
+    }
+    template <typename Body, typename Allocator, typename Send>
+    /*Response*/ void operator () (tcp::endpoint ep, 
+            http::request<Body, http::basic_fields<Allocator>>&& req, 
+            Send&& send) {
+        //LogRequest(req);
+        /*Response resp = */decorated_(ep, std::forward<decltype(req)>(req),
+             std::forward<decltype(send)>(send));
+        //LogResponse(resp);
+        //return resp;
     }
 
 private:
-    SomeRequestHandler& decorated_;
+    SomeRequestHandler decorated_;
 };
 
 } // namespace logger

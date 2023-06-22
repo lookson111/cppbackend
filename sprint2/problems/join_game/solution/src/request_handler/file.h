@@ -13,8 +13,10 @@ public:
 
 private: 
     TypeRequest ParseTarget(std::string_view target, std::string& res) const;
-	FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const;
-	FileRequestResult MakePostResponse(const StringRequest& req);
+    virtual FileRequestResult MakeGetResponse(
+        const StringRequest& req, bool with_body) const override;
+	virtual FileRequestResult MakePostResponse(
+        const StringRequest& req) const override;
 	static fs::path CheckStaticPath(const fs::path& path_static);
 	FileRequestResult StaticFilesResponse(
 		std::string_view responseText, bool with_body,

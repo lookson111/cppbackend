@@ -87,11 +87,11 @@ private:
 class Base {
 public:
     virtual ~Base() {}
-    FileRequestResult HandleRequest(StringRequest&& req);
+    FileRequestResult HandleRequest(const StringRequest& req) const;
 
 protected:
     virtual FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const = 0;
-    virtual FileRequestResult MakePostResponse(const StringRequest& req) = 0;
+    virtual FileRequestResult MakePostResponse(const StringRequest& req) const = 0;
 
     StringResponse MakeStringResponse(
         http::status status, std::string_view requestTarget, unsigned http_version,

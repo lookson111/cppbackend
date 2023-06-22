@@ -54,7 +54,7 @@ StringResponse Base::MakeBadResponse(
     return response;
 }
 
-FileRequestResult Base::HandleRequest(StringRequest&& req) {
+FileRequestResult Base::HandleRequest(const StringRequest& req) const {
     // Format response
     try {
         switch (req.method()) {
