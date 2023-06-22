@@ -89,6 +89,7 @@ public:
     void end(const sys::error_code& ec);
     void error(const sys::error_code& ec, Where where);
     void request(std::string_view address, std::string_view uri, std::string_view method);
+    void msg(std::string_view address, std::string_view uri);
     void response(long long response_time, unsigned status_code, std::string_view content_type);
 };
 

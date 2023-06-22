@@ -74,7 +74,7 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
     }
     default:
         return text_response(http::status::bad_request,
-            with_body ? app::JsonMessage("badRequest", "Bad request") : ""s
+            with_body ? app::JsonMessage("badRequest", "Get/Head api not found") : ""s
         );
     }
 }
@@ -113,7 +113,7 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
     }
     default:
         return text_response(http::status::bad_request,
-            app::JsonMessage("badRequest", "Bad request"));
+            app::JsonMessage("badRequest", "Post api not found"));
     }
 }
 }

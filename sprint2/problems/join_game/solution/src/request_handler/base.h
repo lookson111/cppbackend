@@ -1,4 +1,5 @@
 #pragma once
+#include "../sdk.h"
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -11,7 +12,7 @@ namespace http_handler {
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
 namespace beast = boost::beast;
-namespace http = beast::http;
+namespace http = beast::http; 
 namespace fs = std::filesystem;
 namespace sys = boost::system;
 using namespace std::literals;
@@ -88,15 +89,15 @@ class Base {
 public:
     virtual ~Base() {}
     FileRequestResult HandleRequest(const StringRequest& req) const;
+    static StringResponse MakeStringResponse(
+        http::status status, std::string_view requestTarget, unsigned http_version,
+        bool keep_alive, std::string_view content_type = ContentType::APP_JSON,
+        bool no_cache = false);
 
 protected:
     virtual FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const = 0;
     virtual FileRequestResult MakePostResponse(const StringRequest& req) const = 0;
 
-    StringResponse MakeStringResponse(
-        http::status status, std::string_view requestTarget, unsigned http_version,
-        bool keep_alive, std::string_view content_type = ContentType::APP_JSON,
-        bool no_cache = false) const;
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON) const;

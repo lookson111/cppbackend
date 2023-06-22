@@ -136,6 +136,11 @@ void Server::response(long long response_time, unsigned status_code, std::string
     }
     log_.info(serialize(mapEl), "response sent"sv);
 }
-
+void Server::msg(std::string_view header, std::string_view message) {
+    json::object mapEl;
+    mapEl["header"] = to_booststr(header);
+    mapEl["message"] = to_booststr(message);
+    log_.info(serialize(mapEl), "response sent"sv);
+}
 
 }

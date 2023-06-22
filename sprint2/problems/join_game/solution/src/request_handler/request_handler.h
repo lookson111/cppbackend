@@ -1,4 +1,5 @@
 #pragma once
+#include "../sdk.h"
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <filesystem>
@@ -34,9 +35,10 @@ public:
     void operator()(tcp::endpoint, http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
         auto version = req.version();
         auto keep_alive = req.keep_alive();
-        std::string_view target = StringRequest(req).target();
+        std::string target{StringRequest(req).target().data(), StringRequest(req).target().size()};
+        target = http_server::uriDecode(target);
         std::string_view api = "/api/"sv;
-        bool is_target = target.size() > api.size() && (target.substr(0, api.size()-1) == api);
+        bool is_target = target.size() > api.size() && (target.substr(0, api.size()) == api);
         try {
             /*req относится к API?*/
             if (is_target) {
@@ -47,13 +49,6 @@ public:
                         assert(self->api_strand_.running_in_this_thread());
                         return send(std::get<StringResponse>(
                             self->api.HandleRequest(req)));
-                        /*return std::visit(
-                            [&send](auto&& result) {
-                                send(std::forward<decltype(result)>(result));
-                            },
-                            file.HandleRequest(req)
-                        );*/
-                            //std::forward<decltype(req)>(req)));
                     }
                     catch (...) {
                         send(self->ReportServerError(version, keep_alive));
@@ -66,54 +61,23 @@ public:
                 [&send](auto&& result) {
                     send(std::forward<decltype(result)>(result));
                 },
-                file.HandleRequest(req));
-                    //std::forward<decltype(req)>(req)));
+                file.HandleRequest(req)
+            );
         }
         catch (...) {
+            auto text = app::JsonMessage("ServerError"sv,
+                "request processing error"sv);
+            send(Base::MakeStringResponse(http::status::bad_request, text, version, keep_alive));
             //send(ReportServerError(version, keep_alive));
         }
     }
 
-
-    //template <typename Body, typename Allocator, typename Send>
-    //void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
-    //    // Обработать запрос request и отправить ответ, используя send
-    //    auto res = HandleRequest(std::forward<decltype(req)>(req));
-    //    if (std::holds_alternative<StringResponse>(res))
-    //        send(std::get<StringResponse>(res));
-    //    else
-    //        send(std::get<FileResponse>(res));
-    //}
-
 private:
-    //using VariantResponse = std::variant<StringResponse, FileResponse>;
-
-    //FileRequestResult HandleFileRequest(const StringRequest& req) const;
-    //StringResponse HandleApiRequest(const StringRequest& req) const;
     StringResponse ReportServerError(unsigned version, bool keep_alive) const;
 
     Api api;
     File file;
-    //app::App app_;
-    //const fs::path static_path_;
     Strand api_strand_;
-
-    //FileRequestResult HandleRequest(StringRequest&& req);
-    //StringResponse MakeStringResponse(
-    //    http::status status, std::string_view requestTarget, unsigned http_version,
-    //    bool keep_alive, std::string_view content_type = ContentType::APP_JSON,
-    //    bool no_cache = false) const;
-    //StringResponse MakeBadResponse(
-    //    http::status status, unsigned http_version,
-    //    bool keep_alive, std::string_view content_type = ContentType::APP_JSON) const;
-    //FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const;
-    //FileRequestResult MakePostResponse(const StringRequest& req);
-    //FileRequestResult StaticFilesResponse(
-    //    std::string_view responseText, bool with_body,
-    //    unsigned http_version, bool keep_alive);
-    //static fs::path CheckStaticPath(const fs::path& path_static);
-    //bool CheckFileExist(std::string& file) const;
-    //bool FileInRootStaticDir(std::string_view file) const;
 };
 
 }  // namespace http_handler

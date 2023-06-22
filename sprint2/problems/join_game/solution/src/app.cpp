@@ -1,5 +1,5 @@
 #include "app.h"
-
+#include "log.h"
 std::string app::JsonMessage(std::string_view code, std::string_view message) {
     js::object msg;
     msg["code"] = code.data();
@@ -8,6 +8,7 @@ std::string app::JsonMessage(std::string_view code, std::string_view message) {
 }
 
 namespace app {
+using namespace std::literals;
 std::string ModelToJson::GetMaps() {
     const auto& maps = game_.GetMaps();
     js::array obj;
@@ -78,6 +79,20 @@ js::array ModelToJson::GetOffice(const model::Map::Offices& offices) {
     return arr;
 }
 
+std::string PlayerTokens::ToHex(uint64_t n) const {
+    std::string hex;
+    //loop runs til n is greater than 0
+    while (n > 0) {
+        int r = n % 16;
+        //remainder converted to hexadecimal digit
+        char c = (r < 10) ? ('0' + r) : ('a' + r - 10);
+        //hexadecimal digit added to start of the string
+        hex = c + hex;
+        n /= 16;
+    }
+    return hex;
+}
+
 std::pair<std::string, bool>
 App::GetMapBodyJson(std::string_view mapName) const {
     ModelToJson jmodel(game_);
@@ -89,16 +104,16 @@ App::GetMapBodyJson(std::string_view mapName) const {
         // if map not found
         body = jmodel.GetMap(mapName);
         if (!body.size()) {
-            return std::make_pair(JsonMessage("mapNotFound", "Map not found"), false);
+            return std::make_pair(JsonMessage("mapNotFound"sv, "Map not found"sv), false);
         }
     }
     return std::make_pair(std::move(body), true);
 }
 //
 std::pair<std::string, JoinError>
-App::ResponseJoin(std::string_view jsonBody) const {
+App::ResponseJoin(std::string_view jsonBody) {
     auto parseError = std::make_pair(
-        JsonMessage("invalidArgument", "Join game request parse error"),
+        JsonMessage("invalidArgument"sv, "Join game request parse error"sv),
         JoinError::BadJson
     );
     js::error_code ec;
@@ -121,18 +136,19 @@ App::ResponseJoin(std::string_view jsonBody) const {
     }
     if (userName.empty())
         return std::make_pair(
-            JsonMessage("invalidArgument", "Invalid name"),
+            JsonMessage("invalidArgument"sv, "Invalid name"sv),
             JoinError::InvalidName
         );
     model::Map::Id idmap{mapId.data()};
     auto map = game_.FindMap({ idmap });
     if (map == nullptr)
         return std::make_pair(
-            JsonMessage("mapNotFound", "Map not found"),
+            JsonMessage("mapNotFound"sv, "Map not found"sv),
             JoinError::MapNotFound
         );
+    PlayerTokens pt;
     js::object msg;
-    msg["authToken"] = "6516861d89ebfff147bf2eb2b5153ae1";
+    msg["authToken"] = pt.GetToken();
     msg["plauerId"]  = 0;
     return std::make_pair(
         serialize(msg),

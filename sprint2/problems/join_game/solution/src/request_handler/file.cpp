@@ -4,8 +4,6 @@
 #include "../http_server.h"
 
 namespace http_handler {
-
-
 TypeRequest File::ParseTarget(std::string_view target, std::string& res) const {
     std::string_view api = "/api/"sv;
     res = "";
@@ -96,7 +94,7 @@ FileRequestResult File::MakeGetResponse(const StringRequest& req, bool with_body
     default:
         // if bad URI
         return text_response(http::status::bad_request,
-            with_body ? app::JsonMessage("badRequest", "Bad request") : ""s
+            with_body ? app::JsonMessage("badRequest", "Get/Head tagret(in file) not found") : ""s
         );
     }
 }
@@ -108,10 +106,12 @@ FileRequestResult File::MakePostResponse(const StringRequest& req) const {
     };
     std::string target;
     // if bad URI
-    switch (ParseTarget(req.target(), target)) {
-    default:
-        return text_response(http::status::bad_request,
-            app::JsonMessage("badRequest", "Bad request"));
-    }
+    return text_response(http::status::bad_request,
+        app::JsonMessage("badRequest", "Post target(in file) not found"));
+    //switch (ParseTarget(req.target(), target)) {
+    //default:
+    //    return text_response(http::status::bad_request,
+    //        app::JsonMessage("badRequest", "Bad request"));
+    //}
 }
 }

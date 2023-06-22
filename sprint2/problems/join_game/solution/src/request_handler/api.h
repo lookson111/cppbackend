@@ -6,7 +6,7 @@ namespace http_handler {
 
 class Api : public Base {
 private:
-	app::App app_;
+	mutable app::App app_;
     virtual FileRequestResult MakeGetResponse(
         const StringRequest& req, bool with_body) const override;
 	virtual FileRequestResult MakePostResponse(

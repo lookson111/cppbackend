@@ -30,7 +30,7 @@ std::unordered_map<std::string_view, std::string_view> ContentType::type{
 StringResponse Base::MakeStringResponse(
         http::status status, std::string_view responseText, unsigned http_version,
         bool keep_alive, std::string_view content_type,
-        bool no_cache) const {
+        bool no_cache) {
     StringResponse response(status, http_version);
     response.set(http::field::content_type, content_type);
     if (no_cache)
