@@ -167,6 +167,23 @@ private:
     Offices offices_;
 };
 
+class Dog {
+public:
+    using Id = util::Tagged<uint64_t, Office>;
+        
+private:
+    Id id_;
+    std::string nickname;
+};
+
+using Dogs = std::unordered_map<Dog::Id, Dog, util::TaggedHasher<Dog::Id>>;
+
+class GameSession {
+private:
+    Dogs dogs_;
+    Map* map_;
+};
+
 class Game {
 public:
     using Maps = std::vector<Map>;

@@ -36,6 +36,15 @@ private:
 
 std::string JsonMessage(std::string_view code, std::string_view message);
 
+
+
+class Player {
+public:
+private:
+    GameSession* session_;
+    Dog* dog_;
+};
+
 namespace detail {
     struct TokenTag {};
 }  // namespace detail
@@ -43,14 +52,12 @@ namespace detail {
 using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class PlayerTokens {
-    //...
 public:
-    std::string GetToken() {
-        std::string r1 = ToHex(generator1_());
-        std::string r2 = ToHex(generator2_());
-        return r1 + r2;
-    }
+    Player* FindPlayer(Token token);
+    Token AddPlayer(Player* player);
+
 private:
+    std::unordered_map<Token, Player*> token_to_player;
     std::random_device random_device_;
     std::mt19937_64 generator1_{[this] {
         std::uniform_int_distribution<std::mt19937_64::result_type> dist;
@@ -60,6 +67,11 @@ private:
         std::uniform_int_distribution<std::mt19937_64::result_type> dist;
         return dist(random_device_);
     }()};
+    std::string GetToken() {
+        std::string r1 = ToHex(generator1_());
+        std::string r2 = ToHex(generator2_());
+        return r1 + r2;
+    }
     // Чтобы сгенерировать токен, получите из generator1_ и generator2_
     // два 64-разрядных числа и, переведя их в hex-строки, склейте в одну.
     // Вы можете поэкспериментировать с алгоритмом генерирования токенов,
@@ -69,7 +81,9 @@ private:
 
 
 class Players {
-
+public:
+    Player Add(Dog dog, GameSession session);
+    Player* FindPlayer(DogId id, MapId id);
 };
 
 class App
