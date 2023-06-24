@@ -19,7 +19,7 @@ static auto to_booststr = [](std::string_view str) {
     return boost::string_view(str.data(), str.size());
 };
 
-std::string_view app::GetToken(std::string_view autorization_text) {
+std::string_view GetToken(std::string_view autorization_text) {
     std::string_view bearer = "Bearer "sv;
     std::string_view ex_token = "6516861d89ebfff147bf2eb2b5153ae1"sv;
     std::string_view nullstr = autorization_text.substr(0, 0);
