@@ -47,6 +47,7 @@ StringResponse Base::MakeBadResponse(
     StringResponse response(status, http_version);
     response.set(http::field::content_type, content_type);
     response.set(http::field::allow, "GET, HEAD"sv);
+    response.set(http::field::cache_control, "no-cache"sv);
     auto ans_v = "Invalid method"sv;
     response.body() = ans_v;
     response.content_length(ans_v.size());

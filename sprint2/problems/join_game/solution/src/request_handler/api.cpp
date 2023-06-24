@@ -41,8 +41,8 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
         return text_response(stat, with_body ? text : ""sv);
     }
     case TypeRequest::Join: {
-        auto text = app::JsonMessage("invalidArgument"sv,
-            "Join game request parse error"sv);
+        auto text = app::JsonMessage("invalidMethod"sv,
+            "Only POST method is expected"sv);
         auto resp = MakeStringResponse(http::status::method_not_allowed, with_body ? text : ""sv,
             req.version(), req.keep_alive(), ContentType::APP_JSON, true);
         resp.set(http::field::allow, "POST"sv);
