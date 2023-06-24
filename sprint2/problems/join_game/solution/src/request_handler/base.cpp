@@ -75,6 +75,14 @@ FileRequestResult Base::HandleRequest(const StringRequest& req) const {
             return MakeGetResponse(req, false);
         case http::verb::post:
             return MakePostResponse(req);
+        case http::verb::delete_:
+            return MakeDeleteResponse(req);
+        case http::verb::options:
+            return MakeOptionsResponse(req);
+        case http::verb::put:
+            return MakePutResponse(req);
+        case http::verb::patch:
+            return MakePatchResponse(req);
         default:
             return MakeStringResponse(http::status::method_not_allowed,
                 app::JsonMessage("invalidMethod"sv, "Invaled method"),
