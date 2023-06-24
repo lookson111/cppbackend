@@ -50,7 +50,8 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
     }
     case TypeRequest::Players: {
         const auto invalid = [&](std::string_view text) {
-            return MakeStringResponse(http::status::unauthorized, text, req.version(), req.keep_alive());
+            return MakeStringResponse(http::status::unauthorized, text, 
+                req.version(), req.keep_alive(), ContentType::APP_JSON, true);
         };
         const auto invalidToken = invalid(app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv));
         auto it = req.find(http::field::authorization);
