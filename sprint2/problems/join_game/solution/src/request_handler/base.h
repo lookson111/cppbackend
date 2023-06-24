@@ -97,9 +97,14 @@ public:
 protected:
     virtual FileRequestResult MakeGetResponse(const StringRequest& req, bool with_body) const = 0;
     virtual FileRequestResult MakePostResponse(const StringRequest& req) const = 0;
-
+    virtual FileRequestResult MakeOptionsResponse(const StringRequest& req) const = 0;
+    virtual FileRequestResult MakePutResponse(const StringRequest& req) const = 0;
+    virtual FileRequestResult MakePatchResponse(const StringRequest& req) const = 0;
+    virtual FileRequestResult MakeDeleteResponse(const StringRequest& req) const = 0;
     StringResponse MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON) const;
+    StringResponse MakeInvalidMethod(std::string_view allow_methods, unsigned http_version,
+        bool keep_alive) const;
 };
 } // namespace http_handler

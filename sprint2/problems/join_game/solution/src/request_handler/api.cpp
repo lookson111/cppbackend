@@ -85,7 +85,6 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
             ContentType::APP_JSON, true);
     };
     std::string target;
-    // if bad URI
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Join: {
         auto [body, err] = app_.ResponseJoin(req.body());
@@ -104,16 +103,75 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
         return text_response(stat, body);
 
     }
+    case TypeRequest::Map:
+    case TypeRequest::Maps:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     case TypeRequest::Players: {
-        auto text = app::JsonMessage("invalidMethod"sv, "Invalid method"sv);
-        auto resp = MakeStringResponse(http::status::method_not_allowed, text,
-            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
-        resp.set(http::field::allow, "GET, HEAD"sv);
-        return resp;
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
     default:
         return text_response(http::status::bad_request,
             app::JsonMessage("badRequest", "Post api not found"));
+    }
+}
+FileRequestResult Api::MakeOptionsResponse(const StringRequest& req) const
+{
+    std::string target;
+    switch (ParseTarget(req.target(), target)) {
+    case TypeRequest::Join:
+        return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::Map:
+    case TypeRequest::Maps:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    case TypeRequest::Players:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    default:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    }
+}
+FileRequestResult Api::MakePutResponse(const StringRequest& req) const
+{
+    std::string target;
+    switch (ParseTarget(req.target(), target)) {
+    case TypeRequest::Join:
+        return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::Map:
+    case TypeRequest::Maps:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    case TypeRequest::Players:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    default:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    }
+}
+FileRequestResult Api::MakePatchResponse(const StringRequest& req) const
+{
+    std::string target;
+    switch (ParseTarget(req.target(), target)) {
+    case TypeRequest::Join:
+        return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::Map:
+    case TypeRequest::Maps:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    case TypeRequest::Players:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    default:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    }
+}
+FileRequestResult Api::MakeDeleteResponse(const StringRequest& req) const
+{
+    std::string target;
+    switch (ParseTarget(req.target(), target)) {
+    case TypeRequest::Join:
+        return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::Map:
+    case TypeRequest::Maps:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    case TypeRequest::Players:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+    default:
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
 }
 }

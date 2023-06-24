@@ -17,6 +17,14 @@ private:
         const StringRequest& req, bool with_body) const override;
 	virtual FileRequestResult MakePostResponse(
         const StringRequest& req) const override;
+    virtual FileRequestResult MakeOptionsResponse(
+        const StringRequest& req) const override;
+    virtual FileRequestResult MakePutResponse(
+        const StringRequest& req) const override;
+    virtual FileRequestResult MakePatchResponse(
+        const StringRequest& req) const override;
+    virtual FileRequestResult MakeDeleteResponse(
+        const StringRequest& req) const override;
 	static fs::path CheckStaticPath(const fs::path& path_static);
 	FileRequestResult StaticFilesResponse(
 		std::string_view responseText, bool with_body,

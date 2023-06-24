@@ -100,18 +100,18 @@ FileRequestResult File::MakeGetResponse(const StringRequest& req, bool with_body
 }
 
 FileRequestResult File::MakePostResponse(const StringRequest& req) const {
-    const auto text_response = [&](http::status status, std::string_view text) {
-        return MakeStringResponse(status, text, req.version(), req.keep_alive(),
-            ContentType::APP_JSON, true);
-    };
-    std::string target;
-    // if bad URI
-    return text_response(http::status::bad_request,
-        app::JsonMessage("badRequest", "Post target(in file) not found"));
-    //switch (ParseTarget(req.target(), target)) {
-    //default:
-    //    return text_response(http::status::bad_request,
-    //        app::JsonMessage("badRequest", "Bad request"));
-    //}
+    return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+}
+FileRequestResult File::MakeOptionsResponse(const StringRequest& req) const {
+    return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+}
+FileRequestResult File::MakePutResponse(const StringRequest& req) const {
+    return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+}
+FileRequestResult File::MakePatchResponse(const StringRequest& req) const {
+    return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+}
+FileRequestResult File::MakeDeleteResponse(const StringRequest& req) const {
+    return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
 }
 }

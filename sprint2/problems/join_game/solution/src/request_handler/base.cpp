@@ -55,6 +55,16 @@ StringResponse Base::MakeBadResponse(
     return response;
 }
 
+StringResponse Base::MakeInvalidMethod(std::string_view allow_methods, unsigned http_version,
+    bool keep_alive) const
+{
+    auto text = app::JsonMessage("invalidMethod"sv, "Invalid method"sv);
+    auto resp = MakeStringResponse(http::status::method_not_allowed, text,
+        http_version, keep_alive, ContentType::APP_JSON, true);
+    resp.set(http::field::allow, allow_methods);
+    return resp;
+}
+
 FileRequestResult Base::HandleRequest(const StringRequest& req) const {
     // Format response
     try {
