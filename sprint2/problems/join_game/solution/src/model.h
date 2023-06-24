@@ -1,9 +1,14 @@
 #pragma once 
+#include "sdk.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
-
+#include <deque>
+#include <atomic>
+#include <map>
+#include <memory>
 #include "tagged.h"
+#include "log.h"
 
 namespace model {
 
@@ -169,44 +174,65 @@ private:
 
 class Dog {
 public:
-    using Id = util::Tagged<uint64_t, Office>;
-        
+    using Id = util::Tagged<uint64_t, Dog>;
+    Dog(std::string_view nickname) : nickname_(nickname.data(), nickname.size()), id_(Id{ idn++ }) {
+    }
+    const Id& GetId() const {
+        return id_;
+    }
+    std::string_view GetName() const noexcept {
+        return nickname_;
+    }
+    Dog(const Dog& dog) : id_(dog.id_), nickname_(dog.nickname_) {
+    }
+    Dog(Dog&& dog) noexcept : 
+        id_(std::move(dog.id_)),
+        nickname_(std::move(dog.nickname_)) {
+    }
 private:
-    Id id_;
-    std::string nickname;
+    static std::atomic<uint64_t> idn;
+    Id id_ = Id{0};
+    std::string nickname_ = "";
 };
 
-using Dogs = std::unordered_map<Dog::Id, Dog, util::TaggedHasher<Dog::Id>>;
-
 class GameSession {
+public:
+    using Dogs = std::deque<Dog>;
+    GameSession(const Map* map) : map_(map) {}
+    const Map::Id& MapId() {
+        return map_->GetId();
+    } 
+    Dog* FindDog(std::string_view nick_name);
+    Dog* AddDog(std::string_view nick_name);
 private:
+    using DogsIdHasher = util::TaggedHasher<Dog::Id>;
+    using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
     Dogs dogs_;
-    Map* map_;
+    DogsIdToIndex dogs_id_to_index_;
+    const Map* map_;
 };
 
 class Game {
 public:
     using Maps = std::vector<Map>;
 
-    void AddMap(const Map &map);
+    void AddMap(const Map& map);
 
     const Maps& GetMaps() const noexcept {
         return maps_;
     }
-
-    const Map* FindMap(const Map::Id& id) const noexcept {
-        if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
-            return &maps_.at(it->second);
-        }
-        return nullptr;
-    }
+    const Map* FindMap(const Map::Id& id) const noexcept;
+    GameSession* FindGameSession(const Map::Id& id) noexcept;
+    GameSession* AddGameSession(const Map::Id& id);
 
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
-
-    std::vector<Map> maps_;
+     
+    Maps maps_;
+    std::deque<GameSession> game_sessions_;
     MapIdToIndex map_id_to_index_;
+    MapIdToIndex map_id_to_game_sessions_index_;
 };
 
 }  // namespace model

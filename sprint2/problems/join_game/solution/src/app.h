@@ -35,14 +35,26 @@ private:
 };
 
 std::string JsonMessage(std::string_view code, std::string_view message);
-
-
+std::string_view GetToken(std::string_view autorization_text);
 
 class Player {
 public:
+    using Id = util::Tagged<uint64_t, Player>;
+    Player(model::GameSession* session, model::Dog* dog) : session_(session), dog_(dog), id_({idn++}) {}
+    const Id& GetId() const {
+        return id_;
+    }
+    const model::Map::Id& MapId() const {
+        return session_->MapId();
+    }
+    std::string_view GetName() const {
+        return dog_->GetName();
+    }
 private:
-    GameSession* session_;
-    Dog* dog_;
+    static std::atomic<uint64_t> idn;
+    Id id_;
+    model::GameSession* session_;
+    model::Dog* dog_;
 };
 
 namespace detail {
@@ -53,11 +65,11 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class PlayerTokens {
 public:
-    Player* FindPlayer(Token token);
+    Player* FindPlayer(Token token) const;
     Token AddPlayer(Player* player);
 
 private:
-    std::unordered_map<Token, Player*> token_to_player;
+    std::unordered_map<Token, Player*, util::TaggedHasher<Token>> token_to_player;
     std::random_device random_device_;
     std::mt19937_64 generator1_{[this] {
         std::uniform_int_distribution<std::mt19937_64::result_type> dist;
@@ -82,8 +94,17 @@ private:
 
 class Players {
 public:
-    Player Add(Dog dog, GameSession session);
-    Player* FindPlayer(DogId id, MapId id);
+    //using PlayerContainer = std::unordered_map<Player::Id, Player, util::TaggedHasher<Player::Id>>;
+    Player* Add(model::Dog *dog, model::GameSession *session);
+    Player* FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcept;
+    const Player::Id* FindPlayerId(std::string_view player_name) const noexcept;
+    Player* FindPlayer(Player::Id player_id) const noexcept;
+    
+private:
+    using PlayerIdHasher = util::TaggedHasher<Player::Id>;
+    using PlayerIdToIndex = std::unordered_map<Player::Id, size_t, PlayerIdHasher>;
+    std::deque<std::unique_ptr<Player>> players_;
+    PlayerIdToIndex player_id_to_index_;
 };
 
 class App
@@ -98,6 +119,10 @@ public:
     
 private:
     model::Game& game_;
+    Players players_;
+    PlayerTokens player_tokens_;
+
+    Player* GetPlayer(std::string_view nick, std::string_view mapId);
 };
 }
 
