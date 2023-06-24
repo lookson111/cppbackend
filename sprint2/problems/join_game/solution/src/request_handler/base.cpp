@@ -66,13 +66,16 @@ FileRequestResult Base::HandleRequest(const StringRequest& req) const {
         case http::verb::post:
             return MakePostResponse(req);
         default:
-            return MakeBadResponse(http::status::method_not_allowed,
-                req.version(), req.keep_alive());
+            return MakeStringResponse(http::status::method_not_allowed,
+                app::JsonMessage("invalidMethod"sv, "Invaled method"),
+                req.version(), req.keep_alive(), ContentType::APP_JSON, true);
+            //return MakeBadResponse(http::status::method_not_allowed,
+            //    req.version(), req.keep_alive());
         }
     }
     catch (std::exception ex) {
         return MakeStringResponse(http::status::bad_request,
-            app::JsonMessage("badRequest", "Server error"s + ex.what()),
+            app::JsonMessage("badRequest", "Server error: "s + ex.what()),
             req.version(), req.keep_alive());
     }
 }

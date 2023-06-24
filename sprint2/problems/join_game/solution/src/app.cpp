@@ -176,7 +176,7 @@ App::ResponseJoin(std::string_view jsonBody) {
     catch (const std::system_error&) {
         return parseError;
     }
-    catch (const std::invalid_argument&) {
+    catch (const std::out_of_range&) {
         return parseError;
     }
     if (userName.empty())
