@@ -192,6 +192,7 @@ private:
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
 
+
     DPoint GetRandomRoadCoord();
 };
 

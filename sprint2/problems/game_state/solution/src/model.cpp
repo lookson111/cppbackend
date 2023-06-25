@@ -4,6 +4,7 @@
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <ctime>
+#include <random>
 
 namespace model {
 using namespace std::literals;
@@ -90,20 +91,19 @@ Dog* GameSession::AddDog(std::string_view nick_name)
 
 DPoint GameSession::GetRandomRoadCoord()
 {
-    using namespace boost::multiprecision;
-    using namespace boost::random;
-    auto random_double = [](auto x1, auto x2) {
+    //std::random_device rd;
+    //std::mt19937 random_e2;
+    std::time_t now = std::time(0);
+    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
+    auto random_double = [&](auto x1, auto x2) {
         if (x2 < x1) 
             std::swap(x1, x2);
-        independent_bits_engine<mt19937, std::numeric_limits<double>::digits, cpp_int> gen_d;
-        uniform_real_distribution<double> ur(x1, x2);
-        return ur(gen_d);
+        std::uniform_real_distribution<double> ur(x1, x2);
+        return ur(gen);
     };
     auto &roads = map_->GetRoads();
     if (roads.size() == 0)
         return DPoint();
-    std::time_t now = std::time(0);
-    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
     boost::random::uniform_int_distribution<size_t> dist{0, roads.size()-1};
     auto &road = roads[dist(gen)];
     DPoint coord;
