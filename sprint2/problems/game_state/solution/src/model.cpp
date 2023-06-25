@@ -1,8 +1,9 @@
 #include "model.h"
-
 #include <stdexcept>
-
-std::atomic<uint64_t> model::Dog::idn = 0;
+#include <boost/random.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <ctime>
 
 namespace model {
 using namespace std::literals;
@@ -71,7 +72,8 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     if (FindDog(nick_name) != nullptr) {
         throw std::invalid_argument("Duplicate dog");
     }
-    Dog dog = Dog(nick_name);
+    DPoint coord = GetRandomRoadCoord();
+    Dog dog = Dog(nick_name, coord);
     const size_t index = dogs_.size();
     auto o = dogs_.emplace_back(std::move(dog));
     try {
@@ -84,6 +86,36 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     }
     return &dogs_.back();
     return nullptr;
+}
+
+DPoint GameSession::GetRandomRoadCoord()
+{
+    using namespace boost::multiprecision;
+    using namespace boost::random;
+    auto roads = map_->GetRoads();
+    if (roads.size() == 0)
+        return DPoint();
+    std::time_t now = std::time(0);
+    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
+    boost::random::uniform_int_distribution<size_t> dist{0, roads.size()-1};
+    independent_bits_engine<mt19937, std::numeric_limits<double>::digits, cpp_int> gen_d;
+    auto road = roads[dist(gen)];
+    DPoint coord;
+    if (road.IsHorizontal()) {
+        auto start_point = road.GetStart();
+        auto end_point = road.GetEnd();
+        uniform_real_distribution<double> ur(start_point.x, end_point.x);
+        coord.x = ur(gen_d);
+        coord.y = end_point.y;
+    }
+    else {
+        auto start_point = road.GetStart();
+        auto end_point = road.GetEnd();
+        uniform_real_distribution<double> ur(start_point.y, end_point.y);
+        coord.y = ur(gen_d);
+        coord.x = end_point.x;
+    }
+    return coord;
 }
 
 Dog* GameSession::FindDog(std::string_view nick_name)

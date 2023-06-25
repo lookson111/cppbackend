@@ -94,7 +94,6 @@ private:
 
 class Players {
 public:
-    //using PlayerContainer = std::unordered_map<Player::Id, Player, util::TaggedHasher<Player::Id>>;
     Player* Add(model::Dog *dog, model::GameSession *session);
     Player* FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcept;
     const Player::Id* FindPlayerId(std::string_view player_name) const noexcept;
@@ -115,13 +114,15 @@ public:
     }
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
-    std::pair<std::string, error_code> GetPlayers(std::string_view token) const;
+    std::pair<std::string, error_code> GetPlayers() const;
+    std::pair<std::string, error_code> GetState(std::string_view auth_text) const;
+    error_code CheckToken(std::string_view token) const;
     
 private:
     model::Game& game_;
     Players players_;
     PlayerTokens player_tokens_;
-
+    Player* GetPlayer(std::string_view auth_text) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
 };
 }

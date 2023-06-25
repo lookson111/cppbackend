@@ -7,6 +7,7 @@ TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
     std::string_view maps = "/api/v1/maps"sv;
     std::string_view join = "/api/v1/game/join"sv;
     std::string_view players = "/api/v1/game/players"sv;
+    std::string_view state   = "/api/v1/game/state"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
     // finded maps
@@ -23,12 +24,43 @@ TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
     if (uriDecode.find(players) != uriDecode.npos) {
         return TypeRequest::Players;
     }
+    if (uriDecode.find(state) != uriDecode.npos) {
+        return TypeRequest::State;
+    }
     return TypeRequest::None;
 }
 
+std::pair<http::status, std::string> Api::CheckToken(const StringRequest& req) const {
+    auto invalidToken = app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv);
+    auto it = req.find(http::field::authorization);
+    if (it == req.end())
+        return std::make_pair(http::status::unauthorized, 
+            std::move(invalidToken));//invalidToken);
+    std::string token{it->value()};
+    auto err = app_.CheckToken(token);
+    http::status stat;
+    switch (err) {
+    case app::error_code::InvalidToken:
+        return std::make_pair(http::status::unauthorized,
+            std::move(invalidToken));
+    case app::error_code::UnknownToken:
+        return std::make_pair(http::status::unauthorized, 
+            std::move(app::JsonMessage("unknownToken"sv, "Player token has not been found"sv)));
+    case app::error_code::None:
+        stat = http::status::ok;
+        break;
+    }
+    return std::make_pair(stat, "");
+}
+
 FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body) const {
-    const auto text_response = [&](http::status status, std::string_view text) {
-        return MakeStringResponse(status, text, req.version(), req.keep_alive());
+    const auto body_response = [&](http::status status, std::string_view text) {
+        return MakeStringResponse(status, with_body ? text : ""sv, req.version(), 
+            req.keep_alive(), ContentType::APP_JSON, true);
+    };
+    const auto valid_token = [&](http::status status, std::string_view text) {
+        return MakeStringResponse(status, text,
+            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
     };
     std::string target;
     // if bad URI
@@ -38,45 +70,30 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
         http::status stat;
         auto [text, flag] = app_.GetMapBodyJson(target);
         stat = flag ? http::status::ok : http::status::not_found;
-        return text_response(stat, with_body ? text : ""sv);
+        return body_response(stat, text);
     }
     case TypeRequest::Join: {
-        auto text = app::JsonMessage("invalidMethod"sv,
-            "Only POST method is expected"sv);
-        auto resp = MakeStringResponse(http::status::method_not_allowed, with_body ? text : ""sv,
-            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
-        resp.set(http::field::allow, "POST"sv);
-        return resp;
+        return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     }
     case TypeRequest::Players: {
-        const auto invalid = [&](std::string_view text) {
-            return MakeStringResponse(http::status::unauthorized, text, 
-                req.version(), req.keep_alive(), ContentType::APP_JSON, true);
-        };
-        const auto invalidToken = invalid(app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv));
+        auto [status, error_body] = CheckToken(req);
+        if (status != http::status::ok)
+            return valid_token(status, error_body);
+        auto [body, err] = app_.GetPlayers();
+        return body_response(status, body);
+    }
+    case TypeRequest::State: {
+        auto [status, error_body] = CheckToken(req);
+        if (status != http::status::ok)
+            return valid_token(status, error_body);
         auto it = req.find(http::field::authorization);
-        if (it == req.end())
-            return invalidToken;
         std::string token{it->value()};
-        auto [body, err] = app_.GetPlayers(token);
-        http::status stat;
-        switch (err) {
-        case app::error_code::InvalidToken:
-            return invalidToken;
-        case app::error_code::UnknownToken:
-            return invalid(app::JsonMessage("unknownToken"sv, "Player token has not been found"sv));
-        case app::error_code::None:
-            stat = http::status::ok;
-            break;
-        }
-        auto resp = MakeStringResponse(http::status::ok, with_body ? body : ""sv,
-            req.version(), req.keep_alive(), ContentType::APP_JSON, true);
-        return resp;
+        auto [body, error_code] = app_.GetState(token);
+        return body_response(status, body);
     }
     default:
-        return text_response(http::status::bad_request,
-            with_body ? app::JsonMessage("badRequest", "Get/Head api not found") : ""s
-        );
+        return body_response(http::status::bad_request, 
+            app::JsonMessage("badRequest", "Get/Head api not found"));
     }
 }
 
@@ -106,7 +123,6 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
     }
     case TypeRequest::Map:
     case TypeRequest::Maps:
-        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     case TypeRequest::Players: {
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -121,11 +137,11 @@ FileRequestResult Api::MakeOptionsResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
-    case TypeRequest::Map:
+    /*case TypeRequest::Map:
     case TypeRequest::Maps:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     case TypeRequest::Players:
-        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());*/
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -136,11 +152,11 @@ FileRequestResult Api::MakePutResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
-    case TypeRequest::Map:
+   /* case TypeRequest::Map:
     case TypeRequest::Maps:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     case TypeRequest::Players:
-        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());*/
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -151,11 +167,11 @@ FileRequestResult Api::MakePatchResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
-    case TypeRequest::Map:
+    /*case TypeRequest::Map:
     case TypeRequest::Maps:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     case TypeRequest::Players:
-        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());*/
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -166,11 +182,11 @@ FileRequestResult Api::MakeDeleteResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
-    case TypeRequest::Map:
+    /*case TypeRequest::Map:
     case TypeRequest::Maps:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     case TypeRequest::Players:
-        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());*/
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }

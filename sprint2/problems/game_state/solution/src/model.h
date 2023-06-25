@@ -9,6 +9,7 @@
 #include <memory>
 #include "tagged.h"
 #include "log.h"
+#include "dog.h"
 
 namespace model {
 
@@ -172,29 +173,6 @@ private:
     Offices offices_;
 };
 
-class Dog {
-public:
-    using Id = util::Tagged<uint64_t, Dog>;
-    Dog(std::string_view nickname) : nickname_(nickname.data(), nickname.size()), id_(Id{ idn++ }) {
-    }
-    const Id& GetId() const {
-        return id_;
-    }
-    std::string_view GetName() const noexcept {
-        return nickname_;
-    }
-    Dog(const Dog& dog) : id_(dog.id_), nickname_(dog.nickname_) {
-    }
-    Dog(Dog&& dog) noexcept : 
-        id_(std::move(dog.id_)),
-        nickname_(std::move(dog.nickname_)) {
-    }
-private:
-    static std::atomic<uint64_t> idn;
-    Id id_ = Id{0};
-    std::string nickname_ = "";
-};
-
 class GameSession {
 public:
     using Dogs = std::deque<Dog>;
@@ -210,6 +188,8 @@ private:
     Dogs dogs_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
+
+    DPoint GetRandomRoadCoord();
 };
 
 class Game {

@@ -206,21 +206,9 @@ App::ResponseJoin(std::string_view jsonBody) {
     );
 }
 
-std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) const {
+std::pair<std::string, error_code> App::GetPlayers() const {
     js::object msg;
-    std::string_view authToken = GetToken(auth_text);
-    if (authToken.empty())
-        return std::make_pair(
-            JsonMessage("invalidToken"sv, "Authorization header is missing"sv),
-            error_code::InvalidToken
-        );
-    Token token{std::string(authToken.data(), authToken.size())};
-    Player* player = player_tokens_.FindPlayer(token);
-    if (player == nullptr)
-        return std::make_pair(
-            JsonMessage("unknownToken"sv, "Player token has not been found"sv),
-            error_code::UnknownToken
-        );
+    Player* player;
     for (uint64_t id = 0; (player = players_.FindPlayer(Player::Id{id})) != nullptr; id++) {
         js::object jname;
         jname["name"] = to_booststr(player->GetName());
@@ -231,6 +219,45 @@ std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) c
         std::move(out),
         error_code::None
     );
+}
+
+std::pair<std::string, error_code> App::GetState(std::string_view auth_text) const
+{
+    js::object state;
+    Player* player = GetPlayer(auth_text);
+
+    /*for (uint64_t id = 0; (player = players_.FindPlayer(Player::Id{id})) != nullptr; id++) {
+        js::object jname;
+        jname["name"] = to_booststr(player->GetName());
+        state[std::to_string(id)] = jname;
+    }*/
+    js::object players;
+    players["palyers"] = state;
+    //return serialize(players);
+    return std::make_pair(
+        std::move(serialize(players)),
+        error_code::None
+    );
+}
+
+error_code App::CheckToken(std::string_view auth_text) const
+{
+    std::string_view authToken = GetToken(auth_text);
+    if (authToken.empty())
+        return error_code::InvalidToken;
+    Token token{ std::string(authToken.data(), authToken.size()) };
+    Player* player = player_tokens_.FindPlayer(token);
+    if (player == nullptr)
+        return error_code::UnknownToken;
+    return error_code::None;
+}
+
+Player* App::GetPlayer(std::string_view auth_text) const 
+{
+    std::string_view authToken = GetToken(auth_text);
+    Token token{ std::string(authToken.data(), authToken.size()) };
+    Player* player = player_tokens_.FindPlayer(token);
+    return player;
 }
 
 Player* App::GetPlayer(std::string_view nickName, std::string_view mapId)
