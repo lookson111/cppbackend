@@ -267,7 +267,7 @@ std::pair<std::string, error_code> App::GetState(std::string_view auth_text) con
         dog_param["dir"] = dog.GetDirection();
         state[std::to_string(*dog.GetId())] = dog_param;
     }
-    std::string players = "\"palyers\":"s + serialize(state);
+    std::string players = "\"players\":"s + serialize(state);
     return std::make_pair(
         std::move(players),
         error_code::None
