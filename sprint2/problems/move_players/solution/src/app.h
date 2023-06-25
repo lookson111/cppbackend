@@ -117,8 +117,8 @@ public:
     }
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
-    std::pair<std::string, error_code> GetPlayers(std::string_view auth_text) const;
-    std::pair<std::string, error_code> GetState(std::string_view auth_text) const;
+    std::string GetPlayers(const std::string& token_str) const;
+    std::string GetState(const std::string& token_str) const;
     std::pair<std::string, error_code> CheckToken(std::string_view token, std::string& token_str) const;
     
 private:

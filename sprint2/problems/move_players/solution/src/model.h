@@ -160,6 +160,9 @@ public:
     }
 
     void AddOffice(const Office &office);
+    void SetDogSpeed(DDimension dog_speed) {
+        dog_speed_ = dog_speed;
+    }
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -168,6 +171,7 @@ private:
     std::string name_;
     Roads roads_;
     Buildings buildings_;
+    DDimension dog_speed_;
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
@@ -201,6 +205,9 @@ public:
     using Maps = std::vector<Map>;
 
     void AddMap(const Map& map);
+    void SetDefaultDogSpeed(double speed) {
+        DefaultDogSpeed = speed;
+    }
 
     const Maps& GetMaps() const noexcept {
         return maps_;
@@ -214,6 +221,7 @@ private:
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
      
     Maps maps_;
+    double DefaultDogSpeed = 0;
     std::deque<GameSession> game_sessions_;
     MapIdToIndex map_id_to_index_;
     MapIdToIndex map_id_to_game_sessions_index_;

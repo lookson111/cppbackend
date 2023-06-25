@@ -36,11 +36,17 @@ model::Office LoadOffice(ptree &ptO) {
         model::Offset{.dx = ptO.get<int>("offsetX"), .dy = ptO.get<int>("offsetY")});
 }
 
-model::Map LoadMap(ptree &ptreeMap) {
+model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
     auto id   = ptreeMap.get<std::string>("id");
     auto name = ptreeMap.get<std::string>("name");
     model::Map::Id idmap{id};
     model::Map map(idmap, name);
+    if (ptreeMap.to_iterator(ptreeMap.find("dogSpeed")) != ptreeMap.end()) {
+        map.SetDogSpeed(ptreeMap.get<double>("dogSpeed"));
+    }
+    else {
+        map.SetDogSpeed(def_dog_speed);
+    }
     ptree jroads = ptreeMap.get_child("roads");
     BOOST_FOREACH(ptree::value_type &jroad, jroads) {
         map.AddRoad(LoadRoad(jroad.second));
@@ -70,9 +76,11 @@ model::Game LoadGame(const fs::path& json_path) {
         throw;
     }
     try {
+        auto defDogSpeed = pt.get<double>("defaultDogSpeed");
+        game.SetDefaultDogSpeed(defDogSpeed);
         ptree jmaps = pt.get_child("maps");
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
-            game.AddMap(LoadMap(jmap.second));
+            game.AddMap(LoadMap(jmap.second, defDogSpeed));
         }
     }
     catch (ptree_error &e) {

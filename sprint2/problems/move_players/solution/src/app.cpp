@@ -49,8 +49,6 @@ std::string ModelToJson::GetMaps() {
     return serialize(obj);
 }
 
-
-
 std::string ModelToJson::GetMap(std::string_view nameMap) {
     model::Map::Id idmap{nameMap.data()};
     auto map = game_.FindMap({ idmap });
@@ -207,12 +205,8 @@ App::ResponseJoin(std::string_view jsonBody) {
     );
 }
 
-std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) const {
+std::string App::GetPlayers(const std::string& token_str) const {
     js::object msg;
-    std::string token_str;
-    auto pair = CheckToken(auth_text, token_str);
-    if (pair.second != error_code::None)
-        return pair;
     auto token = Token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     auto session = player->GetSession();
@@ -222,39 +216,17 @@ std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) c
         jname["name"] = to_booststr(dog.GetName());
         msg[std::to_string(*dog.GetId())] = jname;
     }
-
-    return std::make_pair(
-        std::move(serialize(msg)),
-        error_code::None);
-    /*Player* player;
-    for (uint64_t id = 0; (player = players_.FindPlayer(Player::Id{id})) != nullptr; id++) {
-        js::object jname;
-        jname["name"] = to_booststr(player->GetName());
-        msg[std::to_string(id)] = jname;
-    }
-    std::string out = serialize(msg);
-    return std::make_pair(
-        std::move(out),
-        error_code::None
-    );*/
+    return serialize(msg);
 }
 
-std::pair<std::string, error_code> App::GetState(std::string_view auth_text) const
+std::string App::GetState(const std::string& token_str) const
 {
     auto put_array = [](const auto &x, const auto &y) {
-        //using boost::format;
-        //auto double_string = [](const auto& d) {
-        //    return boost::str(format("%0.1f") % d);
-        //};
         js::array jarr;
         jarr.emplace_back(std::floor(x*100)/100);
         jarr.emplace_back(std::floor(y*100)/100);
         return jarr;
     };
-    std::string token_str;
-    auto pair = CheckToken(auth_text, token_str);
-    if (pair.second != error_code::None)
-        return pair;
     auto token = Token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     js::object state;
@@ -267,14 +239,9 @@ std::pair<std::string, error_code> App::GetState(std::string_view auth_text) con
         dog_param["dir"] = dog.GetDirection();
         state[std::to_string(*dog.GetId())] = dog_param;
     }
-    //std::string players = "\"players\": "s + serialize(state);
     js::object players;
     players["players"] = state;
-    return std::make_pair(
-        //std::move(players),
-        std::move(serialize(players)),
-        error_code::None
-    );
+    return serialize(players);
 }
 
 std::pair<std::string, error_code> App::CheckToken(std::string_view auth_text, std::string& token_str) const

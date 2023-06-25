@@ -110,14 +110,12 @@ DPoint GameSession::GetRandomRoadCoord()
     if (road.IsHorizontal()) {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
-        LOGSRV().msg("error random","");
         coord.x = random_double(start_point.x, end_point.x);
         coord.y = end_point.y;
     }
     else {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
-        LOGSRV().msg("error random", "");
         coord.y = random_double(start_point.y, end_point.y);
         coord.x = end_point.x;
     }

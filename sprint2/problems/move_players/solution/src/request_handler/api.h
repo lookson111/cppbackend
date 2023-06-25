@@ -24,6 +24,27 @@ private:
     std::string CheckToken(std::string_view token) const;
     std::string GetToken(const StringRequest& req) const;
     http::status ErrorCodeToStatus(app::error_code ec) const;
+
+
+    template <typename Fn>
+    StringResponse ExecuteAuthorized(const StringRequest& req, bool with_body, Fn&& action) const {
+        const auto body_response = [&](http::status status, std::string_view text) {
+            return MakeStringResponse(status, with_body ? text : ""sv, req.version(),
+                req.keep_alive(), ContentType::APP_JSON, true);
+        };
+        std::string token = GetToken(req);
+        auto error_body = CheckToken(token);
+        if (!error_body.empty()) {
+            return body_response(http::status::unauthorized, error_body);
+        }
+        std::string token_str;
+        auto [body, error_code] = app_.CheckToken(token, token_str);
+        if (error_code != app::error_code::None)
+            return body_response(ErrorCodeToStatus(error_code), body);
+        body = action(token_str);
+        return body_response(ErrorCodeToStatus(error_code), body);
+    }
+
 public:
 	Api(model::Game& game)
 		: app_(game) {}
