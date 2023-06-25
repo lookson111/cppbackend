@@ -92,27 +92,33 @@ DPoint GameSession::GetRandomRoadCoord()
 {
     using namespace boost::multiprecision;
     using namespace boost::random;
+    auto random_double = [](auto x1, auto x2) {
+        if (x2 < x1) 
+            std::swap(x1, x2);
+        independent_bits_engine<mt19937, std::numeric_limits<double>::digits, cpp_int> gen_d;
+        uniform_real_distribution<double> ur(x1, x2);
+        return ur(gen_d);
+    };
     auto &roads = map_->GetRoads();
     if (roads.size() == 0)
         return DPoint();
     std::time_t now = std::time(0);
     boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
     boost::random::uniform_int_distribution<size_t> dist{0, roads.size()-1};
-    independent_bits_engine<mt19937, std::numeric_limits<double>::digits, cpp_int> gen_d;
     auto &road = roads[dist(gen)];
     DPoint coord;
     if (road.IsHorizontal()) {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
-        uniform_real_distribution<double> ur(start_point.x, end_point.x);
-        coord.x = ur(gen_d);
+        LOGSRV().msg("error random","");
+        coord.x = random_double(start_point.x, end_point.x);
         coord.y = end_point.y;
     }
     else {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
-        uniform_real_distribution<double> ur(start_point.y, end_point.y);
-        coord.y = ur(gen_d);
+        LOGSRV().msg("error random", "");
+        coord.y = random_double(start_point.y, end_point.y);
         coord.x = end_point.x;
     }
     return coord;
