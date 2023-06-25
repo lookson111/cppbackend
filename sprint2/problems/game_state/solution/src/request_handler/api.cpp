@@ -42,8 +42,10 @@ http::status Api::ErrorCodeToStatus(app::error_code ec) const {
     switch (ec) {
     case app::error_code::InvalidToken:
         stat = http::status::unauthorized;
+        break;
     case app::error_code::UnknownToken:
         stat = http::status::unauthorized;
+        break;
     case app::error_code::None:
         stat = http::status::ok;
         break;
@@ -99,10 +101,9 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
             return valid_token(error_body);
         auto [body, error_code] = app_.GetState(token);
         return body_response(ErrorCodeToStatus(error_code), body);
-    }
+    }    
     default:
-        return body_response(http::status::bad_request, 
-            app::JsonMessage("badRequest", "Get/Head api not found"));
+        return MakeInvalidMethod(""sv, req.version(), req.keep_alive());
     }
 }
 
@@ -130,14 +131,8 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
         return text_response(stat, body);
 
     }
-    case TypeRequest::Map:
-    case TypeRequest::Maps:
-    case TypeRequest::Players: {
-        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
-    }
     default:
-        return text_response(http::status::bad_request,
-            app::JsonMessage("badRequest", "Post api not found"));
+        return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
 }
 FileRequestResult Api::MakeOptionsResponse(const StringRequest& req) const

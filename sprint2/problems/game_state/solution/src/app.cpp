@@ -1,5 +1,6 @@
 #include "app.h"
 #include "log.h"
+#include <boost/format.hpp>
 
 std::atomic<uint64_t> app::Player::idn = 0;
 
@@ -241,9 +242,13 @@ std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) c
 std::pair<std::string, error_code> App::GetState(std::string_view auth_text) const
 {
     auto put_array = [](const auto &x, const auto &y) {
+        using boost::format;
+        auto double_string = [](const auto& d) {
+            return boost::str(format("%0.1f") % d);
+        };
         js::array jarr;
-        jarr.emplace_back(std::format("{:.1f}", x));
-        jarr.emplace_back(std::format("{:.1f}", y));
+        jarr.emplace_back(double_string(x));
+        jarr.emplace_back(double_string(y));
         return jarr;
     };
     std::string token_str;
@@ -262,10 +267,9 @@ std::pair<std::string, error_code> App::GetState(std::string_view auth_text) con
         dog_param["dir"] = dog.GetDirection();
         state[std::to_string(*dog.GetId())] = dog_param;
     }
-    js::object players;
-    players["palyers"] = state;
+    std::string players = "\"palyers\":"s + serialize(state);
     return std::make_pair(
-        std::move(serialize(players)),
+        std::move(players),
         error_code::None
     );
 }
