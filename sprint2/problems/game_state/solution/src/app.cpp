@@ -242,13 +242,13 @@ std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) c
 std::pair<std::string, error_code> App::GetState(std::string_view auth_text) const
 {
     auto put_array = [](const auto &x, const auto &y) {
-        using boost::format;
-        auto double_string = [](const auto& d) {
-            return boost::str(format("%0.1f") % d);
-        };
+        //using boost::format;
+        //auto double_string = [](const auto& d) {
+        //    return boost::str(format("%0.1f") % d);
+        //};
         js::array jarr;
-        jarr.emplace_back(double_string(x));
-        jarr.emplace_back(double_string(y));
+        jarr.emplace_back(std::floor(x*100)/100);
+        jarr.emplace_back(std::floor(y*100)/100);
         return jarr;
     };
     std::string token_str;
@@ -267,9 +267,12 @@ std::pair<std::string, error_code> App::GetState(std::string_view auth_text) con
         dog_param["dir"] = dog.GetDirection();
         state[std::to_string(*dog.GetId())] = dog_param;
     }
-    std::string players = "\"players\":"s + serialize(state);
+    //std::string players = "\"players\": "s + serialize(state);
+    js::object players;
+    players["players"] = state;
     return std::make_pair(
-        std::move(players),
+        //std::move(players),
+        std::move(serialize(players)),
         error_code::None
     );
 }
