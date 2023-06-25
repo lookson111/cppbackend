@@ -182,6 +182,9 @@ public:
     } 
     Dog* FindDog(std::string_view nick_name);
     Dog* AddDog(std::string_view nick_name);
+    const Dogs& GetDogs() const {
+        return dogs_;
+    }
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;

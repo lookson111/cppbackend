@@ -50,6 +50,9 @@ public:
     std::string_view GetName() const {
         return dog_->GetName();
     }
+    const model::GameSession* GetSession() {
+        return session_;
+    }
 private:
     static std::atomic<uint64_t> idn;
     Id id_;
@@ -114,9 +117,9 @@ public:
     }
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
-    std::pair<std::string, error_code> GetPlayers() const;
+    std::pair<std::string, error_code> GetPlayers(std::string_view auth_text) const;
     std::pair<std::string, error_code> GetState(std::string_view auth_text) const;
-    error_code CheckToken(std::string_view token) const;
+    std::pair<std::string, error_code> CheckToken(std::string_view token, std::string& token_str) const;
     
 private:
     model::Game& game_;

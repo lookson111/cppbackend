@@ -21,8 +21,9 @@ private:
         const StringRequest& req) const override;
     TypeRequest ParseTarget(
         std::string_view target, std::string& res) const;
-    std::pair<http::status, std::string> CheckToken(const StringRequest& req) const;
-
+    std::string CheckToken(std::string_view token) const;
+    std::string GetToken(const StringRequest& req) const;
+    http::status ErrorCodeToStatus(app::error_code ec) const;
 public:
 	Api(model::Game& game)
 		: app_(game) {}

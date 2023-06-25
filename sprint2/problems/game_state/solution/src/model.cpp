@@ -17,7 +17,7 @@ void Map::AddOffice(const Office &office) {
     try {
         warehouse_id_to_index_.emplace(o.GetId(), index);
     } catch (...) {
-        // Удаляем офис из вектора, если не удалось вставить в unordered_map
+        // Удаляем офис из вектора, если не удалось вставить в unordered_mapS
         offices_.pop_back();
         throw;
     }
@@ -75,7 +75,7 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     DPoint coord = GetRandomRoadCoord();
     Dog dog = Dog(nick_name, coord);
     const size_t index = dogs_.size();
-    auto o = dogs_.emplace_back(std::move(dog));
+    auto &o = dogs_.emplace_back(std::move(dog));
     try {
         dogs_id_to_index_.emplace(o.GetId(), index);
     }
@@ -92,14 +92,14 @@ DPoint GameSession::GetRandomRoadCoord()
 {
     using namespace boost::multiprecision;
     using namespace boost::random;
-    auto roads = map_->GetRoads();
+    auto &roads = map_->GetRoads();
     if (roads.size() == 0)
         return DPoint();
     std::time_t now = std::time(0);
     boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
     boost::random::uniform_int_distribution<size_t> dist{0, roads.size()-1};
     independent_bits_engine<mt19937, std::numeric_limits<double>::digits, cpp_int> gen_d;
-    auto road = roads[dist(gen)];
+    auto &road = roads[dist(gen)];
     DPoint coord;
     if (road.IsHorizontal()) {
         auto start_point = road.GetStart();

@@ -29,28 +29,37 @@ TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
     }
     return TypeRequest::None;
 }
-
-std::pair<http::status, std::string> Api::CheckToken(const StringRequest& req) const {
-    auto invalidToken = app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv);
+std::string Api::GetToken(const StringRequest& req) const {
     auto it = req.find(http::field::authorization);
     if (it == req.end())
-        return std::make_pair(http::status::unauthorized, 
-            std::move(invalidToken));//invalidToken);
+        return "";
     std::string token{it->value()};
-    auto err = app_.CheckToken(token);
-    http::status stat;
-    switch (err) {
+    return token;
+}
+
+http::status Api::ErrorCodeToStatus(app::error_code ec) const {
+    http::status stat = http::status::ok;
+    switch (ec) {
     case app::error_code::InvalidToken:
-        return std::make_pair(http::status::unauthorized,
-            std::move(invalidToken));
+        stat = http::status::unauthorized;
     case app::error_code::UnknownToken:
-        return std::make_pair(http::status::unauthorized, 
-            std::move(app::JsonMessage("unknownToken"sv, "Player token has not been found"sv)));
+        stat = http::status::unauthorized;
     case app::error_code::None:
         stat = http::status::ok;
         break;
     }
-    return std::make_pair(stat, "");
+    return stat;
+}
+
+std::string Api::CheckToken(std::string_view token) const {
+    auto invalidToken = app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv);
+    if (token.empty())
+        return invalidToken;
+    return "";
+   /*     return std::make_pair(http::status::unauthorized,
+            std::move(invalidToken));
+    auto [text, err] = app_.CheckToken(token);
+    return std::make_pair(ErrorCodeToStatus(err), std::move(text));*/
 }
 
 FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body) const {
@@ -58,8 +67,8 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
         return MakeStringResponse(status, with_body ? text : ""sv, req.version(), 
             req.keep_alive(), ContentType::APP_JSON, true);
     };
-    const auto valid_token = [&](http::status status, std::string_view text) {
-        return MakeStringResponse(status, text,
+    const auto valid_token = [&](std::string_view text) {
+        return MakeStringResponse(http::status::unauthorized, text,
             req.version(), req.keep_alive(), ContentType::APP_JSON, true);
     };
     std::string target;
@@ -76,20 +85,20 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     }
     case TypeRequest::Players: {
-        auto [status, error_body] = CheckToken(req);
-        if (status != http::status::ok)
-            return valid_token(status, error_body);
-        auto [body, err] = app_.GetPlayers();
-        return body_response(status, body);
+        std::string token = GetToken(req);
+        auto error_body = CheckToken(token);
+        if (!error_body.empty())
+            return valid_token(error_body);
+        auto [body, error_code] = app_.GetPlayers(token);
+        return body_response(ErrorCodeToStatus(error_code), body);
     }
     case TypeRequest::State: {
-        auto [status, error_body] = CheckToken(req);
-        if (status != http::status::ok)
-            return valid_token(status, error_body);
-        auto it = req.find(http::field::authorization);
-        std::string token{it->value()};
+        std::string token = GetToken(req);
+        auto error_body = CheckToken(token);
+        if (!error_body.empty())
+            return valid_token(error_body);
         auto [body, error_code] = app_.GetState(token);
-        return body_response(status, body);
+        return body_response(ErrorCodeToStatus(error_code), body);
     }
     default:
         return body_response(http::status::bad_request, 

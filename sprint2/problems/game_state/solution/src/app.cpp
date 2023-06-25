@@ -206,9 +206,26 @@ App::ResponseJoin(std::string_view jsonBody) {
     );
 }
 
-std::pair<std::string, error_code> App::GetPlayers() const {
+std::pair<std::string, error_code> App::GetPlayers(std::string_view auth_text) const {
     js::object msg;
-    Player* player;
+    std::string token_str;
+    auto pair = CheckToken(auth_text, token_str);
+    if (pair.second != error_code::None)
+        return pair;
+    auto token = Token{ token_str };
+    Player* player = player_tokens_.FindPlayer(token);
+    auto session = player->GetSession();
+    const auto &dogs = session->GetDogs();
+    for (const auto& dog : dogs) {
+        js::object jname;
+        jname["name"] = to_booststr(dog.GetName());
+        msg[std::to_string(*dog.GetId())] = jname;
+    }
+
+    return std::make_pair(
+        std::move(serialize(msg)),
+        error_code::None);
+    /*Player* player;
     for (uint64_t id = 0; (player = players_.FindPlayer(Player::Id{id})) != nullptr; id++) {
         js::object jname;
         jname["name"] = to_booststr(player->GetName());
@@ -218,38 +235,61 @@ std::pair<std::string, error_code> App::GetPlayers() const {
     return std::make_pair(
         std::move(out),
         error_code::None
-    );
+    );*/
 }
 
 std::pair<std::string, error_code> App::GetState(std::string_view auth_text) const
 {
+    auto put_array = [](const auto &x, const auto &y) {
+        js::array jarr;
+        jarr.emplace_back(std::format("{:.1f}", x));
+        jarr.emplace_back(std::format("{:.1f}", y));
+        return jarr;
+    };
+    std::string token_str;
+    auto pair = CheckToken(auth_text, token_str);
+    if (pair.second != error_code::None)
+        return pair;
+    auto token = Token{ token_str };
+    Player* player = player_tokens_.FindPlayer(token);
     js::object state;
-    Player* player = GetPlayer(auth_text);
-
-    /*for (uint64_t id = 0; (player = players_.FindPlayer(Player::Id{id})) != nullptr; id++) {
-        js::object jname;
-        jname["name"] = to_booststr(player->GetName());
-        state[std::to_string(id)] = jname;
-    }*/
+    auto session = player->GetSession();
+    const auto &dogs = session->GetDogs();
+    for (const auto &dog : dogs) {
+        js::object dog_param;
+        dog_param["pos"] = put_array(dog.GetPoint().x, dog.GetPoint().y);
+        dog_param["speed"] = put_array(dog.GetSpeed().x, dog.GetSpeed().y);
+        dog_param["dir"] = dog.GetDirection();
+        state[std::to_string(*dog.GetId())] = dog_param;
+    }
     js::object players;
     players["palyers"] = state;
-    //return serialize(players);
     return std::make_pair(
         std::move(serialize(players)),
         error_code::None
     );
 }
 
-error_code App::CheckToken(std::string_view auth_text) const
+std::pair<std::string, error_code> App::CheckToken(std::string_view auth_text, std::string& token_str) const
 {
     std::string_view authToken = GetToken(auth_text);
+    token_str = std::string(authToken.data(), authToken.size());
     if (authToken.empty())
-        return error_code::InvalidToken;
-    Token token{ std::string(authToken.data(), authToken.size()) };
+        return std::make_pair(
+            std::move(app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv)),
+            error_code::InvalidToken
+        );
+    Token token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     if (player == nullptr)
-        return error_code::UnknownToken;
-    return error_code::None;
+        return std::make_pair(
+            std::move(app::JsonMessage("unknownToken"sv, "Player token has not been found"sv)),
+            error_code::UnknownToken
+        );
+    return std::make_pair(
+        "",
+        error_code::None
+    );
 }
 
 Player* App::GetPlayer(std::string_view auth_text) const 
@@ -282,7 +322,8 @@ Player* App::GetPlayer(std::string_view nickName, std::string_view mapId)
 Player* Players::Add(model::Dog* dog, model::GameSession* session) {
     const size_t index = players_.size();
     std::unique_ptr<Player> player = std::make_unique<Player>(session, dog);
-    if (auto [it, inserted] = player_id_to_index_.emplace(player->GetId(), index); !inserted) {
+    Player::Id id{*dog->GetId()};
+    if (auto [it, inserted] = player_id_to_index_.emplace(id, index); !inserted) {
         throw std::invalid_argument("Player with id "s + std::to_string(*player->GetId()) + " already exists"s);
     }
     else {

@@ -50,20 +50,28 @@ public:
         nickname_(nickname.data(), nickname.size()), id_(Id{ idn++ }),
         coord_(coord){
     }
+    Dog(const Dog& other) : id_(other.id_), nickname_(other.nickname_),
+        coord_(other.coord_), speed_(other.speed_), dir_(other.dir_) {
+    }
+    Dog(Dog&& other) noexcept :
+        id_(std::move(other.id_)), nickname_(std::move(other.nickname_)),
+        coord_(std::move(other.coord_)), speed_(std::move(other.speed_)),
+        dir_(std::move(other.dir_)) {
+    }
     const Id& GetId() const {
         return id_;
     }
     std::string_view GetName() const noexcept {
         return nickname_;
     }
-    Dog(const Dog& other) : id_(other.id_), nickname_(other.nickname_),
-        coord_(other.coord_), speed_(other.speed_), dir_(other.dir_) {
+    const DPoint& GetPoint() const {
+        return coord_;
     }
-    Dog(Dog&& other) noexcept :
-        id_(std::move(other.id_)), nickname_(std::move(other.nickname_)),
-        coord_(std::move(other.coord_)), speed_(std::move(other.speed_)), 
-        dir_(std::move(other.dir_)) {
+    const DSpeed& GetSpeed() const {
+        return speed_;
     }
+    std::string GetDirection() const;
+
 private:
     static std::atomic<uint64_t> idn;
     Id id_ = Id{0};
