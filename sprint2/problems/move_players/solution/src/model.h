@@ -163,6 +163,9 @@ public:
     void SetDogSpeed(DDimension dog_speed) {
         dog_speed_ = dog_speed;
     }
+    DDimension GetDogSpeed() const {
+        return dog_speed_;
+    }
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;

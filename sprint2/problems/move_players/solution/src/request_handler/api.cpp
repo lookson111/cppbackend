@@ -50,6 +50,9 @@ http::status Api::ErrorCodeToStatus(app::error_code ec) const {
     case app::error_code::UnknownToken:
         stat = http::status::unauthorized;
         break;
+    case app::error_code::InvalidArgument:
+        stat = http::status::bad_request;
+        break;
     case app::error_code::None:
         stat = http::status::ok;
         break;
@@ -126,8 +129,8 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
         return text_response(stat, body);
     }
     case TypeRequest::Action: {
-        return ExecuteAuthorized(req, true, [&](const std::string& token) {
-            return app_.MoveAction(token, req.body());
+        return ExecuteAuthorizedPost(req, true, [&](const std::string& token) {
+            return app_.ActionMove(token, req.body());
             });
     }
     default:

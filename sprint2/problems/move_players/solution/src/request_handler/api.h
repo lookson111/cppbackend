@@ -45,6 +45,25 @@ private:
         return body_response(ErrorCodeToStatus(error_code), body);
     }
 
+    template <typename Fn>
+    StringResponse ExecuteAuthorizedPost(const StringRequest& req, bool with_body, Fn&& action) const {
+        const auto body_response = [&](http::status status, std::string_view text) {
+            return MakeStringResponse(status, with_body ? text : ""sv, req.version(),
+                req.keep_alive(), ContentType::APP_JSON, true);
+        };
+        std::string token = GetToken(req);
+        auto error_body_check = CheckToken(token);
+        if (!error_body_check.empty()) {
+            return body_response(http::status::unauthorized, error_body_check);
+        }
+        std::string token_str;
+        auto [error_body, error_code] = app_.CheckToken(token, token_str);
+        if (error_code != app::error_code::None)
+            return body_response(ErrorCodeToStatus(error_code), error_body);
+        auto [body, error_action] = action(token_str);
+        return body_response(ErrorCodeToStatus(error_action), body);
+    }
+
 public:
 	Api(model::Game& game)
 		: app_(game) {}

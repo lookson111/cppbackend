@@ -222,17 +222,16 @@ App::ResponseJoin(std::string_view jsonBody) {
 
 std::pair<std::string, error_code>
 App::ActionMove(const std::string& token_str, std::string_view jsonBody) {
-    auto parseError = std::make_pair(
-        JsonMessage("invalidArgument"sv, "Failed to parse action"sv),
-        JoinError::BadJson
-    );
     std::string move;
     try {
-        js::value const jv = js::parse(jb);
+        js::value const jv = js::parse(to_booststr(jsonBody));
         move = jv.at("move").as_string();
     }
     catch (...) {
-        return parseError;
+        return std::make_pair(
+            JsonMessage("invalidArgument"sv, "Failed to parse action"sv),
+            error_code::InvalidArgument
+        );
     }    
     auto token = Token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);

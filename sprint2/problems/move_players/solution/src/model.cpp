@@ -131,6 +131,7 @@ Dog* GameSession::FindDog(std::string_view nick_name)
     return nullptr;
 }
 void GameSession::MoveDog(Dog::Id id, Move move) {
-    
+    auto& dog = dogs_[dogs_id_to_index_[id]];
+    dog.Diraction(move, map_->GetDogSpeed());
 }
 }  // namespace model

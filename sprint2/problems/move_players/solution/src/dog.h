@@ -21,7 +21,7 @@ enum class Move {
     UP,
     DOWN,
     STAND
-}
+};
 
 enum class Direction {
     NORTH, 
@@ -80,7 +80,7 @@ public:
         return speed_;
     }
     std::string GetDirection() const;
-
+    void Diraction(Move move, DDimension speed);
 private:
     static std::atomic<uint64_t> idn;
     Id id_ = Id{0};

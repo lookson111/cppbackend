@@ -23,4 +23,19 @@ std::string Dog::GetDirection() const
     return "U";
 }
 
+void Dog::Diraction(Move move, DDimension speed) {
+    switch (move) {
+    case Move::LEFT:
+        speed_ = { -1*speed, 0.0 };
+    case Move::RIGHT:
+        speed_ = { speed, 0.0 };
+    case Move::UP:
+        speed_ = { 0.0, -1*speed };
+    case Move::DOWN:
+        speed_ = { 0.0, speed };
+    case Move::STAND:
+        speed_ = { 0.0, 0.0 };
+    }
+}
+
 }  // namespace model
