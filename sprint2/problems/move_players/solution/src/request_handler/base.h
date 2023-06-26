@@ -33,7 +33,8 @@ enum class TypeRequest {
     Join,
     Players,
     State,
-    Action
+    Action,
+    BadVersion
 };
 
 struct FileExtension {
@@ -108,5 +109,6 @@ protected:
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON) const;
     StringResponse MakeInvalidMethod(std::string_view allow_methods, unsigned http_version,
         bool keep_alive) const;
+    StringResponse MakeInvalidApiVersion(unsigned http_version, bool keep_alive) const;
 };
 } // namespace http_handler

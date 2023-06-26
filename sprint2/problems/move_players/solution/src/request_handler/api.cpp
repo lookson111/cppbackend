@@ -4,6 +4,7 @@
 namespace http_handler {
 
 TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
+    std::string_view check_version = "/api/v1/"sv;
     std::string_view maps = "/api/v1/maps"sv;
     std::string_view join = "/api/v1/game/join"sv;
     std::string_view players = "/api/v1/game/players"sv;
@@ -11,6 +12,9 @@ TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
     std::string_view action  = "/api/v1/game/player/action"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
+    if (uriDecode.find(check_version) == uriDecode.npos) {
+        return TypeRequest::BadVersion;
+    }
     // finded maps
     if (uriDecode.find(maps) != uriDecode.npos) {
         if (uriDecode.size() == maps.size())
@@ -100,6 +104,8 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
     case TypeRequest::Join: {
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     }
+    case TypeRequest::BadVersion:
+        return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
         return MakeInvalidMethod(""sv, req.version(), req.keep_alive());
     }
@@ -133,6 +139,8 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
             return app_.ActionMove(token, req.body());
             });
     }
+    case TypeRequest::BadVersion:
+        return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -145,6 +153,8 @@ FileRequestResult Api::MakeOptionsResponse(const StringRequest& req) const
     case TypeRequest::Action:
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::BadVersion:
+        return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -156,6 +166,8 @@ FileRequestResult Api::MakePutResponse(const StringRequest& req) const
     case TypeRequest::Action:
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::BadVersion:
+        return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -167,6 +179,8 @@ FileRequestResult Api::MakePatchResponse(const StringRequest& req) const
     case TypeRequest::Action:
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::BadVersion:
+        return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }
@@ -178,6 +192,8 @@ FileRequestResult Api::MakeDeleteResponse(const StringRequest& req) const
     case TypeRequest::Action:
     case TypeRequest::Join:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
+    case TypeRequest::BadVersion:
+        return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
         return MakeInvalidMethod("GET, HEAD"sv, req.version(), req.keep_alive());
     }

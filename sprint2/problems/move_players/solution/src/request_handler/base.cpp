@@ -65,6 +65,14 @@ StringResponse Base::MakeInvalidMethod(std::string_view allow_methods, unsigned 
     return resp;
 }
 
+StringResponse Base::MakeInvalidApiVersion(unsigned http_version, bool keep_alive) const
+{
+    auto text = app::JsonMessage("badRequest", "Invalid api vesion");
+    auto resp = MakeStringResponse(http::status::bad_request, text,
+        http_version, keep_alive, ContentType::APP_JSON, true);
+    return resp;
+}
+
 FileRequestResult Base::HandleRequest(const StringRequest& req) const {
     // Format response
     try {
@@ -87,8 +95,6 @@ FileRequestResult Base::HandleRequest(const StringRequest& req) const {
             return MakeStringResponse(http::status::method_not_allowed,
                 app::JsonMessage("invalidMethod"sv, "Invaled method"),
                 req.version(), req.keep_alive(), ContentType::APP_JSON, true);
-            //return MakeBadResponse(http::status::method_not_allowed,
-            //    req.version(), req.keep_alive());
         }
     }
     catch (std::exception ex) {
