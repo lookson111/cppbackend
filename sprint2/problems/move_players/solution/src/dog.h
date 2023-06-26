@@ -15,6 +15,21 @@ namespace model {
 using DDimension = double;
 using DCoord = DDimension;
 
+enum class Move {
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    STAND
+}
+
+enum class Direction {
+    NORTH, 
+    SOUTH,
+    WEST, 
+    EAST
+};
+
 struct DPoint {
     //DPoint() {}
     //explicit DPoint(double x, double y) : x(x), y(y)
@@ -36,12 +51,6 @@ struct DSpeed {
     double x = 0, y = 0;
 };
 
-enum class Direction {
-    NORTH, 
-    SOUTH,
-    WEST, 
-    EAST
-};
 
 class Dog {
 public:

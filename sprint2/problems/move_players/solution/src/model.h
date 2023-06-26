@@ -189,13 +189,13 @@ public:
     const Dogs& GetDogs() const {
         return dogs_;
     }
+    void MoveDog(Dog::Id id, Move move);
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
     Dogs dogs_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
-
 
     DPoint GetRandomRoadCoord();
 };

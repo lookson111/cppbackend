@@ -107,6 +107,21 @@ js::array ModelToJson::GetOffice(const model::Map::Offices& offices) {
     return arr;
 }
 
+void Player::Move(std::string_view move_cmd) {
+    model::Move dog_move;
+    if (move_cmd == "L"sv) 
+        dog_move = model::Move::LEFT;
+    else if (move_cmd == "R"sv)
+        dog_move = model::Move::RIGHT;
+    else if (move_cmd == "U"sv)
+        dog_move = model::Move::UP;
+    else if (move_cmd == "D"sv)
+        dog_move = model::Move::DOWN;
+    else 
+        dog_move = model::Move::STAND;
+    session_->MoveDog(dog_->GetId(), dog_move);    
+}
+
 Player* PlayerTokens::FindPlayer(Token token) const
 {
     if (token_to_player.contains(token))
@@ -202,6 +217,30 @@ App::ResponseJoin(std::string_view jsonBody) {
     return std::make_pair(
         std::move(serialize(msg)),
         JoinError::None
+    );
+}
+
+std::pair<std::string, error_code>
+App::ActionMove(const std::string& token_str, std::string_view jsonBody) {
+    auto parseError = std::make_pair(
+        JsonMessage("invalidArgument"sv, "Failed to parse action"sv),
+        JoinError::BadJson
+    );
+    std::string move;
+    try {
+        js::value const jv = js::parse(jb);
+        move = jv.at("move").as_string();
+    }
+    catch (...) {
+        return parseError;
+    }    
+    auto token = Token{ token_str };
+    Player* player = player_tokens_.FindPlayer(token);
+    player->Move(move);
+    js::object msg;
+    return std::make_pair(
+        std::move(serialize(msg)),
+        error_code::None        
     );
 }
 

@@ -130,5 +130,7 @@ Dog* GameSession::FindDog(std::string_view nick_name)
     }
     return nullptr;
 }
-
+void GameSession::MoveDog(Dog::Id id, Move move) {
+    
+}
 }  // namespace model

@@ -40,7 +40,8 @@ std::string_view GetToken(std::string_view autorization_text);
 class Player {
 public:
     using Id = util::Tagged<uint64_t, Player>;
-    Player(model::GameSession* session, model::Dog* dog) : session_(session), dog_(dog), id_({idn++}) {}
+    Player(model::GameSession* session, model::Dog* dog) : 
+        session_(session), dog_(dog), id_({idn++}) {}
     const Id& GetId() const {
         return id_;
     }
@@ -53,6 +54,8 @@ public:
     const model::GameSession* GetSession() {
         return session_;
     }
+    void Move(std::string_view move_cmd);
+
 private:
     static std::atomic<uint64_t> idn;
     Id id_;
@@ -117,6 +120,8 @@ public:
     }
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
+    std::pair<std::string, error_code> ActionMove(const std::string& token_str,
+        const std::string& body);
     std::string GetPlayers(const std::string& token_str) const;
     std::string GetState(const std::string& token_str) const;
     std::pair<std::string, error_code> CheckToken(std::string_view token, std::string& token_str) const;

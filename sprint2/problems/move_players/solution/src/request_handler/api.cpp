@@ -127,7 +127,7 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
     }
     case TypeRequest::Action: {
         return ExecuteAuthorized(req, true, [&](const std::string& token) {
-            return app_.GetState(token);
+            return app_.MoveAction(token, req.body());
             });
     }
     default:
