@@ -123,6 +123,7 @@ public:
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
     std::pair<std::string, error_code> ActionMove(
         const std::string& token_str, std::string_view jsonBody);
+    std::pair<std::string, error_code> Tick(std::string_view jsonBody);
     std::string GetPlayers(const std::string& token_str) const;
     std::string GetState(const std::string& token_str) const;
     std::pair<std::string, error_code> CheckToken(std::string_view token, std::string& token_str) const;

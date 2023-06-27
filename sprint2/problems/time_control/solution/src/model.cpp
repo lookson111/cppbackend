@@ -68,6 +68,12 @@ GameSession* Game::AddGameSession(const Map::Id& id) {
     return &game_sessions_.back();
 }
 
+void Game::Tick(uint64_t time_delta_ms) {
+    for (auto &game_session : game_sessions_) {
+        
+    }    
+}
+
 Dog* GameSession::AddDog(std::string_view nick_name)
 {
     if (FindDog(nick_name) != nullptr) {

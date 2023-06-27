@@ -34,7 +34,8 @@ enum class TypeRequest {
     Players,
     State,
     Action,
-    BadVersion
+    BadVersion,
+    Tick
 };
 
 struct FileExtension {

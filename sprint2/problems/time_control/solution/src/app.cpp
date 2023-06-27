@@ -243,6 +243,26 @@ App::ActionMove(const std::string& token_str, std::string_view jsonBody) {
     );
 }
 
+std::pair<std::string, error_code> App::Tick(std::string_view jsonBody) {
+    uint64_t time_delta_mc;
+    try {
+        js::value const jv = js::parse(to_booststr(jsonBody));
+        time_delta_mc = jv.at("timeDelta").as_uint64();
+    }
+    catch (...) {
+        return std::make_pair(
+            JsonMessage("invalidArgument"sv, "Failed to parse tick request JSON"sv),
+            error_code::InvalidArgument
+        );
+    }    
+    game_.Tick(time_delta_mc);
+    js::object msg;
+    return std::make_pair(
+        std::move(serialize(msg)),
+        error_code::None        
+    );
+}
+
 std::string App::GetPlayers(const std::string& token_str) const {
     js::object msg;
     auto token = Token{ token_str };

@@ -5,11 +5,12 @@ namespace http_handler {
 
 TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
     std::string_view check_version = "/api/v1/"sv;
-    std::string_view maps = "/api/v1/maps"sv;
-    std::string_view join = "/api/v1/game/join"sv;
+    std::string_view maps    = "/api/v1/maps"sv;
+    std::string_view join    = "/api/v1/game/join"sv;
     std::string_view players = "/api/v1/game/players"sv;
     std::string_view state   = "/api/v1/game/state"sv;
     std::string_view action  = "/api/v1/game/player/action"sv;
+    std::string_view tick    = "/api/v1/game/tick"sv;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
     if (uriDecode.find(check_version) == uriDecode.npos) {
@@ -23,18 +24,16 @@ TypeRequest Api::ParseTarget(std::string_view target, std::string& res) const {
         return TypeRequest::Map;
     }
     // join game
-    if (uriDecode.find(join) != uriDecode.npos) {
-        return TypeRequest::Join;
-    }
-    if (uriDecode.find(players) != uriDecode.npos) {
-        return TypeRequest::Players;
-    }
-    if (uriDecode.find(state) != uriDecode.npos) {
-        return TypeRequest::State;
-    }
-    if (uriDecode.find(action) != uriDecode.npos) {
-        return TypeRequest::Action;
-    }
+    if (uriDecode.find(join) != uriDecode.npos)
+        return TypeRequest::Join;    
+    if (uriDecode.find(players) != uriDecode.npos)
+        return TypeRequest::Players;    
+    if (uriDecode.find(state) != uriDecode.npos)
+        return TypeRequest::State;    
+    if (uriDecode.find(action) != uriDecode.npos)
+        return TypeRequest::Action;    
+    if (uriDecode.find(tick) != uriDecode.npos)
+        return TypeRequest::Tick;
     return TypeRequest::None;
 }
 std::string Api::GetToken(const StringRequest& req) const {
@@ -100,6 +99,7 @@ FileRequestResult Api::MakeGetResponse(const StringRequest& req, bool with_body)
             return app_.GetState(token);
             });
     }
+    case TypeRequest::Tick:
     case TypeRequest::Action:
     case TypeRequest::Join: {
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
@@ -139,6 +139,11 @@ FileRequestResult Api::MakePostResponse(const StringRequest& req) const {
             return app_.ActionMove(token, req.body());
             });
     }
+    case TypeRequest::Tick: {
+        auto [body, error_code] = app_.Tick(req.body());
+        return text_response(ErrorCodeToStatus(error_code), body);
+        
+    }
     case TypeRequest::BadVersion:
         return MakeInvalidApiVersion(req.version(), req.keep_alive());
     default:
@@ -152,6 +157,7 @@ FileRequestResult Api::MakeOptionsResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Action:
     case TypeRequest::Join:
+    case TypeRequest::Tick:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     case TypeRequest::BadVersion:
         return MakeInvalidApiVersion(req.version(), req.keep_alive());
@@ -165,6 +171,7 @@ FileRequestResult Api::MakePutResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Action:
     case TypeRequest::Join:
+    case TypeRequest::Tick:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     case TypeRequest::BadVersion:
         return MakeInvalidApiVersion(req.version(), req.keep_alive());
@@ -178,6 +185,7 @@ FileRequestResult Api::MakePatchResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Action:
     case TypeRequest::Join:
+    case TypeRequest::Tick:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     case TypeRequest::BadVersion:
         return MakeInvalidApiVersion(req.version(), req.keep_alive());
@@ -191,6 +199,7 @@ FileRequestResult Api::MakeDeleteResponse(const StringRequest& req) const
     switch (ParseTarget(req.target(), target)) {
     case TypeRequest::Action:
     case TypeRequest::Join:
+    case TypeRequest::Tick:
         return MakeInvalidMethod("POST"sv, req.version(), req.keep_alive());
     case TypeRequest::BadVersion:
         return MakeInvalidApiVersion(req.version(), req.keep_alive());

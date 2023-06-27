@@ -218,6 +218,7 @@ public:
     const Map* FindMap(const Map::Id& id) const noexcept;
     GameSession* FindGameSession(const Map::Id& id) noexcept;
     GameSession* AddGameSession(const Map::Id& id);
+    void Tick(uint64_t time_delta_ms);
 
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
