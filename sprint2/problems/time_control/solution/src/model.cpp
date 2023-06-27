@@ -70,8 +70,8 @@ GameSession* Game::AddGameSession(const Map::Id& id) {
 
 void Game::Tick(uint64_t time_delta_ms) {
     for (auto &game_session : game_sessions_) {
-        
-    }    
+        game_session.Tick(time_delta_ms);
+    }
 }
 
 Dog* GameSession::AddDog(std::string_view nick_name)
@@ -87,7 +87,6 @@ Dog* GameSession::AddDog(std::string_view nick_name)
         dogs_id_to_index_.emplace(o.GetId(), index);
     }
     catch (...) {
-        // Удаляем офис из вектора, если не удалось вставить в unordered_map
         dogs_.pop_back();
         throw;
     }
@@ -97,8 +96,6 @@ Dog* GameSession::AddDog(std::string_view nick_name)
 
 DPoint GameSession::GetRandomRoadCoord()
 {
-    //std::random_device rd;
-    //std::mt19937 random_e2;
     std::time_t now = std::time(0);
     boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
     auto random_double = [&](auto x1, auto x2) {
@@ -128,6 +125,24 @@ DPoint GameSession::GetRandomRoadCoord()
     return coord;
 }
 
+void GameSession::LoadRoadMap() {
+    const auto &roads = map_->GetRoads();
+    for (const auto& road : roads) {
+        auto start = road.GetStart();
+        auto end = road.GetEnd();
+        if (road.IsHorizontal()) {
+            for (auto x = start.x; x <= end.x; x++) {
+                road_map.emplace(Point{.x = x, .y = start.y}, &road);
+            }
+        }
+        if (road.IsVertical()) {
+            for (auto y = start.y; y <= end.y; y++) {
+                road_map.emplace(Point{ .x = start.x, .y = y }, &road);
+            }
+        }
+    }
+}
+
 Dog* GameSession::FindDog(std::string_view nick_name)
 {
     for (auto &dog : dogs_) {
@@ -139,5 +154,20 @@ Dog* GameSession::FindDog(std::string_view nick_name)
 void GameSession::MoveDog(Dog::Id id, Move move) {
     auto& dog = dogs_[dogs_id_to_index_[id]];
     dog.Diraction(move, map_->GetDogSpeed());
+}
+void GameSession::Tick(uint64_t time_delta_ms)
+{
+    for (auto& dog : dogs_) {
+        auto start_pos = dog.GetPoint();
+        auto end_pos = dog.GetEndPoint(time_delta_ms);
+        bool is_vertical = start_pos.y == end_pos.y;
+        if (start_pos == end_pos)
+            continue;
+        Point dog_pos{ .x = std::lround(start_pos.x), .y = std::lround(start_pos.y) };
+        auto roads = road_map.equal_range(dog_pos);
+        for (auto it = roads.first; it != roads.second; ++it) {
+
+        }
+    }
 }
 }  // namespace model

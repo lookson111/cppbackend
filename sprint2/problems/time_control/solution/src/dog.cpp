@@ -38,4 +38,10 @@ void Dog::Diraction(Move move, DDimension speed) {
     }
 }
 
+DPoint Dog::GetEndPoint(uint64_t move_time_ms)
+{
+    // TODO
+    return DPoint();
+}
+
 }  // namespace model

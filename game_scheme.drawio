@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-06-23T10:16:24.120Z" agent="Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0" etag="Sx6_T3NQtIPtRbv1r76v" version="21.5.0" type="google">
+<mxfile host="app.diagrams.net" modified="2023-06-27T13:06:43.694Z" agent="Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 OPR/95.0.0.0" etag="BC4QThEbR0VaLicGLLTZ" version="21.5.0" type="google">
   <diagram name="Page-1" id="5f0bae14-7c28-e335-631c-24af17079c00">
     <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
       <root>
@@ -568,6 +568,128 @@
         </mxCell>
         <mxCell id="qP6IXcjLeHCJztaKZTst-110" value="Посылаем ошибку валидации" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" vertex="1" parent="1">
           <mxGeometry x="-1555" y="1041" width="150" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-1" target="z9T2FMF0DJhRf5L9BuB9-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-1" value="Обновление времени" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-2" target="z9T2FMF0DJhRf5L9BuB9-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-2" value="Выбираем game_session" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-4" target="z9T2FMF0DJhRf5L9BuB9-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-4" value="выбираем движущийся объект&lt;br&gt;Dog" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-6" target="z9T2FMF0DJhRf5L9BuB9-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-6" value="Берем изначальные координаты и направление движения" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2460" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-8" target="z9T2FMF0DJhRf5L9BuB9-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-8" value="Вычисляем по скорости и времени где должен быть объект" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2550" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-10" target="z9T2FMF0DJhRf5L9BuB9-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-10" value="По начальным координатам получаем дороги по которым может передвигается объект" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2640" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-12" target="z9T2FMF0DJhRf5L9BuB9-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-12" value="Берем следующую дорогу" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2770" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-14" target="z9T2FMF0DJhRf5L9BuB9-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-14" value="Получаем крайнюю точку дороги на которую может переместиться объект" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1455" y="2860" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-16" target="z9T2FMF0DJhRf5L9BuB9-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-16" value="Запоминаем эту точку" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="2945" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.042;entryY=0.533;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-18" target="z9T2FMF0DJhRf5L9BuB9-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1550" y="2720" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-1530" y="3070" />
+              <mxPoint x="-1530" y="2802" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-22" value="нет" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" connectable="0" vertex="1" parent="z9T2FMF0DJhRf5L9BuB9-19">
+          <mxGeometry x="-0.9443" relative="1" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-18" target="z9T2FMF0DJhRf5L9BuB9-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-18" value="дороги закончились" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1490" y="3030" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-23">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1390" y="3220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-23" value="находим максимальную крайнюю точку дороги куда может переместится объект" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1465" y="3130" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-27" target="z9T2FMF0DJhRf5L9BuB9-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-32" value="Есть" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" connectable="0" vertex="1" parent="z9T2FMF0DJhRf5L9BuB9-30">
+          <mxGeometry x="-0.5304" y="2" relative="1" as="geometry">
+            <mxPoint x="25" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-27" target="z9T2FMF0DJhRf5L9BuB9-34">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-38" value="Нет" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" connectable="0" vertex="1" parent="z9T2FMF0DJhRf5L9BuB9-35">
+          <mxGeometry x="-0.75" y="-1" relative="1" as="geometry">
+            <mxPoint x="21" y="5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-27" value="Есть ли, по координатам крайней точки, дороги в направлении движения собаки" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1520" y="3210" width="260" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-29">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-1390" y="2750" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-1630" y="2750" />
+              <mxPoint x="-1390" y="2750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-29" value="Получаем список дорог&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1690" y="3130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-33" value="конец" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="3450" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="z9T2FMF0DJhRf5L9BuB9-34" target="z9T2FMF0DJhRf5L9BuB9-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="z9T2FMF0DJhRf5L9BuB9-34" value="Фиксируем конечную точку движения собаки" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-1450" y="3360" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

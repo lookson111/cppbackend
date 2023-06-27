@@ -39,14 +39,16 @@ model::Office LoadOffice(ptree &ptO) {
 model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
     auto id   = ptreeMap.get<std::string>("id");
     auto name = ptreeMap.get<std::string>("name");
-    model::Map::Id idmap{id};
-    model::Map map(idmap, name);
+    double dog_speed;
     if (ptreeMap.to_iterator(ptreeMap.find("dogSpeed")) != ptreeMap.end()) {
-        map.SetDogSpeed(ptreeMap.get<double>("dogSpeed"));
+        dog_speed = ptreeMap.get<double>("dogSpeed");
     }
     else {
-        map.SetDogSpeed(def_dog_speed);
+        dog_speed = def_dog_speed;
     }
+    model::Map::Id idmap{id};
+    model::Map map(idmap, name, dog_speed);
+
     ptree jroads = ptreeMap.get_child("roads");
     BOOST_FOREACH(ptree::value_type &jroad, jroads) {
         map.AddRoad(LoadRoad(jroad.second));

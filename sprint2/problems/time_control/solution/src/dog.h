@@ -31,23 +31,12 @@ enum class Direction {
 };
 
 struct DPoint {
-    //DPoint() {}
-    //explicit DPoint(double x, double y) : x(x), y(y)
-    //{}
-    //friend DogCoord operator"" _posx(long double val);
-    //friend DogCoord operator"" _posy(long double val);
     DDimension x = 0, y = 0;
+    bool operator==(const DPoint& p) const {
+        return this->x == p.x && this->y == p.y;
+    }
 };
-/*
-DogCoord operator"" _posx(long double val) {
-    return DogCoord(val);
-}
-DogCoord operator"" _posy(long double val) {
-    return DogCoord(val);
-}*/
 struct DSpeed {
-    //explicit DSpeed(double x, double y) : x(x), y(y)
-    //{}
     double x = 0, y = 0;
 };
 
@@ -81,6 +70,8 @@ public:
     }
     std::string GetDirection() const;
     void Diraction(Move move, DDimension speed);
+    DPoint GetEndPoint(uint64_t move_time_ms);
+
 private:
     static std::atomic<uint64_t> idn;
     Id id_ = Id{0};

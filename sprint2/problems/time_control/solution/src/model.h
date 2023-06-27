@@ -126,9 +126,8 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name) noexcept
-        : id_(std::move(id))
-        , name_(std::move(name)) {
+    Map(Id id, std::string name, DDimension dog_speed) noexcept
+        : id_(std::move(id)), name_(std::move(name)), dog_speed_(dog_speed) {
     }
 
     const Id& GetId() const noexcept {
@@ -160,9 +159,9 @@ public:
     }
 
     void AddOffice(const Office &office);
-    void SetDogSpeed(DDimension dog_speed) {
+    /*void SetDogSpeed(DDimension dog_speed) {
         dog_speed_ = dog_speed;
-    }
+    }*/
     DDimension GetDogSpeed() const {
         return dog_speed_;
     }
@@ -179,11 +178,23 @@ private:
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
 };
+struct PointKeyHash {
+    std::size_t operator()(const Point& k) const {
+        return std::hash<Coord>()(k.x) ^ (std::hash<Coord>()(k.y) << 1);
+    }
+};
+struct PointKeyEqual {
+    bool operator()(const Point& lhs, const Point& rhs) const {
+        return lhs.x == rhs.x && lhs.y == rhs.y;
+    }
+};
 
 class GameSession {
 public:
     using Dogs = std::deque<Dog>;
-    GameSession(const Map* map) : map_(map) {}
+    GameSession(const Map* map) : map_(map) {
+        LoadRoadMap();
+    }
     const Map::Id& MapId() {
         return map_->GetId();
     } 
@@ -193,14 +204,18 @@ public:
         return dogs_;
     }
     void MoveDog(Dog::Id id, Move move);
+    void Tick(uint64_t time_delta_ms);
+
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
+    using RoadMap = std::unordered_multimap<Point, const Road*, PointKeyHash, PointKeyEqual>;
     Dogs dogs_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
-
+    RoadMap road_map;
     DPoint GetRandomRoadCoord();
+    void LoadRoadMap();
 };
 
 class Game {
