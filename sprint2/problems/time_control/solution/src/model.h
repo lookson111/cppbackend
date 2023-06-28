@@ -165,10 +165,12 @@ public:
     DDimension GetDogSpeed() const {
         return dog_speed_;
     }
-
+    DDimension GetRoadOffset() const {
+        return road_offset_;
+    }
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
-
+    DDimension road_offset_ = 0.4;
     Id id_;
     std::string name_;
     Roads roads_;
@@ -190,6 +192,10 @@ struct PointKeyEqual {
 };
 
 class GameSession {
+private:
+    using RoadMap = std::unordered_multimap<Point, const Road*, PointKeyHash, PointKeyEqual>;
+    using RoadMapIter = decltype(RoadMap{}.equal_range(Point{}));
+
 public:
     using Dogs = std::deque<Dog>;
     GameSession(const Map* map) : map_(map) {
@@ -205,11 +211,11 @@ public:
     }
     void MoveDog(Dog::Id id, Move move);
     void Tick(uint64_t time_delta_ms);
-
+    bool PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset);
+    DPoint GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset);
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
-    using RoadMap = std::unordered_multimap<Point, const Road*, PointKeyHash, PointKeyEqual>;
     Dogs dogs_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;

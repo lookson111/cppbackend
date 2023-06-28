@@ -81,7 +81,8 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     if (FindDog(nick_name) != nullptr) {
         throw std::invalid_argument("Duplicate dog");
     }
-    DPoint coord = GetRandomRoadCoord();
+    DPoint coord{.x = 0.0, .y = 0.0};
+    //DPoint coord = GetRandomRoadCoord();
     Dog dog = Dog(nick_name, coord);
     const size_t index = dogs_.size();
     auto &o = dogs_.emplace_back(std::move(dog));
@@ -166,36 +167,47 @@ void GameSession::Tick(uint64_t time_delta_ms)
             .y = static_cast<Coord>(std::round(pos.y))};
         return point_pos;
     };
+    auto road_offset = map_->GetRoadOffset();
     for (auto& dog : dogs_) {
         auto start_pos = dog.GetPoint();
         auto end_pos = dog.GetEndPoint(time_delta_ms);
         bool is_vertical = start_pos.y == end_pos.y;
         if (start_pos == end_pos)
             continue;
-        //Point dog_pos{ .x = static_cast<Coord>(std::round(start_pos.x)), 
-        //    .y = static_cast<Coord>(std::round(start_pos.y))};
         Point dog_cell = pos_round(start_pos);
-        auto prev_cell = start_pos;
+        auto prev_pos = start_pos;
         int protect = 0;
         do {
             auto roads = road_map.equal_range(dog_cell);
-            if (PosInRoads(roads, end_pos)) {
+            if (PosInRoads(roads, end_pos, road_offset)) {
                 dog.SetPoint(end_pos);
-                continue;
+                break;
             }
-            auto extreme_pos = GetExtremePos(roads, end_pos);
-            //prev_cell = dog_cell;
-            dog_cell = pos_round(extreme_pos);
             prev_pos = start_pos;
-            start_pos = extreme_pos;
+            start_pos = GetExtremePos(roads, end_pos, road_offset);
+            dog_cell = pos_round(start_pos);
             protect++;
             if (protect >= MAX_ROADS_TO_FOUND)
                 throw std::exception("Error, not found end cell in roads");
-        } while (prev_pos != extreme_pos);
+        } while (prev_pos != start_pos);
         // TODO if the dog is on the edge, it is necessery to stop him
 
-        //for (auto it = roads.first; it != roads.second; ++it) {
-        // }
+
     }
+}
+bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset)
+{
+    for (auto it = roads.first; it != roads.second; ++it) {
+        auto &road = *it->second;
+        //auto left = ;
+        // down = road
+    }
+    return false;
+}
+DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset)
+{
+    for (auto it = roads.first; it != roads.second; ++it) {
+    }
+    return DPoint();
 }
 }  // namespace model
