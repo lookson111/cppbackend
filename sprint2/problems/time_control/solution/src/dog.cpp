@@ -41,7 +41,13 @@ void Dog::Diraction(Move move, DDimension speed) {
 DPoint Dog::GetEndPoint(uint64_t move_time_ms)
 {
     // TODO
-    return DPoint();
+    if (speed_.x == 0.0 && speed_.y == 0.0)
+        return coord_; 
+    double dt_second = double(move_time_ms) / 1000.0;
+    DPoint end_point;
+    end_point.x = coord_.x + speed_.x * dt_second;
+    end_point.y = coord_.y + speed_.y * dt_second;
+    return end_point;
 }
 
 }  // namespace model

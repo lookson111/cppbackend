@@ -6,6 +6,8 @@
 #include <ctime>
 #include <random>
 
+#define MAX_ROADS_TO_FOUND 100
+
 namespace model {
 using namespace std::literals;
 
@@ -151,23 +153,49 @@ Dog* GameSession::FindDog(std::string_view nick_name)
     }
     return nullptr;
 }
+
 void GameSession::MoveDog(Dog::Id id, Move move) {
     auto& dog = dogs_[dogs_id_to_index_[id]];
     dog.Diraction(move, map_->GetDogSpeed());
 }
+
 void GameSession::Tick(uint64_t time_delta_ms)
 {
+    auto pos_round = [](auto &pos) {
+        Point point_pos{ .x = static_cast<Coord>(std::round(pos.x)),
+            .y = static_cast<Coord>(std::round(pos.y))};
+        return point_pos;
+    };
     for (auto& dog : dogs_) {
         auto start_pos = dog.GetPoint();
         auto end_pos = dog.GetEndPoint(time_delta_ms);
         bool is_vertical = start_pos.y == end_pos.y;
         if (start_pos == end_pos)
             continue;
-        Point dog_pos{ .x = std::lround(start_pos.x), .y = std::lround(start_pos.y) };
-        auto roads = road_map.equal_range(dog_pos);
-        for (auto it = roads.first; it != roads.second; ++it) {
+        //Point dog_pos{ .x = static_cast<Coord>(std::round(start_pos.x)), 
+        //    .y = static_cast<Coord>(std::round(start_pos.y))};
+        Point dog_cell = pos_round(start_pos);
+        auto prev_cell = start_pos;
+        int protect = 0;
+        do {
+            auto roads = road_map.equal_range(dog_cell);
+            if (PosInRoads(roads, end_pos)) {
+                dog.SetPoint(end_pos);
+                continue;
+            }
+            auto extreme_pos = GetExtremePos(roads, end_pos);
+            //prev_cell = dog_cell;
+            dog_cell = pos_round(extreme_pos);
+            prev_pos = start_pos;
+            start_pos = extreme_pos;
+            protect++;
+            if (protect >= MAX_ROADS_TO_FOUND)
+                throw std::exception("Error, not found end cell in roads");
+        } while (prev_pos != extreme_pos);
+        // TODO if the dog is on the edge, it is necessery to stop him
 
-        }
+        //for (auto it = roads.first; it != roads.second; ++it) {
+        // }
     }
 }
 }  // namespace model
