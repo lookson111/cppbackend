@@ -38,6 +38,9 @@ struct DPoint {
 };
 struct DSpeed {
     double x = 0, y = 0;
+    bool operator==(const DSpeed& p) const {
+        return this->x == p.x && this->y == p.y;
+    }
 };
 
 
@@ -74,13 +77,19 @@ public:
     void SetPoint(DPoint coord) {
         coord_ = coord;
     }
-
+    bool IsStanding() {
+        return speed_ == zero_speed_;
+    }
+    void Stop() {
+        speed_ = zero_speed_;
+    }
 private:
     static std::atomic<uint64_t> idn;
+    static DSpeed zero_speed_;
     Id id_ = Id{0};
     std::string nickname_ = "";
     DPoint coord_;
-    DSpeed speed_ = DSpeed{0.0f, 0.0f};
+    DSpeed speed_ = zero_speed_;
     Direction dir_ = Direction::NORTH;
 };
 

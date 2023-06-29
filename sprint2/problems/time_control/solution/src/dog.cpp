@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 std::atomic<uint64_t> model::Dog::idn = 0;
-
+model::DSpeed model::Dog::zero_speed_ = DSpeed{0.0, 0.0};  
 namespace model {
 using namespace std::literals;
 
@@ -34,14 +34,13 @@ void Dog::Diraction(Move move, DDimension speed) {
     case Move::DOWN:
         speed_ = { 0.0, speed };
     case Move::STAND:
-        speed_ = { 0.0, 0.0 };
+        speed_ = zero_speed_;
     }
 }
 
 DPoint Dog::GetEndPoint(uint64_t move_time_ms)
 {
-    // TODO
-    if (speed_.x == 0.0 && speed_.y == 0.0)
+    if (IsStanding())
         return coord_; 
     double dt_second = double(move_time_ms) / 1000.0;
     DPoint end_point;

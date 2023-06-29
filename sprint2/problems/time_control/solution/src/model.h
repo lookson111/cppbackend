@@ -33,6 +33,24 @@ struct Offset {
     Dimension dx, dy;
 };
 
+class RoadRectangle {
+    DDimension x0, x1, y0, y1;
+public:
+    RoadRectangle(Point start, Point end, DDimension road_offset) noexcept {
+        x0 = static_cast<DDimension>(std::min(start.x, end.x)) -
+            road_offset;
+        x1 = static_cast<DDimension>(std::max(start.x, end.x)) +
+            road_offset;
+        y0 = static_cast<DDimension>(std::min(start.y, end.y)) -
+            road_offset;
+        y1 = static_cast<DDimension>(std::max(start.y, end.y)) +
+            road_offset;
+    }
+    auto Get() const noexcept {
+        return std::make_tuple(x0, x1, y0, y1);
+    }
+};
+
 class Road {
     struct HorizontalTag {
         HorizontalTag() = default;
@@ -46,14 +64,16 @@ public:
     constexpr static HorizontalTag HORIZONTAL{};
     constexpr static VerticalTag VERTICAL{};
 
-    Road(HorizontalTag, Point start, Coord end_x) noexcept
+    Road(HorizontalTag, Point start, Coord end_x, DDimension offset) noexcept
         : start_{start}
-        , end_{end_x, start.y} {
+        , end_{end_x, start.y}
+        , road_rectangle_{start_, end_, offset} {
     }
 
-    Road(VerticalTag, Point start, Coord end_y) noexcept
+    Road(VerticalTag, Point start, Coord end_y, DDimension offset) noexcept
         : start_{start}
-        , end_{start.x, end_y} {
+        , end_{start.x, end_y} 
+        , road_rectangle_{start_, end_, offset} {
     }
 
     bool IsHorizontal() const noexcept {
@@ -71,11 +91,16 @@ public:
     Point GetEnd() const noexcept {
         return end_;
     }
-
+    auto GetRectangle() const noexcept {
+        return road_rectangle_.Get();
+    }
 private:
     Point start_;
     Point end_;
+    RoadRectangle road_rectangle_;
 };
+
+
 
 class Building {
 public:
@@ -211,8 +236,6 @@ public:
     }
     void MoveDog(Dog::Id id, Move move);
     void Tick(uint64_t time_delta_ms);
-    bool PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset);
-    DPoint GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset);
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
@@ -222,6 +245,9 @@ private:
     RoadMap road_map;
     DPoint GetRandomRoadCoord();
     void LoadRoadMap();
+    bool PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset);
+    DPoint GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset);
+    DPoint MoveDog(DPoint start_pos, DPoint end_pos);
 };
 
 class Game {

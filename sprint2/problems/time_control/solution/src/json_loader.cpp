@@ -9,18 +9,18 @@ namespace json_loader {
 using namespace boost::property_tree;
 namespace fs = std::filesystem;
 
-model::Road LoadRoad(ptree &ptreeRoad) {
+model::Road LoadRoad(ptree &ptreeRoad, model::DDimension road_offset) {
     model::Point start;
     if (ptreeRoad.to_iterator(ptreeRoad.find("y1")) == ptreeRoad.end()) {
         start.x = ptreeRoad.get<int>("x0");
         start.y = ptreeRoad.get<int>("y0");
         return model::Road(model::Road::HORIZONTAL, start, 
-            ptreeRoad.get<int>("x1"));
+            ptreeRoad.get<int>("x1"), road_offset);
     }
     start.x = ptreeRoad.get<int>("x0");
     start.y = ptreeRoad.get<int>("y0");
     return model::Road(model::Road::VERTICAL, start, 
-        ptreeRoad.get<int>("y1"));
+        ptreeRoad.get<int>("y1"), road_offset);
 }
 
 model::Building LoadBuilding(ptree &ptB) {
@@ -51,7 +51,7 @@ model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
 
     ptree jroads = ptreeMap.get_child("roads");
     BOOST_FOREACH(ptree::value_type &jroad, jroads) {
-        map.AddRoad(LoadRoad(jroad.second));
+        map.AddRoad(LoadRoad(jroad.second, map.GetRoadOffset()));
     }
     ptree jbuildings = ptreeMap.get_child("buildings");
     BOOST_FOREACH(ptree::value_type &jbuilding, jbuildings) {

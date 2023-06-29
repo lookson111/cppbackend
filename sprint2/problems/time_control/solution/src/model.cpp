@@ -160,47 +160,76 @@ void GameSession::MoveDog(Dog::Id id, Move move) {
     dog.Diraction(move, map_->GetDogSpeed());
 }
 
-void GameSession::Tick(uint64_t time_delta_ms)
-{
+DPoint GameSession::MoveDog(DPoint start_pos, DPoint end_pos) {
     auto pos_round = [](auto &pos) {
         Point point_pos{ .x = static_cast<Coord>(std::round(pos.x)),
             .y = static_cast<Coord>(std::round(pos.y))};
         return point_pos;
     };
+    if (start_pos == end_pos)
+        return start_pos;    
     auto road_offset = map_->GetRoadOffset();
+    auto prev_pos = start_pos;
+    int protect = 0;
+    do {
+        Point dog_cell = pos_round(start_pos);
+        auto roads = road_map.equal_range(dog_cell);
+        if (PosInRoads(roads, end_pos, road_offset)) {
+            return end_pos;
+        }
+        prev_pos = start_pos;
+        start_pos = GetExtremePos(roads, end_pos, road_offset);
+        protect++;
+        if (protect >= MAX_ROADS_TO_FOUND)
+            throw std::logic_error("Error, not found end cell in roads"s);
+    } while (prev_pos != start_pos);
+    return start_pos;
+}
+
+void GameSession::Tick(uint64_t time_delta_ms)
+{
     for (auto& dog : dogs_) {
+        if (dog.IsStanding())
+            continue;
         auto start_pos = dog.GetPoint();
         auto end_pos = dog.GetEndPoint(time_delta_ms);
-        bool is_vertical = start_pos.y == end_pos.y;
-        if (start_pos == end_pos)
-            continue;
-        Point dog_cell = pos_round(start_pos);
-        auto prev_pos = start_pos;
-        int protect = 0;
-        do {
-            auto roads = road_map.equal_range(dog_cell);
-            if (PosInRoads(roads, end_pos, road_offset)) {
-                dog.SetPoint(end_pos);
-                break;
-            }
-            prev_pos = start_pos;
-            start_pos = GetExtremePos(roads, end_pos, road_offset);
-            dog_cell = pos_round(start_pos);
-            protect++;
-            if (protect >= MAX_ROADS_TO_FOUND)
-                throw std::exception("Error, not found end cell in roads");
-        } while (prev_pos != start_pos);
-        // TODO if the dog is on the edge, it is necessery to stop him
-
-
+        auto move_pos = MoveDog(start_pos, end_pos);
+        dog.SetPoint(move_pos);
+        // if the dog is on the edge, it is necessery to stop him
+        if (move_pos != end_pos) 
+            dog.Stop();
     }
 }
+//    |  ______________
+// y1 | |              |
+//    | |              |
+//    | |              |
+//    | |              |
+// y0 | |______________|
+//    |____________________
+//     x0             x1
+//
 bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset)
 {
     for (auto it = roads.first; it != roads.second; ++it) {
         auto &road = *it->second;
-        //auto left = ;
-        // down = road
+        auto begin_pos = road.GetStart();
+        auto end_pos = road.GetEnd();
+        //DDimension x0 = 
+        //    static_cast<DDimension>(std::min(begin_pos.x, end_pos.x)) -
+        //    road_offset;
+        //DDimension x1 = 
+        //    static_cast<DDimension>(std::max(begin_pos.x, end_pos.x)) +
+        //    road_offset;
+        //DDimension y0 = 
+        //    static_cast<DDimension>(std::min(begin_pos.y, end_pos.y)) -
+        //    road_offset;
+        //DDimension y0 = 
+        //    static_cast<DDimension>(std::max(begin_pos.y, end_pos.y)) +
+        //    road_offset;
+        auto [x0, x1, y0, y1] = road.GetRectangle();
+        if (pos.x > x0 && pos.x < x1 && pos.y > y0 && pos.y < y1)
+            return true;
     }
     return false;
 }
