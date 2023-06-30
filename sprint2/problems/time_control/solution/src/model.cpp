@@ -6,7 +6,7 @@
 #include <ctime>
 #include <random>
 
-#define MAX_ROADS_TO_FOUND 100
+#define MAX_ROADS_TO_FOUND 10000
 
 namespace model {
 using namespace std::literals;
@@ -176,11 +176,11 @@ DPoint GameSession::MoveDog(DPoint start_pos, DPoint end_pos) {
     do {
         Point dog_cell = pos_round(start_pos);
         auto roads = road_map.equal_range(dog_cell);
-        if (PosInRoads(roads, end_pos, road_offset)) {
+        if (PosInRoads(roads, end_pos)) {
             return end_pos;
         }
         prev_pos = start_pos;
-        start_pos = GetExtremePos(roads, end_pos, road_offset);
+        start_pos = GetExtremePos(roads, end_pos);
         protect++;
         if (protect >= MAX_ROADS_TO_FOUND)
             throw std::logic_error("Error, not found end cell in roads"s);
@@ -211,54 +211,58 @@ void GameSession::Tick(uint64_t time_delta_ms)
 //    |____________________
 //     x0             x1
 //
-bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset)
+bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos)
 {
     for (auto it = roads.first; it != roads.second; ++it) {
         auto &road = *it->second;
         auto [x0, x1, y0, y1] = road.GetRectangle();
-        if (pos.x > x0 && pos.x < x1 && pos.y > y0 && pos.y < y1)
+        if (pos.x >= x0 && pos.x <= x1 && pos.y >= y0 && pos.y <= y1)
             return true;
     }
     return false;
 }
-DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset)
+DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos)
 {
     typedef std::numeric_limits<DDimension> dbl; 
     
     DPoint min;
-    DDimension min_x = dbl::max(), min_y = dbl::max(), distance;
+    DDimension min_d = dbl::max(), distance;
     for (auto it = roads.first; it != roads.second; ++it) {
         auto& road = *it->second;
         auto [x0, x1, y0, y1] = road.GetRectangle();
-        if (pos.x > x0 && pos.x < x1) {
-            if (pos.y < y0) {
-                if ((distance = std::abs(y0 - pos.y)) < min_y) {
-                    min_y = distance;
+        if (pos.x >= x0 && pos.x <= x1) {
+            if (pos.y <= y0) {
+                if ((distance = std::abs(y0 - pos.y)) < min_d) {
+                    min_d = distance;
                     min.y = y0;
                     min.x = pos.x;
+                    continue;
                 }
             }
-            if (pos.y > y1) {
-                if ((distance = std::abs(y1 - pos.y)) < min_y) {
-                    min_y = distance;
+            if (pos.y >= y1) {
+                if ((distance = std::abs(y1 - pos.y)) < min_d) {
+                    min_d = distance;
                     min.y = y1;
                     min.x = pos.x;
+                    continue;
                 }
             }
         }
-        if (pos.y > y0 && pos.y < y1) {
-            if (pos.x < x0) {
-                if ((distance = std::abs(x0 - pos.x)) < min_x) {
-                    min_x = distance;
+        if (pos.y >= y0 && pos.y <= y1) {
+            if (pos.x <= x0) {
+                if ((distance = std::abs(x0 - pos.x)) < min_d) {
+                    min_d = distance;
                     min.x = x0;
                     min.y = pos.y;
+                    continue;
                 }   
             }
-            if (pos.x > x1) {
-                if ((distance = std::abs(x1 - pos.x)) < min_x) {
-                    min_x = distance;
+            if (pos.x >= x1) {
+                if ((distance = std::abs(x1 - pos.x)) < min_d) {
+                    min_d = distance;
                     min.x = x1;
                     min.y = pos.y;
+                    continue;
                 }
             }
         }

@@ -300,8 +300,8 @@ std::string App::GetState(const std::string& token_str) const
 {
     auto put_array = [](const auto &x, const auto &y) {
         js::array jarr;
-        jarr.emplace_back(std::floor(x*100)/100);
-        jarr.emplace_back(std::floor(y*100)/100);
+        jarr.emplace_back(x);//std::floor(x*100)/100);
+        jarr.emplace_back(y);//std::floor(y*100)/100);
         return jarr;
     };
     auto token = Token{ token_str };

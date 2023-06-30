@@ -245,8 +245,8 @@ private:
     RoadMap road_map;
     DPoint GetRandomRoadCoord();
     void LoadRoadMap();
-    bool PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offset);
-    DPoint GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset);
+    bool PosInRoads(RoadMapIter roads, DPoint pos);
+    DPoint GetExtremePos(RoadMapIter roads, DPoint pos);
     DPoint MoveDog(DPoint start_pos, DPoint end_pos);
 };
 
