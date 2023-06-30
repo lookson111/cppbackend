@@ -157,6 +157,7 @@ Dog* GameSession::FindDog(std::string_view nick_name)
 
 void GameSession::MoveDog(Dog::Id id, Move move) {
     auto& dog = dogs_[dogs_id_to_index_[id]];
+    std::cout << "Dog id: " << *id << std::endl;
     dog.Diraction(move, map_->GetDogSpeed());
 }
 
@@ -221,33 +222,46 @@ bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offs
 }
 DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset)
 {
+    typedef std::numeric_limits<DDimension> dbl; 
+    
     DPoint min;
-    DDimension min_x, min_y;
+    DDimension min_x = dbl::max(), min_y = dbl::max(), distance;
     for (auto it = roads.first; it != roads.second; ++it) {
         auto& road = *it->second;
         auto [x0, x1, y0, y1] = road.GetRectangle();
         if (pos.x > x0 && pos.x < x1) {
             if (pos.y < y0) {
-                min.y = y0;
-                //min_y = std::abs();
-                min.x = pos.x;
+                if ((distance = std::abs(y0 - pos.y)) < min_y) {
+                    min_y = distance;
+                    min.y = y0;
+                    min.x = pos.x;
+                }
             }
             if (pos.y > y1) {
-                min.y = y1;
-                min.x = pos.x;
+                if ((distance = std::abs(y1 - pos.y)) < min_y) {
+                    min_y = distance;
+                    min.y = y1;
+                    min.x = pos.x;
+                }
             }
         }
         if (pos.y > y0 && pos.y < y1) {
             if (pos.x < x0) {
-                min.x = x0;
-                min.y = pos.y;
+                if ((distance = std::abs(x0 - pos.x)) < min_x) {
+                    min_x = distance;
+                    min.x = x0;
+                    min.y = pos.y;
+                }   
             }
             if (pos.x > x1) {
-                min.x = x1;
-                min.y = pos.y;
+                if ((distance = std::abs(x1 - pos.x)) < min_x) {
+                    min_x = distance;
+                    min.x = x1;
+                    min.y = pos.y;
+                }
             }
         }
     }
-    return DPoint();
+    return min;
 }
 }  // namespace model
