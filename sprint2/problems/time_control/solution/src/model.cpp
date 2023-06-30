@@ -158,6 +158,7 @@ Dog* GameSession::FindDog(std::string_view nick_name)
 void GameSession::MoveDog(Dog::Id id, Move move) {
     auto& dog = dogs_[dogs_id_to_index_[id]];
     std::cout << "Dog id: " << *id << std::endl;
+    std::cout << "Dog move: " << (int)move << std::endl;
     dog.Diraction(move, map_->GetDogSpeed());
 }
 

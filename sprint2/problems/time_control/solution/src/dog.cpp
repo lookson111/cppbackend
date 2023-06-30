@@ -27,14 +27,24 @@ void Dog::Diraction(Move move, DDimension speed) {
     switch (move) {
     case Move::LEFT:
         speed_ = { -1*speed, 0.0 };
+        dir_ = Direction::WEST;
+        break;
     case Move::RIGHT:
         speed_ = { speed, 0.0 };
+        dir_ = Direction::EAST;
+        break;
     case Move::UP:
         speed_ = { 0.0, -1*speed };
+        dir_ = Direction::NORTH;
+        break;
     case Move::DOWN:
         speed_ = { 0.0, speed };
+        dir_ = Direction::SOUTH;
+        break;
     case Move::STAND:
         speed_ = zero_speed_;
+        //dir_ = ;
+        break;
     }
 }
 

@@ -121,6 +121,7 @@ void Player::Move(std::string_view move_cmd) {
     else 
         dog_move = model::Move::STAND;
     std::cout << "Dog id: " << *dog_->GetId() << std::endl;
+    std::cout << "Dog move: " << (int)dog_move << std::endl;
     session_->MoveDog(dog_->GetId(), dog_move);    
 }
 
