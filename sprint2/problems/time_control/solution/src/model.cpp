@@ -213,20 +213,6 @@ bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offs
 {
     for (auto it = roads.first; it != roads.second; ++it) {
         auto &road = *it->second;
-        auto begin_pos = road.GetStart();
-        auto end_pos = road.GetEnd();
-        //DDimension x0 = 
-        //    static_cast<DDimension>(std::min(begin_pos.x, end_pos.x)) -
-        //    road_offset;
-        //DDimension x1 = 
-        //    static_cast<DDimension>(std::max(begin_pos.x, end_pos.x)) +
-        //    road_offset;
-        //DDimension y0 = 
-        //    static_cast<DDimension>(std::min(begin_pos.y, end_pos.y)) -
-        //    road_offset;
-        //DDimension y0 = 
-        //    static_cast<DDimension>(std::max(begin_pos.y, end_pos.y)) +
-        //    road_offset;
         auto [x0, x1, y0, y1] = road.GetRectangle();
         if (pos.x > x0 && pos.x < x1 && pos.y > y0 && pos.y < y1)
             return true;
@@ -235,7 +221,32 @@ bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos, DDimension road_offs
 }
 DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos, DDimension road_offset)
 {
+    DPoint min;
+    DDimension min_x, min_y;
     for (auto it = roads.first; it != roads.second; ++it) {
+        auto& road = *it->second;
+        auto [x0, x1, y0, y1] = road.GetRectangle();
+        if (pos.x > x0 && pos.x < x1) {
+            if (pos.y < y0) {
+                min.y = y0;
+                //min_y = std::abs();
+                min.x = pos.x;
+            }
+            if (pos.y > y1) {
+                min.y = y1;
+                min.x = pos.x;
+            }
+        }
+        if (pos.y > y0 && pos.y < y1) {
+            if (pos.x < x0) {
+                min.x = x0;
+                min.y = pos.y;
+            }
+            if (pos.x > x1) {
+                min.x = x1;
+                min.y = pos.y;
+            }
+        }
     }
     return DPoint();
 }
