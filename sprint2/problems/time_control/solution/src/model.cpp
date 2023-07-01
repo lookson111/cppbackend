@@ -134,11 +134,15 @@ void GameSession::LoadRoadMap() {
         auto start = road.GetStart();
         auto end = road.GetEnd();
         if (road.IsHorizontal()) {
+            if (start.x > end.x)
+                std::swap(start, end);
             for (auto x = start.x; x <= end.x; x++) {
                 road_map.emplace(Point{.x = x, .y = start.y}, &road);
             }
         }
         if (road.IsVertical()) {
+            if (start.y > end.y)
+                std::swap(start, end);
             for (auto y = start.y; y <= end.y; y++) {
                 road_map.emplace(Point{ .x = start.x, .y = y }, &road);
             }
