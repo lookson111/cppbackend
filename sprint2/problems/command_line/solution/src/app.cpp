@@ -120,8 +120,6 @@ void Player::Move(std::string_view move_cmd) {
         dog_move = model::Move::DOWN;
     else 
         dog_move = model::Move::STAND;
-    std::cout << "Dog id: " << *dog_->GetId() << std::endl;
-    std::cout << "Dog move: " << (int)dog_move << std::endl;
     session_->MoveDog(dog_->GetId(), dog_move);    
 }
 
@@ -248,25 +246,21 @@ App::ActionMove(const std::string& token_str, std::string_view jsonBody) {
 
 std::pair<std::string, error_code> 
 App::Tick(std::string_view jsonBody) {
-    uint64_t time_delta_mc;
+    std::chrono::milliseconds time_delta_mc;
     try {
         auto jv = js::parse(to_booststr(jsonBody));
         auto jv_time_delta = jv.at("timeDelta");
-        //std::cout << "jv: " << jv << std::endl;
-        //std::cout << "jv_time_delta: " << jv_time_delta << std::endl;
+        uint64_t mc;
         if (const auto* n = jv_time_delta.if_int64(); n && *n > 0) { // [ 1 .. 2^63 - 1 ]
-            time_delta_mc = *n;
+            mc = *n;
         } else if (const auto* n = jv_time_delta.if_uint64()) { // [ 2^63 .. 2^64 - 1 ]
-            time_delta_mc = *n;
+            mc = *n;
         } else {
             throw std::out_of_range{"not an uint64_t"};
         }
-        //time_delta_mc = jv_time_delta.as_uint64();
-        //if (!jv_time_delta.is_uint64())
-        //    throw;
-        //time_delta_mc = jv_time_delta.to_number<uint64_t>();
-        if (time_delta_mc == 0)
+        if (mc == 0)
             throw std::out_of_range{"The time should not be zero"};
+        time_delta_mc = std::chrono::milliseconds(mc);
     }
     catch (...) {
         return std::make_pair(
@@ -300,8 +294,8 @@ std::string App::GetState(const std::string& token_str) const
 {
     auto put_array = [](const auto &x, const auto &y) {
         js::array jarr;
-        jarr.emplace_back(x);//std::floor(x*100)/100);
-        jarr.emplace_back(y);//std::floor(y*100)/100);
+        jarr.emplace_back(x);
+        jarr.emplace_back(y);
         return jarr;
     };
     auto token = Token{ token_str };

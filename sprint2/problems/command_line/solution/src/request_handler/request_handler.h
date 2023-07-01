@@ -40,7 +40,7 @@ public:
         std::string_view api = "/api/"sv;
         bool is_target = target.size() > api.size() && (target.substr(0, api.size()) == api);
         try {
-            /*req относится к API?*/
+            /*req относится к API*/
             if (is_target) {
                 auto handle = [self = shared_from_this(), send,
                     req = std::forward<decltype(req)>(req), version, keep_alive] {

@@ -51,9 +51,14 @@ int main(int argc, const char* argv[]) {
                 ioc.stop();
             }
         });
+        // strand, используемый для доступа к API
         auto api_strand = net::make_strand(ioc);
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game);
+        // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
+        auto ticker = std::make_shared<app::Ticker>(api_strand, 50ms,
+            [&game](std::chrono::milliseconds delta) { game.Tick(delta); }
+        );
         // Оборачиваем его в логирующий декоратор
         server_logging::LoggingRequestHandler logging_handler{
             [handler](auto&& endpoint, auto&& req, auto&& send) {
@@ -68,6 +73,7 @@ int main(int argc, const char* argv[]) {
         constexpr net::ip::port_type port = 8080;
         // Запускаем обработку запросов
         http_server::ServerHttp(ioc, { address, port }, logging_handler);
+        ticker->Start();
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         LOGSRV().start(address.to_string(), port);
         // 6. Запускаем обработку асинхронных операций

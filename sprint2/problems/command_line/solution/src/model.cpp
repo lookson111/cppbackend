@@ -70,7 +70,7 @@ GameSession* Game::AddGameSession(const Map::Id& id) {
     return &game_sessions_.back();
 }
 
-void Game::Tick(uint64_t time_delta_ms) {
+void Game::Tick(std::chrono::milliseconds time_delta_ms) {
     for (auto &game_session : game_sessions_) {
         game_session.Tick(time_delta_ms);
     }
@@ -161,8 +161,6 @@ Dog* GameSession::FindDog(std::string_view nick_name)
 
 void GameSession::MoveDog(Dog::Id id, Move move) {
     auto& dog = dogs_[dogs_id_to_index_[id]];
-    std::cout << "Dog id: " << *id << std::endl;
-    std::cout << "Dog move: " << (int)move << std::endl;
     dog.Diraction(move, map_->GetDogSpeed());
 }
 
@@ -192,7 +190,7 @@ DPoint GameSession::MoveDog(DPoint start_pos, DPoint end_pos) {
     return start_pos;
 }
 
-void GameSession::Tick(uint64_t time_delta_ms)
+void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
 {
     for (auto& dog : dogs_) {
         if (dog.IsStanding())

@@ -235,7 +235,7 @@ public:
         return dogs_;
     }
     void MoveDog(Dog::Id id, Move move);
-    void Tick(uint64_t time_delta_ms);
+    void Tick(std::chrono::milliseconds time_delta_ms);
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
@@ -265,7 +265,7 @@ public:
     const Map* FindMap(const Map::Id& id) const noexcept;
     GameSession* FindGameSession(const Map::Id& id) noexcept;
     GameSession* AddGameSession(const Map::Id& id);
-    void Tick(uint64_t time_delta_ms);
+    void Tick(std::chrono::milliseconds time_delta_ms);
 
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;

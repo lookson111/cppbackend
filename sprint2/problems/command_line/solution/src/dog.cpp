@@ -43,16 +43,15 @@ void Dog::Diraction(Move move, DDimension speed) {
         break;
     case Move::STAND:
         speed_ = zero_speed_;
-        //dir_ = ;
         break;
     }
 }
 
-DPoint Dog::GetEndPoint(uint64_t move_time_ms)
+DPoint Dog::GetEndPoint(std::chrono::milliseconds move_time_ms)
 {
     if (IsStanding())
         return coord_; 
-    double dt_second = double(move_time_ms) / 1000.0;
+    double dt_second = double(move_time_ms.count()) / 1000.0;
     DPoint end_point;
     end_point.x = coord_.x + speed_.x * dt_second;
     end_point.y = coord_.y + speed_.y * dt_second;

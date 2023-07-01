@@ -73,7 +73,7 @@ public:
     }
     std::string GetDirection() const;
     void Diraction(Move move, DDimension speed);
-    DPoint GetEndPoint(uint64_t move_time_ms);
+    DPoint GetEndPoint(std::chrono::milliseconds move_time_ms);
     void SetPoint(DPoint coord) {
         coord_ = coord;
     }
