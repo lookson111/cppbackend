@@ -2,6 +2,7 @@
 //
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
+#include <boost/program_options.hpp>
 #include <thread>
 
 
@@ -27,19 +28,83 @@ void RunThreads(unsigned n, const Fn& fn) {
     }
     fn();
 }
+
+struct Args {
+    std::vector<std::string> source;
+    std::string config_file;
+    std::string www_root;
+    std::chrono::milliseconds tick_period;
+    bool randomize_spawn_points = false;
+};
+
+[[nodiscard]] std::optional<Args> ParseCommandLine(int argc, const char* const argv[]) {
+    namespace po = boost::program_options;
+    po::options_description desc{"All options"s};
+    // Выводим описание параметров программы
+    Args args;
+    uint64_t time = 0;
+    desc.add_options()
+        // Добавляем опцию --help и её короткую версию -h
+        ("help,h", "produce help message")
+        // Задаёт период автоматического обновления игрового состояния в миллисекундах
+        ("tick-period,t", po::value(&time)->value_name("milliseconds"s), "set tick period")
+        // Задаёт путь к конфигурационному JSON-файлу игры
+        ("config-file,c", po::value(&args.config_file)->value_name("file"s), "set config file path")
+        // Задаёт путь к каталогу со статическими файлами игры
+        ("www-root,w", po::value(&args.www_root)->value_name("dir"s), "set static files root")
+        // включает режим, при котором пёс игрока появляется в случайной точке случайно выбранной дороги карты.
+        ("randomize-spawn-points", "spawn dogs at random positions");
+    
+    // variables_map хранит значения опций после разбора
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.contains("help"s)) {
+        // Если был указан параметр --help, то выводим справку и возвращаем nullopt
+        std::cout << desc;
+        return std::nullopt;
+    }
+    if (vm.contains("tick-period"s)) {
+        args.tick_period = std::chrono::milliseconds{ time };
+    }
+    else {
+        args.tick_period = std::chrono::milliseconds{ 0 };
+    }
+    // Проверяем наличие опций src и dst
+    if (!vm.contains("config-file"s)) {
+        throw std::runtime_error("Config files have not been specified"s);
+    }
+    if (!vm.contains("www-root"s)) {
+        throw std::runtime_error("Static file path is not specified"s);
+    }
+    if (!vm.contains("randomize-spawn-points"s)) {
+        args.randomize_spawn_points = true;
+    }
+    std::cout << desc;
+    // С опциями программы всё в порядке, возвращаем структуру args
+    return args;
+}
+
 }  // namespace
 
 int main(int argc, const char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: game_server <game-config-json> <static-files>"sv << std::endl;
+    Args args;
+    try {
+        if (auto args_opt = ParseCommandLine(argc, argv))
+            args = std::move(args_opt.value());
+        else
+            return EXIT_SUCCESS;
+    }
+    catch (const std::exception& e) {
+        std::cout << e.what() << std::endl;
         return EXIT_FAILURE;
     }
     server_logging::InitBoostLogFilter();
     try {
         // 1. Загружаем карту из файла и построить модель игры
-        model::Game game = json_loader::LoadGame(argv[1]);
+        model::Game game = json_loader::LoadGame(args.config_file);
         // 1.a Get and check path
-        fs::path static_path = argv[2];
+        fs::path static_path = args.www_root;
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
@@ -56,7 +121,7 @@ int main(int argc, const char* argv[]) {
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game);
         // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
-        auto ticker = std::make_shared<app::Ticker>(api_strand, 50ms,
+        auto ticker = std::make_shared<app::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }
         );
         // Оборачиваем его в логирующий декоратор

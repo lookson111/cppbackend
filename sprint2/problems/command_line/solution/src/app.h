@@ -54,6 +54,8 @@ public:
     }
 
     void Start() {
+        if (period_ == std::chrono::milliseconds(0))
+            return;
         net::dispatch(strand_, [self = shared_from_this()] {
             self->last_tick_ = Clock::now();
             self->ScheduleTick();

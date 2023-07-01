@@ -270,7 +270,8 @@ public:
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
-     
+    
+    bool randomize_spawn_points;
     Maps maps_;
     double DefaultDogSpeed = 0;
     std::deque<GameSession> game_sessions_;
