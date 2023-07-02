@@ -9,6 +9,8 @@
 #include "json_loader.h"
 #include "request_handler/request_handler.h"
 #include "log.h"
+#include "app.h"
+#include "http_server.h"
 
 using namespace std::literals;
 namespace sys = boost::system;
@@ -34,6 +36,7 @@ struct Args {
     std::string config_file;
     std::string www_root;
     std::chrono::milliseconds tick_period;
+    bool on_tick_api = false;
     bool randomize_spawn_points = false;
 };
 
@@ -66,9 +69,11 @@ struct Args {
     }
     if (vm.contains("tick-period"s)) {
         args.tick_period = std::chrono::milliseconds{ time };
+        args.on_tick_api = true;
     }
     else {
         args.tick_period = std::chrono::milliseconds{ 0 };
+        args.on_tick_api = false;
     }
     // Проверяем наличие опций src и dst
     if (!vm.contains("config-file"s)) {
@@ -80,7 +85,6 @@ struct Args {
     if (!vm.contains("randomize-spawn-points"s)) {
         args.randomize_spawn_points = true;
     }
-    std::cout << desc;
     // С опциями программы всё в порядке, возвращаем структуру args
     return args;
 }
@@ -103,6 +107,7 @@ int main(int argc, const char* argv[]) {
     try {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(args.config_file);
+        game.SetRandomizeSpawnPoints(args.randomize_spawn_points);        
         // 1.a Get and check path
         fs::path static_path = args.www_root;
         // 2. Инициализируем io_context
@@ -119,7 +124,7 @@ int main(int argc, const char* argv[]) {
         // strand, используемый для доступа к API
         auto api_strand = net::make_strand(ioc);
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game);
+        auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game, args.on_tick_api);
         // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
         auto ticker = std::make_shared<app::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }

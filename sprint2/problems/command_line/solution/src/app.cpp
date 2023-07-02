@@ -11,31 +11,12 @@ std::string app::JsonMessage(std::string_view code, std::string_view message) {
     return serialize(msg);
 }
 
-
-
 namespace app {
 using namespace std::literals;
 
 static auto to_booststr = [](std::string_view str) {
     return boost::string_view(str.data(), str.size());
 };
-
-std::string_view GetToken(std::string_view autorization_text) {
-    std::string_view bearer = "Bearer "sv;
-    std::string_view ex_token = "6516861d89ebfff147bf2eb2b5153ae1"sv;
-    std::string_view nullstr = autorization_text.substr(0, 0);
-    if (autorization_text.substr(0, bearer.size()) != bearer)
-        return nullstr;
-    if (autorization_text.size() < (bearer.size() + ex_token.size()))
-        return nullstr;
-    size_t begin = bearer.size();
-    size_t end = autorization_text.size() - 1;
-    for (; end > begin && autorization_text[end] == ' '; end--);
-    std::string_view out = autorization_text.substr(begin, end);
-    if (out.size() != ex_token.size())
-        return nullstr;
-    return out;
-}
 
 std::string ModelToJson::GetMaps() {
     const auto& maps = game_.GetMaps();
@@ -222,7 +203,7 @@ App::ResponseJoin(std::string_view jsonBody) {
 }
 
 std::pair<std::string, error_code>
-App::ActionMove(const std::string& token_str, std::string_view jsonBody) {
+App::ActionMove(const Token& token, std::string_view jsonBody) {
     std::string move;
     try {
         js::value const jv = js::parse(to_booststr(jsonBody));
@@ -234,7 +215,6 @@ App::ActionMove(const std::string& token_str, std::string_view jsonBody) {
             error_code::InvalidArgument
         );
     }    
-    auto token = Token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     player->Move(move);
     js::object msg;
@@ -276,9 +256,8 @@ App::Tick(std::string_view jsonBody) {
     );
 }
 
-std::string App::GetPlayers(const std::string& token_str) const {
+std::pair<std::string, error_code> App::GetPlayers(const Token& token) const {
     js::object msg;
-    auto token = Token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     auto session = player->GetSession();
     const auto &dogs = session->GetDogs();
@@ -287,10 +266,13 @@ std::string App::GetPlayers(const std::string& token_str) const {
         jname["name"] = to_booststr(dog.GetName());
         msg[std::to_string(*dog.GetId())] = jname;
     }
-    return serialize(msg);
+    return std::make_pair(
+        std::move(serialize(msg)),
+        error_code::None
+    );
 }
 
-std::string App::GetState(const std::string& token_str) const
+std::pair<std::string, error_code> App::GetState(const Token& token) const
 {
     auto put_array = [](const auto &x, const auto &y) {
         js::array jarr;
@@ -298,7 +280,6 @@ std::string App::GetState(const std::string& token_str) const
         jarr.emplace_back(y);
         return jarr;
     };
-    auto token = Token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     js::object state;
     auto session = player->GetSession();
@@ -312,19 +293,14 @@ std::string App::GetState(const std::string& token_str) const
     }
     js::object players;
     players["players"] = state;
-    return serialize(players);
+    return std::make_pair(
+        std::move(serialize(players)),
+        error_code::None
+    );
 }
 
-std::pair<std::string, error_code> App::CheckToken(std::string_view auth_text, std::string& token_str) const
+std::pair<std::string, error_code> App::CheckToken(const Token& token) const
 {
-    std::string_view authToken = GetToken(auth_text);
-    token_str = std::string(authToken.data(), authToken.size());
-    if (authToken.empty())
-        return std::make_pair(
-            std::move(app::JsonMessage("invalidToken"sv, "Authorization header is missing"sv)),
-            error_code::InvalidToken
-        );
-    Token token{ token_str };
     Player* player = player_tokens_.FindPlayer(token);
     if (player == nullptr)
         return std::make_pair(
@@ -337,10 +313,8 @@ std::pair<std::string, error_code> App::CheckToken(std::string_view auth_text, s
     );
 }
 
-Player* App::GetPlayer(std::string_view auth_text) const 
+Player* App::GetPlayer(const Token& token) const
 {
-    std::string_view authToken = GetToken(auth_text);
-    Token token{ std::string(authToken.data(), authToken.size()) };
     Player* player = player_tokens_.FindPlayer(token);
     return player;
 }
@@ -348,20 +322,12 @@ Player* App::GetPlayer(std::string_view auth_text) const
 Player* App::GetPlayer(std::string_view nickName, std::string_view mapId)
 {
     model::Map::Id map_id{mapId.data()};
-    auto playerId = players_.FindPlayerId(nickName);
-    if (playerId == nullptr) {
-        auto session = game_.FindGameSession(map_id);
-        if (session == nullptr)
-            session = game_.AddGameSession(map_id);
-        model::Dog* dog = session->AddDog(nickName);
-        auto player = players_.Add(dog, session);
-        //player_tokens_.AddPlayer(player);
-        return player;
-    }
-    else {
-        return players_.FindPlayer(*playerId, map_id);
-    }
-    return nullptr;
+    auto session = game_.FindGameSession(map_id);
+    if (session == nullptr)
+        session = game_.AddGameSession(map_id);
+    model::Dog* dog = session->AddDog(nickName);
+    auto player = players_.Add(dog, session);
+    return player;
 }
 
 Player* Players::Add(model::Dog* dog, model::GameSession* session) {

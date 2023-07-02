@@ -1,4 +1,4 @@
-#include "base.h"
+#include "base_request.h"
 #include <boost/beast/http.hpp>
 #include "../app.h"
 
@@ -27,7 +27,7 @@ std::unordered_map<std::string_view, std::string_view> ContentType::type{
 };
 
 // Создаёт StringResponse с заданными параметрами
-StringResponse Base::MakeStringResponse(
+StringResponse BaseRequestHandler::MakeStringResponse(
         http::status status, std::string_view responseText, unsigned http_version,
         bool keep_alive, std::string_view content_type,
         bool no_cache) {
@@ -41,7 +41,7 @@ StringResponse Base::MakeStringResponse(
     return response;
 }
 
-StringResponse Base::MakeBadResponse(
+StringResponse BaseRequestHandler::MakeBadResponse(
         http::status status, unsigned http_version,
         bool keep_alive, std::string_view content_type) const {
     StringResponse response(status, http_version);
@@ -55,7 +55,7 @@ StringResponse Base::MakeBadResponse(
     return response;
 }
 
-StringResponse Base::MakeInvalidMethod(std::string_view allow_methods, unsigned http_version,
+StringResponse BaseRequestHandler::MakeInvalidMethod(std::string_view allow_methods, unsigned http_version,
     bool keep_alive) const
 {
     auto text = app::JsonMessage("invalidMethod"sv, "Invalid method"sv);
@@ -65,7 +65,7 @@ StringResponse Base::MakeInvalidMethod(std::string_view allow_methods, unsigned 
     return resp;
 }
 
-StringResponse Base::MakeInvalidApiVersion(unsigned http_version, bool keep_alive) const
+StringResponse BaseRequestHandler::MakeInvalidApiVersion(unsigned http_version, bool keep_alive) const
 {
     auto text = app::JsonMessage("badRequest", "Invalid api vesion");
     auto resp = MakeStringResponse(http::status::bad_request, text,
@@ -73,7 +73,7 @@ StringResponse Base::MakeInvalidApiVersion(unsigned http_version, bool keep_aliv
     return resp;
 }
 
-FileRequestResult Base::HandleRequest(const StringRequest& req) const {
+FileRequestResult BaseRequestHandler::Handle(const StringRequest& req) const {
     // Format response
     try {
         switch (req.method()) {

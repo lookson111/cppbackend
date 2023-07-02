@@ -1,16 +1,20 @@
 #pragma once
-#include "base.h"
+#include "base_request.h"
+#include <filesystem>
+#include "response.h"
+#include "defs.h"
 
 namespace http_handler {
+namespace fs = std::filesystem;
 	
-class File : public Base {
+class FileRequestHandler : public BaseRequestHandler {
 private:
 	const fs::path static_path_;
 
 public:
-	File(const fs::path& static_path)
+	FileRequestHandler(const fs::path& static_path)
 		: static_path_{ CheckStaticPath(static_path) } {}
-
+//
 private: 
     TypeRequest ParseTarget(std::string_view target, std::string& res) const;
     virtual FileRequestResult MakeGetResponse(

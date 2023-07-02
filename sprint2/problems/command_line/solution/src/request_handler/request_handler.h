@@ -1,38 +1,48 @@
 #pragma once
-#include "../sdk.h"
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/strand.hpp>
-#include <filesystem>
+
 #include <iostream>
+#include <string_view>
+#include <string>
+#include <boost/json.hpp>
+#include <functional>
+#include <map>
 #include <variant>
+#include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/asio/strand.hpp>
 
+#include "defs.h"
 #include "../http_server.h"
-#include "../model.h"
-#include "../log.h"
-#include "../app.h"
-
-#include "file.h"
-#include "api.h"
+//#include "token_m.h"
+#include "response.h"
+#include "api_request.h"
+#include "file_request.h"
 
 namespace http_handler {
+namespace beast = boost::beast;
+namespace http = beast::http;
+namespace net = boost::asio;
+using tcp = net::ip::tcp;
 
 class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
-public:
     using Strand = net::strand<net::io_context::executor_type>;
-
-    RequestHandler(const fs::path& static_path, Strand api_strand, model::Game& game)
-        : file{ static_path }
-        , api_strand_{ api_strand }
-        , api(game) {
-        }
-
+public:
+    /*explicit RequestHandler(boost::asio::io_context& io)
+        : api_handler_{io} 
+	{
+    }*/
+    RequestHandler(const fs::path& static_path, Strand api_strand, model::Game& game, bool on_tick_api)
+        : file_handler{ static_path }
+        , api_strand_(api_strand)
+        , api_handler_(api_strand, game, on_tick_api) {
+    }
 
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-
     template <typename Body, typename Allocator, typename Send>
-    void operator()(tcp::endpoint, http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
+    void operator()(tcp::endpoint, http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send)
+	{
         auto version = req.version();
         auto keep_alive = req.keep_alive();
         std::string target{StringRequest(req).target().data(), StringRequest(req).target().size()};
@@ -40,15 +50,16 @@ public:
         std::string_view api = "/api/"sv;
         bool is_target = target.size() > api.size() && (target.substr(0, api.size()) == api);
         try {
-            /*req РѕС‚РЅРѕСЃРёС‚СЃСЏ Рє API*/
+            /*req относится к API*/
             if (is_target) {
                 auto handle = [self = shared_from_this(), send,
                     req = std::forward<decltype(req)>(req), version, keep_alive] {
                     try {
-                        // Р­С‚РѕС‚ assert РЅРµ РІС‹СЃС‚СЂРµР»РёС‚, С‚Р°Рє РєР°Рє Р»СЏРјР±РґР°-С„СѓРЅРєС†РёСЏ Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЊСЃСЏ РІРЅСѓС‚СЂРё strand
+                        // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
                         assert(self->api_strand_.running_in_this_thread());
-                        return send(std::get<StringResponse>(
-                            self->api.HandleRequest(req)));
+                        return send(std::move(self->api_handler_.Handle(req)));
+                        //return send(std::get<StringResponse>(
+                        //    self->api.HandleRequest(req)));
                     }
                     catch (...) {
                         send(self->ReportServerError(version, keep_alive));
@@ -56,28 +67,24 @@ public:
                 };
                 return net::dispatch(api_strand_, handle);
             }
-            // Р’РѕР·РІСЂР°С‰Р°РµРј СЂРµР·СѓР»СЊС‚Р°С‚ РѕР±СЂР°Р±РѕС‚РєРё Р·Р°РїСЂРѕСЃР° Рє С„Р°Р№Р»Сѓ
+            // Возвращаем результат обработки запроса к файлу
             return std::visit(
                 [&send](auto&& result) {
                     send(std::forward<decltype(result)>(result));
                 },
-                file.HandleRequest(req)
+                file_handler.Handle(req)
             );
         }
         catch (...) {
-            auto text = app::JsonMessage("ServerError"sv,
-                "request processing error"sv);
-            send(Base::MakeStringResponse(http::status::bad_request, text, version, keep_alive));
-            //send(ReportServerError(version, keep_alive));
+            send(ReportServerError(version, keep_alive));
         }
+        //send(std::move(api_handler_.Handle(req)) );
     }
-
 private:
-    StringResponse ReportServerError(unsigned version, bool keep_alive) const;
-
-    Api api;
-    File file;
+    FileRequestHandler file_handler;
     Strand api_strand_;
+	ApiRequestHandler api_handler_;
+    StringResponse ReportServerError(unsigned version, bool keep_alive) const;
 };
 
 }  // namespace http_handler

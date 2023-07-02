@@ -184,9 +184,7 @@ public:
     }
 
     void AddOffice(const Office &office);
-    /*void SetDogSpeed(DDimension dog_speed) {
-        dog_speed_ = dog_speed;
-    }*/
+
     DDimension GetDogSpeed() const {
         return dog_speed_;
     }
@@ -223,7 +221,9 @@ private:
 
 public:
     using Dogs = std::deque<Dog>;
-    GameSession(const Map* map) : map_(map) {
+    GameSession(const Map* map, bool randomize_spawn_points) 
+        : map_(map)
+        , randomize_spawn_points_ (randomize_spawn_points) {
         LoadRoadMap();
     }
     const Map::Id& MapId() {
@@ -242,6 +242,7 @@ private:
     Dogs dogs_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
+    const bool randomize_spawn_points_ = true;
     RoadMap road_map;
     DPoint GetRandomRoadCoord();
     void LoadRoadMap();
@@ -258,7 +259,9 @@ public:
     void SetDefaultDogSpeed(double speed) {
         DefaultDogSpeed = speed;
     }
-
+    void SetRandomizeSpawnPoints(bool randomize_spawn_points) {
+        randomize_spawn_points_ = randomize_spawn_points;
+    }
     const Maps& GetMaps() const noexcept {
         return maps_;
     }
@@ -271,7 +274,7 @@ private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
     
-    bool randomize_spawn_points;
+    bool randomize_spawn_points_ = true;
     Maps maps_;
     double DefaultDogSpeed = 0;
     std::deque<GameSession> game_sessions_;

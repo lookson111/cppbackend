@@ -26,18 +26,23 @@ add_executable(game_server
 	src/json_loader.cpp
 	src/request_handler/request_handler.cpp
 	src/request_handler/request_handler.h
-	src/request_handler/api.cpp
-	src/request_handler/api.h
-	src/request_handler/file.cpp
-	src/request_handler/file.h
-	src/request_handler/base.cpp
-	src/request_handler/base.h
+	src/request_handler/api_request.cpp
+	src/request_handler/api_request.h
+	src/request_handler/file_request.cpp
+	src/request_handler/file_request.h
+	src/request_handler/base_request.cpp
+	src/request_handler/base_request.h
+	src/request_handler/response.cpp
+	src/request_handler/response.h
+	src/request_handler/uri_api.h
+	src/request_handler/defs.h
 	src/log.cpp
 	src/log.h
 	src/app.cpp
 	src/app.h
 	src/dog.cpp
 	src/dog.h
+	src/token.h
 )
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)
 target_link_libraries(game_server PRIVATE CONAN_PKG::boost Threads::Threads) 

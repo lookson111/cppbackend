@@ -89,10 +89,10 @@ private:
     static std::unordered_map<std::string_view, std::string_view> type;
 };
 
-class Base {
+class BaseRequestHandler {
 public:
-    virtual ~Base() {}
-    FileRequestResult HandleRequest(const StringRequest& req) const;
+    virtual ~BaseRequestHandler() {}
+    FileRequestResult Handle(const StringRequest& req) const;
     static StringResponse MakeStringResponse(
         http::status status, std::string_view requestTarget, unsigned http_version,
         bool keep_alive, std::string_view content_type = ContentType::APP_JSON,

@@ -5,6 +5,7 @@
 #include <string>
 #include <random>
 #include "model.h"
+#include "token.h"
 
 namespace app {
 namespace js = boost::json;
@@ -39,7 +40,7 @@ private:
 };
 
 std::string JsonMessage(std::string_view code, std::string_view message);
-std::string_view GetToken(std::string_view autorization_text);
+//std::string_view GetToken(std::string_view autorization_text);
 
 class Ticker : public std::enable_shared_from_this<Ticker> {
 public:
@@ -123,11 +124,11 @@ private:
     model::Dog* dog_;
 };
 
-namespace detail {
-    struct TokenTag {};
-}  // namespace detail
+//namespace detail {
+//    struct TokenTag {};
+//}  // namespace detail
 
-using Token = util::Tagged<std::string, detail::TokenTag>;
+//using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class PlayerTokens {
 public:
@@ -181,17 +182,17 @@ public:
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
     std::pair<std::string, error_code> ActionMove(
-        const std::string& token_str, std::string_view jsonBody);
+        const Token& token, std::string_view jsonBody);
     std::pair<std::string, error_code> Tick(std::string_view jsonBody);
-    std::string GetPlayers(const std::string& token_str) const;
-    std::string GetState(const std::string& token_str) const;
-    std::pair<std::string, error_code> CheckToken(std::string_view token, std::string& token_str) const;
+    std::pair<std::string, error_code> GetPlayers(const Token& token) const;
+    std::pair<std::string, error_code> GetState(const Token& token) const;
+    std::pair<std::string, error_code> CheckToken(const Token& token) const;
     
 private:
     model::Game& game_;
     Players players_;
     PlayerTokens player_tokens_;
-    Player* GetPlayer(std::string_view auth_text) const;
+    Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
 };
 }

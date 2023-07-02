@@ -6,7 +6,7 @@
 #include <ctime>
 #include <random>
 
-#define MAX_ROADS_TO_FOUND 10000
+#define MAX_ROADS_TO_FOUND 1000
 
 namespace model {
 using namespace std::literals;
@@ -56,7 +56,7 @@ GameSession* Game::FindGameSession(const Map::Id& id) noexcept {
 }
 
 GameSession* Game::AddGameSession(const Map::Id& id) {
-    GameSession gs{ FindMap(id) };
+    GameSession gs{ FindMap(id) , randomize_spawn_points_ };
     const size_t index = game_sessions_.size();
     game_sessions_.emplace_back(std::move(gs));
     try {
@@ -78,11 +78,11 @@ void Game::Tick(std::chrono::milliseconds time_delta_ms) {
 
 Dog* GameSession::AddDog(std::string_view nick_name)
 {
-    if (FindDog(nick_name) != nullptr) {
-        throw std::invalid_argument("Duplicate dog");
-    }
-    DPoint coord{.x = 0.0, .y = 0.0};
-    //DPoint coord = GetRandomRoadCoord();
+    DPoint coord;
+    if (randomize_spawn_points_)
+        coord = GetRandomRoadCoord();
+    else
+        coord = { .x = 0.0, .y = 0.0 };
     Dog dog = Dog(nick_name, coord);
     const size_t index = dogs_.size();
     auto &o = dogs_.emplace_back(std::move(dog));
@@ -226,7 +226,6 @@ bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos)
 DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos)
 {
     typedef std::numeric_limits<DDimension> dbl; 
-    
     DPoint min;
     DDimension min_d = dbl::max(), distance;
     for (auto it = roads.first; it != roads.second; ++it) {

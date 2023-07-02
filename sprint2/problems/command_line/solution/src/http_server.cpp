@@ -27,7 +27,7 @@ std::string uriDecode(std::string_view src) {
             ret += src[i];
         }
     }
-    return (ret);
+    return ret;
 }
 
 void SessionBase::Run() {
