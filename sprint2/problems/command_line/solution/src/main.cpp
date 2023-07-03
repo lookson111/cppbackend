@@ -69,11 +69,11 @@ struct Args {
     }
     if (vm.contains("tick-period"s)) {
         args.tick_period = std::chrono::milliseconds{ time };
-        args.on_tick_api = true;
+        args.on_tick_api = false;
     }
     else {
         args.tick_period = std::chrono::milliseconds{ 0 };
-        args.on_tick_api = false;
+        args.on_tick_api = true;
     }
     // Проверяем наличие опций src и dst
     if (!vm.contains("config-file"s)) {
