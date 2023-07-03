@@ -139,8 +139,8 @@ int main(int argc, const char* argv[]) {
             }
         };
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-        const auto address = net::ip::make_address("0.0.0.0");
-        constexpr net::ip::port_type port = 8080;
+        const auto address = net::ip::make_address(ServerParam::ADDR);
+        constexpr net::ip::port_type port = ServerParam::PORT;
         // Запускаем обработку запросов
         http_server::ServerHttp(ioc, { address, port }, logging_handler);
         ticker->Start();

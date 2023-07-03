@@ -1,7 +1,7 @@
 #include "log.h"
-#include <boost/log/trivial.hpp>     // для BOOST_LOG_TRIVIAL
-#include <boost/log/core.hpp>        // для logging::core
-#include <boost/log/expressions.hpp> // для выражения, задающего фильтр 
+#include <boost/log/trivial.hpp>     // РґР»СЏ BOOST_LOG_TRIVIAL
+#include <boost/log/core.hpp>        // РґР»СЏ logging::core
+#include <boost/log/expressions.hpp> // РґР»СЏ РІС‹СЂР°Р¶РµРЅРёСЏ, Р·Р°РґР°СЋС‰РµРіРѕ С„РёР»СЊС‚СЂ 
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
@@ -37,9 +37,9 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(msg, "Msg", std::string_view)
 
 
 static void JsonFormatter(logging::record_view const& rec, logging::formatting_ostream& strm) {
-    // Момент времени приходится вручную конвертировать в строку.
-    // Для получения истинного значения атрибута нужно добавить
-    // разыменование. 
+    // РњРѕРјРµРЅС‚ РІСЂРµРјРµРЅРё РїСЂРёС…РѕРґРёС‚СЃСЏ РІСЂСѓС‡РЅСѓСЋ РєРѕРЅРІРµСЂС‚РёСЂРѕРІР°С‚СЊ РІ СЃС‚СЂРѕРєСѓ.
+    // Р”Р»СЏ РїРѕР»СѓС‡РµРЅРёВ¤ РёСЃС‚РёРЅРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ Р°С‚СЂРёР±СѓС‚Р° РЅСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ
+    // СЂР°Р·С‹РјРµРЅРѕРІР°РЅРёРµ. 
     auto ts = *rec[timestamp];
     strm << "{\"timestamp\":\"" << to_iso_extended_string(ts) << "\",";
     strm << "\"data\":" << rec[data] << ",";
@@ -55,9 +55,9 @@ void InitBoostLogFilter() {
         keywords::file_name = "/var/log/sample_%N.log",
         keywords::format = &JsonFormatter,
         keywords::open_mode = std::ios_base::app | std::ios_base::out,
-        // ротируем по достижению размера 10 мегабайт
+        // СЂРѕС‚РёСЂСѓРµРј РїРѕ РґРѕСЃС‚РёР¶РµРЅРёСЋ СЂР°Р·РјРµСЂР° 10 РјРµРіР°Р±Р°Р№С‚
         keywords::rotation_size = 10 * 1024 * 1024,
-        // ротируем ежедневно в полдень
+        // СЂРѕС‚РёСЂСѓРµРј РµР¶РµРґРЅРµРІРЅРѕ РІ РїРѕР»РґРµРЅСЊ
         keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
     );
     logging::add_console_log(

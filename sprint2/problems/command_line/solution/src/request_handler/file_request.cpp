@@ -37,8 +37,6 @@ bool FileRequestHandler::CheckFileExist(std::string& file) const {
             return true;
         }
     }
-    //    if (fs::exists(filePath))
-    //        return true;
     return false;
 }
 bool FileRequestHandler::FileInRootStaticDir(std::string_view file) const {
@@ -75,8 +73,8 @@ FileRequestResult FileRequestHandler::StaticFilesResponse(
 
     if (with_body)
         res.body() = std::move(file);
-    // Метод prepare_payload заполняет заголовки Content-Length и Transfer-Encoding
-    // в зависимости от свойств тела сообщения
+    // РњРµС‚РѕРґ prepare_payload Р·Р°РїРѕР»РЅСЏРµС‚ Р·Р°РіРѕР»РѕРІРєРё Content-Length Рё Transfer-Encoding
+    // РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЃРІРѕР№СЃС‚РІ С‚РµР»Р° СЃРѕРѕР±С‰РµРЅРёСЏ
     res.prepare_payload();
     return std::move(res);
 }

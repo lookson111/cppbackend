@@ -26,7 +26,7 @@ std::unordered_map<std::string_view, std::string_view> ContentType::type{
     { FE::EMPTY,         EMPTY },
 };
 
-// Создаёт StringResponse с заданными параметрами
+// РЎРѕР·РґР°С‘С‚ StringResponse СЃ Р·Р°РґР°РЅРЅС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
 StringResponse BaseRequestHandler::MakeStringResponse(
         http::status status, std::string_view responseText, unsigned http_version,
         bool keep_alive, std::string_view content_type,

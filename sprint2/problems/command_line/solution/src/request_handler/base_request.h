@@ -16,9 +16,9 @@ namespace http = beast::http;
 namespace fs = std::filesystem;
 namespace sys = boost::system;
 using namespace std::literals;
-// Запрос, тело которого представлено в виде строки
+// В«Р°РїСЂРѕСЃ, С‚РµР»Рѕ РєРѕС‚РѕСЂРѕРіРѕ РїСЂРµРґСЃС‚Р°РІР»РµРЅРѕ РІ РІРёРґРµ СЃС‚СЂРѕРєРё
 using StringRequest = http::request<http::string_body>;
-// Ответ, тело которого представлено в виде строки
+// СњС‚РІРµС‚, С‚РµР»Рѕ РєРѕС‚РѕСЂРѕРіРѕ РїСЂРµРґСЃС‚Р°РІР»РµРЅРѕ РІ РІРёРґРµ СЃС‚СЂРѕРєРё
 using StringResponse = http::response<http::string_body>;
 using FileResponse = http::response<http::file_body>;
 using EmptyResponse = http::response<http::empty_body>;

@@ -47,19 +47,17 @@ public:
         auto keep_alive = req.keep_alive();
         std::string target{StringRequest(req).target().data(), StringRequest(req).target().size()};
         target = http_server::uriDecode(target);
-        std::string_view api = "/api/"sv;
+        auto api = Endpoint::API;
         bool is_target = target.size() > api.size() && (target.substr(0, api.size()) == api);
         try {
-            /*req относится к API*/
+            /*req РѕС‚РЅРѕСЃРёС‚СЃСЏ Рє API*/
             if (is_target) {
                 auto handle = [self = shared_from_this(), send,
                     req = std::forward<decltype(req)>(req), version, keep_alive] {
                     try {
-                        // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
+                        // Р­С‚РѕС‚ assert РЅРµ РІС‹СЃС‚СЂРµР»РёС‚, С‚Р°Рє РєР°Рє Р»СЏРјР±РґР°-С„СѓРЅРєС†РёСЏ Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЊСЃСЏ РІРЅСѓС‚СЂРё strand
                         assert(self->api_strand_.running_in_this_thread());
                         return send(std::move(self->api_handler_.Handle(req)));
-                        //return send(std::get<StringResponse>(
-                        //    self->api.HandleRequest(req)));
                     }
                     catch (...) {
                         send(self->ReportServerError(version, keep_alive));
@@ -67,7 +65,7 @@ public:
                 };
                 return net::dispatch(api_strand_, handle);
             }
-            // Возвращаем результат обработки запроса к файлу
+            // Р’РѕР·РІСЂР°С‰Р°РµРј СЂРµР·СѓР»СЊС‚Р°С‚ РѕР±СЂР°Р±РѕС‚РєРё Р·Р°РїСЂРѕСЃР° Рє С„Р°Р№Р»Сѓ
             return std::visit(
                 [&send](auto&& result) {
                     send(std::forward<decltype(result)>(result));
@@ -78,7 +76,6 @@ public:
         catch (...) {
             send(ReportServerError(version, keep_alive));
         }
-        //send(std::move(api_handler_.Handle(req)) );
     }
 private:
     FileRequestHandler file_handler;
