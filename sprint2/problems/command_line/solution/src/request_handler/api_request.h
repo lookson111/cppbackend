@@ -35,7 +35,7 @@ namespace http_handler
             //
             LinkGameActionMove();
             //
-            if (on_tick_api)
+            //if (on_tick_api)
                 LinkGameTick();
         };
 

@@ -106,7 +106,7 @@ namespace http_handler
         auto ptr = uri_handler_.AddEndpoint(Endpoint::GAME_TICK);
         if (ptr)
         {
-            ptr->SetNeedAuthorization(true)
+            ptr->SetNeedAuthorization(false)
                 .SetAllowedMethods({ http::verb::post }, ErrorMessage::POST_IS_EXPECTED, MiscMessage::ALLOWED_POST_METHOD)
                 .SetProcessFunction([&](std::string_view body) {
                     auto [text, err] = app_.Tick(body);
