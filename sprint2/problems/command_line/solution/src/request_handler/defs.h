@@ -1,7 +1,5 @@
-#ifndef __MAGIC_DEFS_H__
-#define __MAGIC_DEFS_H__
-
 #pragma once
+
 #include <string_view>
 #include <string>
 using namespace std::literals;
@@ -86,5 +84,4 @@ struct Endpoint
     static inline constexpr std::string_view GAME_STATE     = "/api/v1/game/state"sv;
     static inline constexpr std::string_view GAME_ACTION    = "/api/v1/game/player/action"sv;
 };
-#endif /* __MAGIC_DEFS_H__ */
 

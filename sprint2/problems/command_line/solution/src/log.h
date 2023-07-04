@@ -32,10 +32,10 @@ public:
         static Log obj;
         return obj;
     }
-    static void info(std::string_view data, std::string_view message);
+    static void Info(std::string_view data, std::string_view message);
 
     template <typename ConstBufferSequence>
-    size_t write_some(const ConstBufferSequence& cbs, sys::error_code& ec) {
+    size_t WriteSome(const ConstBufferSequence& cbs, sys::error_code& ec) {
         const size_t total_size = net::buffer_size(cbs);
         if (total_size == 0) {
             ec = {};
@@ -58,7 +58,7 @@ public:
     }
 
     template <typename ConstBufferSequence>
-    size_t write_some(const ConstBufferSequence& cbs) {
+    size_t WriteSome(const ConstBufferSequence& cbs) {
         sys::error_code ec;
         const size_t bytes_written = write_some(cbs, ec);
         if (ec) {
@@ -85,31 +85,26 @@ public:
         static Server obj;
         return obj;
     }
-    void start(std::string_view address, int port);
-    void end(const sys::error_code& ec);
-    void error(const sys::error_code& ec, Where where);
-    void request(std::string_view address, std::string_view uri, std::string_view method);
-    void msg(std::string_view address, std::string_view uri);
-    void response(long long response_time, unsigned status_code, std::string_view content_type);
+    void Start(std::string_view address, int port);
+    void End(const sys::error_code& ec);
+    void Error(const sys::error_code& ec, Where where);
+    void Request(std::string_view address, std::string_view uri, std::string_view method);
+    void Msg(std::string_view address, std::string_view uri);
+    void Response(long long response_time, unsigned status_code, std::string_view content_type);
 };
 
 template<class SomeRequestHandler>
 class LoggingRequestHandler {
-    //static void LogRequest(const Request& r);
-    //static void LogResponse(const Response& r);
 public:
     LoggingRequestHandler(SomeRequestHandler&& requestHandler) : 
         decorated_(std::forward<SomeRequestHandler>(requestHandler)) {
     }
     template <typename Body, typename Allocator, typename Send>
-    /*Response*/ void operator () (tcp::endpoint ep, 
+     void operator () (tcp::endpoint ep, 
             http::request<Body, http::basic_fields<Allocator>>&& req, 
             Send&& send) {
-        //LogRequest(req);
-        /*Response resp = */decorated_(ep, std::forward<decltype(req)>(req),
-             std::forward<decltype(send)>(send));
-        //LogResponse(resp);
-        //return resp;
+        decorated_(ep, std::forward<decltype(req)>(req),
+        std::forward<decltype(send)>(send));
     }
 
 private:

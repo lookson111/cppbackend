@@ -54,29 +54,29 @@ void InitBoostLogFilter() {
     );
 }
 
-void Log::info(std::string_view data_, std::string_view message_) {
+void Log::Info(std::string_view data_, std::string_view message_) {
     BOOST_LOG_TRIVIAL(info)
         << logging::add_value(data, data_)
         << logging::add_value(msg, message_);
 }
 
-void Server::start(std::string_view address, int port) {
+void Server::Start(std::string_view address, int port) {
     json::object mapEl;
     mapEl["port"] = port;
     mapEl["address"] = address.data();
-    log_.info(serialize(mapEl), "server started"sv);
+    log_.Info(serialize(mapEl), "server started"sv);
 }
 
-void Server::end(const boost::system::error_code& err) {
+void Server::End(const boost::system::error_code& err) {
     json::object mapEl;
     mapEl["code"] = err.value();
     
     if (err)
         mapEl["exception"] = err.what();
-    log_.info(serialize(mapEl), "server exited"sv);
+    log_.Info(serialize(mapEl), "server exited"sv);
 }
 
-void Server::error(const sys::error_code& ec, Where where)
+void Server::Error(const sys::error_code& ec, Where where)
 {
     boost::string_view svWhere;
     switch (where) {
@@ -94,23 +94,23 @@ void Server::error(const sys::error_code& ec, Where where)
     mapEl["code"] = ec.value();
     mapEl["text"] = ec.message();
     mapEl["where"] = svWhere;
-    log_.info(serialize(mapEl), "error"sv);
+    log_.Info(serialize(mapEl), "error"sv);
 }
 
 static auto to_booststr = [](std::string_view str) {
     return boost::string_view(str.data(), str.size());
 };
 
-void Server::request(std::string_view address, std::string_view uri, std::string_view method)
+void Server::Request(std::string_view address, std::string_view uri, std::string_view method)
 {
     json::object mapEl;
     mapEl["address"] = to_booststr(address);
     mapEl["URI"] = to_booststr(uri);
     mapEl["method"] = to_booststr(method);
-    log_.info(serialize(mapEl), "request received"sv);
+    log_.Info(serialize(mapEl), "request received"sv);
 }
 
-void Server::response(long long response_time, unsigned status_code, std::string_view content_type)
+void Server::Response(long long response_time, unsigned status_code, std::string_view content_type)
 {
     json::object mapEl;
     mapEl["response_time"] = response_time;
@@ -121,13 +121,13 @@ void Server::response(long long response_time, unsigned status_code, std::string
         auto ct = content_type.substr(0, content_type.find("\\r"));
         mapEl["content_type"] = to_booststr(ct);
     }
-    log_.info(serialize(mapEl), "response sent"sv);
+    log_.Info(serialize(mapEl), "response sent"sv);
 }
-void Server::msg(std::string_view header, std::string_view message) {
+void Server::Msg(std::string_view header, std::string_view message) {
     json::object mapEl;
     mapEl["header"] = to_booststr(header);
     mapEl["message"] = to_booststr(message);
-    log_.info(serialize(mapEl), "response sent"sv);
+    log_.Info(serialize(mapEl), "response sent"sv);
 }
 
 }
