@@ -10,6 +10,7 @@
 #include "request_handler/request_handler.h"
 #include "log.h"
 #include "app.h"
+#include "ticker.h"
 #include "http_server.h"
 
 using namespace std::literals;
@@ -126,7 +127,7 @@ int main(int argc, const char* argv[]) {
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game, args.on_tick_api);
         // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
-        auto ticker = std::make_shared<app::Ticker>(api_strand, args.tick_period,
+        auto ticker = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }
         );
         // Оборачиваем его в логирующий декоратор

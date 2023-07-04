@@ -13,7 +13,6 @@
 
 #include "defs.h"
 #include "../http_server.h"
-//#include "token_m.h"
 #include "response.h"
 #include "api_request.h"
 #include "file_request.h"
@@ -27,10 +26,6 @@ using tcp = net::ip::tcp;
 class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
     using Strand = net::strand<net::io_context::executor_type>;
 public:
-    /*explicit RequestHandler(boost::asio::io_context& io)
-        : api_handler_{io} 
-	{
-    }*/
     RequestHandler(const fs::path& static_path, Strand api_strand, model::Game& game, bool on_tick_api)
         : file_handler{ static_path }
         , api_strand_(api_strand)
@@ -55,8 +50,6 @@ public:
                 auto handle = [self = shared_from_this(), send,
                     req = std::forward<decltype(req)>(req), version, keep_alive] {
                     try {
-                        // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
-                        assert(self->api_strand_.running_in_this_thread());
                         return send(std::move(self->api_handler_.Handle(req)));
                     }
                     catch (...) {

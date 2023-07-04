@@ -5,7 +5,7 @@
 
 namespace http_handler {
 TypeRequest FileRequestHandler::ParseTarget(std::string_view target, std::string& res) const {
-    std::string_view api = "/api/"sv;
+    std::string_view api = Endpoint::API;
     res = "";
     std::string uriDecode = http_server::uriDecode(target);
     // request stitic files

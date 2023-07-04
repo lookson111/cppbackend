@@ -32,15 +32,14 @@ std::string ModelToJson::GetMaps() {
 
 std::string ModelToJson::GetMap(std::string_view nameMap) {
     model::Map::Id idmap{nameMap.data()};
-    auto map = game_.FindMap({ idmap });
-    if (map == nullptr)
-        return "";
     js::object mapEl;
-    mapEl["id"] = *map->GetId();
-    mapEl["name"] = map->GetName();
-    mapEl["roads"] = GetRoads(map->GetRoads());
-    mapEl["buildings"] = GetBuildings(map->GetBuildings());
-    mapEl["offices"] = GetOffice(map->GetOffices());
+    if (auto map = game_.FindMap({ idmap }); map != nullptr) {
+        mapEl["id"] = *map->GetId();
+        mapEl["name"] = map->GetName();
+        mapEl["roads"] = GetRoads(map->GetRoads());
+        mapEl["buildings"] = GetBuildings(map->GetBuildings());
+        mapEl["offices"] = GetOffice(map->GetOffices());
+    }
     return serialize(mapEl);
 }
 
