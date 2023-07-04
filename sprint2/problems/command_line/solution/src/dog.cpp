@@ -24,21 +24,23 @@ std::string Dog::GetDirection() const
 }
 
 void Dog::Diraction(Move move, DDimension speed) {
+    static constexpr double dzero = 0.0; 
+    static constexpr double invert = -1.0; 
     switch (move) {
     case Move::LEFT:
-        speed_ = { -1*speed, 0.0 };
+        speed_ = { invert*speed, dzero };
         dir_ = Direction::WEST;
         break;
     case Move::RIGHT:
-        speed_ = { speed, 0.0 };
+        speed_ = { speed, dzero };
         dir_ = Direction::EAST;
         break;
     case Move::UP:
-        speed_ = { 0.0, -1*speed };
+        speed_ = { dzero, invert*speed };
         dir_ = Direction::NORTH;
         break;
     case Move::DOWN:
-        speed_ = { 0.0, speed };
+        speed_ = { dzero, speed };
         dir_ = Direction::SOUTH;
         break;
     case Move::STAND:
@@ -49,9 +51,13 @@ void Dog::Diraction(Move move, DDimension speed) {
 
 DPoint Dog::GetEndPoint(std::chrono::milliseconds move_time_ms)
 {
+    auto msChronoToDoubleSec = [] (auto ms) {
+        static constexpr double to_sec = 1000.0;
+        return double(ms.count()) / to_sec;
+    };
     if (IsStanding())
         return coord_; 
-    double dt_second = double(move_time_ms.count()) / 1000.0;
+    double dt_second = msChronoToDoubleSec(move_time_ms);
     DPoint end_point;
     end_point.x = coord_.x + speed_.x * dt_second;
     end_point.y = coord_.y + speed_.y * dt_second;

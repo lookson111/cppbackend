@@ -1,5 +1,4 @@
-#ifndef __API_REQUEST_HANDLER_M__
-#define __API_REQUEST_HANDLER_M__
+#pragma once
 
 #include <optional>
 #include <mutex>
@@ -28,13 +27,13 @@ namespace http_handler
             LinkJoinWithoutAuthorize();
             //Add players list with GET only and authorization
             LinkPlayersToUriHandler();
-            //
+            //Add map and maps request 
             LinkMapsAndMaps();
-            //
+            //Add game state request
             LinkGameState();
-            //
+            //Add game action move
             LinkGameActionMove();
-            //
+            //Add tick if period tick is not specified
             if (on_tick_api)
                 LinkGameTick();
         };
@@ -96,4 +95,3 @@ namespace http_handler
 
     };
 }
-#endif /* __API_REQUEST_HANDLER_M__ */

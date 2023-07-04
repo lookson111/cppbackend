@@ -1,6 +1,3 @@
-#ifndef __URI_API_H__
-#define __URI_API_H__
-
 #pragma once
 
 #include <string_view>
@@ -179,5 +176,3 @@ namespace uri_api
         std::unordered_map<std::string, UriElement> data_;
     };
 }
-
-#endif /* __URI_API_H__ */

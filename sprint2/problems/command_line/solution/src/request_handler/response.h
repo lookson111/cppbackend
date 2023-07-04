@@ -1,5 +1,4 @@
-#ifndef __RESPONSE_M_H__
-#define __RESPONSE_M_H__
+#pragma once 
 
 #include <string_view>
 #include <string>
@@ -44,4 +43,3 @@ namespace http_handler {
         static StringResponse MakeMethodNotAllowed(std::string_view message, std::string_view allow);
     };
 }
-#endif

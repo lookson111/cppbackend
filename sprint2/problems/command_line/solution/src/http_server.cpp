@@ -55,12 +55,12 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
         return Close();
     }
     if (ec) {
-        LOGSRV().error(ec, server_logging::Server::Where::read);
+        LOGSRV().Error(ec, server_logging::Server::Where::read);
         return;
     }
     std::string uri = uriDecode(request_.target());
     auto rmeth = http::to_string(request_.method());
-    LOGSRV().request(stream_.socket().remote_endpoint().address().to_string(),
+    LOGSRV().Request(stream_.socket().remote_endpoint().address().to_string(),
         uri, std::string_view(rmeth.data(), rmeth.size()));
     start_time_ = steady_clock::now();
     HandleRequest(std::move(request_));
@@ -68,7 +68,7 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
 
 void SessionBase::OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
     if (ec) {
-        LOGSRV().error(ec, server_logging::Server::Where::write);
+        LOGSRV().Error(ec, server_logging::Server::Where::write);
         return;
     }
     if (close) {

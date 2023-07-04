@@ -22,20 +22,6 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(line, "Line", int)
 BOOST_LOG_ATTRIBUTE_KEYWORD(data, "Data", std::string_view)
 BOOST_LOG_ATTRIBUTE_KEYWORD(msg, "Msg", std::string_view)
 
-//{"timestamp":"2022-09-17T01:04:47.841269", "data" : {"port":8080, "address" : "0.0.0.0"}, "message" : "server started"}
-//{"timestamp":"2022-09-17T01:04:59.502760", "data" : {"ip":"127.0.0.1", "URI" : "/", "method" : "GET"}, "message" : "request received"}
-//{"timestamp":"2022-09-17T01:04:59.506669", "data" : {"ip":"127.0.0.1", "response_time" : 3, "code" : 200, "content_type" : "text/html"}, "message" : "response sent"}
-//{"timestamp":"2022-09-17T01:04:59.559406", "data" : {"ip":"127.0.0.1", "URI" : "/images/cube.svg", "method" : "GET"}, "message" : "request received"}
-//{"timestamp":"2022-09-17T01:04:59.563314", "data" : {"ip":"127.0.0.1", "response_time" : 4, "code" : 200, "content_type" : "image/svg+xml"}, "message" : "response sent"}
-//{"timestamp":"2022-09-17T01:05:13.894737", "data" : {"ip":"127.0.0.1", "URI" : "/file%20with+spaces.html", "method" : "GET"}, "message" : "request received"}
-//{"timestamp":"2022-09-17T01:05:13.898645", "data" : {"ip":"127.0.0.1", "response_time" : 3, "code" : 200, "content_type" : "text/html"}, "message" : "response sent"}
-//{"timestamp":"2022-09-17T01:05:23.092869", "data" : {"ip":"127.0.0.1", "URI" : "/abracadabra", "method" : "GET"}, "message" : "request received"}
-//{"timestamp":"2022-09-17T01:05:23.102635", "data" : {"ip":"127.0.0.1", "response_time" : 9, "code" : 404, "content_type" : "text/html"}, "message" : "response sent"}
-//{"timestamp":"2022-09-17T01:05:29.502651", "data" : {"code":1, "text" : "The socket was closed due to a timeout", "where" : "read"}, "message" : "error"}
-//{"timestamp":"2022-09-17T01:05:29.746568", "data" : {"code":1, "text" : "The socket was closed due to a timeout", "where" : "read"}, "message" : "error"}
-//{"timestamp":"2022-09-17T01:05:51.777199", "data" : {"code":0}, "message" : "server exited"}
-
-
 static void JsonFormatter(logging::record_view const& rec, logging::formatting_ostream& strm) {
     // Момент времени приходится вручную конвертировать в строку.
     // Для получени¤ истинного значения атрибута нужно добавить
@@ -67,29 +53,29 @@ void InitBoostLogFilter() {
     );
 }
 
-void Log::info(std::string_view data_, std::string_view message_) {
+void Log::Info(std::string_view data_, std::string_view message_) {
     BOOST_LOG_TRIVIAL(info)
         << logging::add_value(data, data_)
         << logging::add_value(msg, message_);
 }
 
-void Server::start(std::string_view address, int port) {
+void Server::Start(std::string_view address, int port) {
     json::object mapEl;
     mapEl["port"] = port;
     mapEl["address"] = address.data();
-    log_.info(serialize(mapEl), "server started"sv);
+    log_.Info(serialize(mapEl), "server started"sv);
 }
 
-void Server::end(const boost::system::error_code& err) {
+void Server::End(const boost::system::error_code& err) {
     json::object mapEl;
     mapEl["code"] = err.value();
     
     if (err)
         mapEl["exception"] = err.what();
-    log_.info(serialize(mapEl), "server exited"sv);
+    log_.Info(serialize(mapEl), "server exited"sv);
 }
 
-void Server::error(const sys::error_code& ec, Where where)
+void Server::Error(const sys::error_code& ec, Where where)
 {
     boost::string_view svWhere;
     switch (where) {
@@ -107,23 +93,23 @@ void Server::error(const sys::error_code& ec, Where where)
     mapEl["code"] = ec.value();
     mapEl["text"] = ec.message();
     mapEl["where"] = svWhere;
-    log_.info(serialize(mapEl), "error"sv);
+    log_.Info(serialize(mapEl), "error"sv);
 }
 
 static auto to_booststr = [](std::string_view str) {
     return boost::string_view(str.data(), str.size());
 };
 
-void Server::request(std::string_view address, std::string_view uri, std::string_view method)
+void Server::Request(std::string_view address, std::string_view uri, std::string_view method)
 {
     json::object mapEl;
     mapEl["address"] = to_booststr(address);
     mapEl["URI"] = to_booststr(uri);
     mapEl["method"] = to_booststr(method);
-    log_.info(serialize(mapEl), "request received"sv);
+    log_.Info(serialize(mapEl), "request received"sv);
 }
 
-void Server::response(long long response_time, unsigned status_code, std::string_view content_type)
+void Server::Response(long long response_time, unsigned status_code, std::string_view content_type)
 {
     json::object mapEl;
     mapEl["response_time"] = response_time;
@@ -134,13 +120,13 @@ void Server::response(long long response_time, unsigned status_code, std::string
         auto ct = content_type.substr(0, content_type.find("\\r"));
         mapEl["content_type"] = to_booststr(ct);
     }
-    log_.info(serialize(mapEl), "response sent"sv);
+    log_.Info(serialize(mapEl), "response sent"sv);
 }
-void Server::msg(std::string_view header, std::string_view message) {
+void Server::Msg(std::string_view header, std::string_view message) {
     json::object mapEl;
     mapEl["header"] = to_booststr(header);
     mapEl["message"] = to_booststr(message);
-    log_.info(serialize(mapEl), "response sent"sv);
+    log_.Info(serialize(mapEl), "response sent"sv);
 }
 
 }

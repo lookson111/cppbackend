@@ -1,7 +1,5 @@
 #pragma once
 #include "sdk.h"
-// boost.beast будет использовать std::string_view вместо boost::string_view
-//#define BOOST_BEAST_USE_STD_STRING_VIEW
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
@@ -37,7 +35,7 @@ protected:
     template <typename Body, typename Fields>
     void Write(http::response<Body, Fields>&& response) {
         auto time = steady_clock::now() - start_time_;
-        LOGSRV().response(std::chrono::round<milliseconds>(time).count(), 
+        LOGSRV().Response(std::chrono::round<milliseconds>(time).count(), 
             response.result_int(), response[http::field::content_type]);
         // Запись выполняется асинхронно, поэтому response перемещаем в область кучи
         auto safe_response = std::make_shared<http::response<Body, Fields>>(std::move(response));
@@ -141,7 +139,7 @@ private:
     void OnAccept(sys::error_code ec, tcp::socket socket) {
         using namespace std::literals;
         if (ec) {
-            LOGSRV().error(ec, server_logging::Server::Where::accept);
+            LOGSRV().Error(ec, server_logging::Server::Where::accept);
             return;
         }
         // Асинхронно обрабатываем сессию

@@ -10,6 +10,7 @@
 #include "request_handler/request_handler.h"
 #include "log.h"
 #include "app.h"
+#include "ticker.h"
 #include "http_server.h"
 
 using namespace std::literals;
@@ -20,12 +21,12 @@ namespace fs = std::filesystem;
 namespace {
 // Запускает функцию fn на n потоках, включая текущий
 template <typename Fn>
-void RunThreads(unsigned n, const Fn& fn) {
-    n = std::max(1u, n);
+void RunThreads(unsigned number_of_threads, const Fn& fn) {
+    number_of_threads = std::max(1u, number_of_threads);
     std::vector<std::jthread> workers;
-    workers.reserve(n - 1);
+    workers.reserve(number_of_threads - 1);
     // Запускаем n-1 рабочих потоков, выполняющих функцию fn
-    while (--n) {
+    while (--number_of_threads) {
         workers.emplace_back(fn);
     }
     fn();
@@ -117,7 +118,7 @@ int main(int argc, const char* argv[]) {
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
             if (!ec) {
-                LOGSRV().end(ec);
+                LOGSRV().End(ec);
                 ioc.stop();
             }
         });
@@ -126,7 +127,7 @@ int main(int argc, const char* argv[]) {
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game, args.on_tick_api);
         // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
-        auto ticker = std::make_shared<app::Ticker>(api_strand, args.tick_period,
+        auto ticker = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }
         );
         // Оборачиваем его в логирующий декоратор
@@ -145,9 +146,9 @@ int main(int argc, const char* argv[]) {
         http_server::ServerHttp(ioc, { address, port }, logging_handler);
         ticker->Start();
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-        LOGSRV().start(address.to_string(), port);
+        LOGSRV().Start(address.to_string(), port);
         // 6. Запускаем обработку асинхронных операций
-        RunThreads(std::max(1u, num_threads), [&ioc] {
+        RunThreads(num_threads, [&ioc] {
             ioc.run();
         });
     } catch (const std::exception& ex) {

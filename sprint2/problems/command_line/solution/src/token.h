@@ -1,7 +1,5 @@
-#ifndef __TOKEN_M_H__
-#define __TOKEN_M_H__
-
 #pragma once
+
 #include <string>
 #include <optional>
 
@@ -58,5 +56,3 @@ namespace security
         }
     }
 }
-
-#endif /* __TOKEN_M_H__ */

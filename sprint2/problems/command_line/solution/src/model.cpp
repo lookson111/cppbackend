@@ -183,8 +183,7 @@ DPoint GameSession::MoveDog(DPoint start_pos, DPoint end_pos) {
         }
         prev_pos = start_pos;
         start_pos = GetExtremePos(roads, end_pos);
-        protect++;
-        if (protect >= MAX_ROADS_TO_FOUND)
+        if (++protect >= MAX_ROADS_TO_FOUND)
             throw std::logic_error("Error, not found end cell in roads"s);
     } while (prev_pos != start_pos);
     return start_pos;
