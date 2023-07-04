@@ -1,0 +1,345 @@
+    1  ls
+    2  sudo apt-get update
+    3  sudo apt-get upgrade
+    4  pwd
+    5  whoami
+    6  cat /etc/sudoers
+    7  sudo cat /etc/sudoers
+    8  sudo groupadd developer
+    9  sudo usermod -aG developer torvalds
+   10  groups
+   11  ls- la
+   12  ls -la
+   13  htop
+   14  sudo apt-get install htop
+   15  htop
+   16  ls
+   17  touch file.txt
+   18  ls
+   19  ls -la
+   20  echo "Some text" > other_file
+   21  ls - la
+   22  ls -la
+   23  chgrp root file.txt 
+   24  chgrp sudo file.txt 
+   25  sudo chgrp root file.txt 
+   26  ls -la
+   27  chown root other_file 
+   28  sudo chown root other_file 
+   29  ls -la
+   30  touch st.txt
+   31  chmod 444 st.txt 
+   32  nano st.txt 
+   33  apt-get install vim
+   34  sudo apt-get install vim
+   35  vim t.txt
+   36  sudo useradd van-rossum
+   37  sudo passwd van-rossum 
+   38  ps -aux
+   39  cat /etc/passwd
+   40  hto
+   41  cat /etc/group
+   42  curl --version
+   43  exit
+   44  ls
+   45  ssh-keygen
+   46  ls
+   47  cat ~/.ssh/id_rsa.pub 
+   48  ssh -T git@github.com
+   49  curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+   50  git
+   51  apt install git
+   52  sudo apt-get install git
+   53  curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+   54  pyenv
+   55  sudo reboot
+   56  pyenv
+   57  echo 'export PYENV_ROOT="$HOME/.pyenv"
+   58  command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+   59  eval "$(pyenv init -)"
+   60  ' >> ~/.bashrc
+   61  pyenv
+   62  curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+   63  exit
+   64  ls
+   65  pyenv
+   66  pyenv install 3.9.7
+   67  sudo apt install libedit-dev
+   68  sudo apt-get install make
+   69  pyenv install 3.9.7
+   70  sudo apt install build-essential
+   71  pyenv install 3.9.7
+   72  sudo apt install gcc make cmake zlib1g-dev libncurses5-dev libedit-dev libssl-dev libffi-dev libbz2-dev libreadline6-dev lzma-dev libsqlite3-dev
+   73  pyenv install 3.9.7
+   74  pyenv global 3.9.7
+   75  git clone git@github.com:lookson111/cppbackend.git
+   76  ls
+   77  git remote add -m main template https://github.com/cpppracticum/cpp-backend-template-practicum.git
+   78  git remote
+   79  cd cppbackend/
+   80  git remote add -m main template https://github.com/cpppracticum/cpp-backend-template-practicum.git
+   81  git remote
+   82  git fetch template && git checkout template/main .github
+   83  ./prepare_test.sh 
+   84  ls sprint1/problems/sum/precode/
+   85  ls sprint1/problems/sum/precode/main.cpp 
+   86  cat sprint1/problems/sum/precode/main.cpp 
+   87  cd sprint1/problems/sum/precode/ 
+   88  cd ..
+   89  ls
+   90  ls solution/
+   91  ls
+   92  cp -R precode/ solution/
+   93  ls solution/
+   94  ls solution/precode/
+   95  cp -R precode/* solution/
+   96  ls solution/
+   97  rm -R solution/precode/
+   98  cd solution/
+   99  ls
+  100  vim main.cpp 
+  101  make
+  102  git -a -m "finish sum"
+  103  git commit -a -m "finish sum"
+  104  git config --global user.email "karl.komarblch@gmail.com"
+  105  git config --global user.name "lookson111"
+  106  git commit -a -m "finish sum"
+  107  git push
+  108  vim CMakeLists.txt 
+  109  make
+  110  ./prepare_test.sh 
+  111  cd ~/cppbackend/
+  112  ./prepare_test.sh 
+  113  ls
+  114  rm -R cpp-backend-tests-practicum/
+  115  rm -a -R cpp-backend-tests-practicum/
+  116  man rm
+  117  rm -a -R cpp-backend-tests-practicum/
+  118  rm -R cpp-backend-tests-practicum/
+  119  ls
+  120  ./prepare_test.sh 
+  121  ls
+  122  vim requirements.txt 
+  123  cd sprint1/problems/sum/
+  124  cd solution/
+  125  ls
+  126  cmake
+  127  ls
+  128  git add main.cpp CMakeLists.txt 
+  129  git commit -a -m "Add sum files"
+  130  git push
+  131  mkdir tmp
+  132  ls
+  133  cd tmp
+  134  cmake ../
+  135  ls
+  136  make
+  137  ls
+  138  cd sum
+  139  ./sum 
+  140  учше
+  141  exit
+  142  ls
+  143  python --version
+  144  sudo apt update
+  145  htop
+  146  sudo apt install python3
+  147  sudo apt install python3-pip
+  148  pip --version
+  149  sudo pip install conan==1.*
+  150  conan --version
+  151  ls
+  152  mkdir cppexample
+  153  cd cppexample/
+  154  mkdir hello
+  155  touch hello/conanfile.txt
+  156  cd hello/
+  157  vim conanfile.txt 
+  158  mkdir build
+  159  cd build/
+  160  conan install ..
+  161  ls
+  162  cmake --version
+  163  cd ..
+  164  ls
+  165  ls build/
+  166  cd ..
+  167  ls
+  168  cd hello/
+  169  ls
+  170  nano CMakeLists.txt
+  171  mkdir src
+  172  nano src/main.cpp
+  173  cd build/
+  174  cmake ..
+  175  ls
+  176  ls bin
+  177  cmake --build
+  178  cmake --build .
+  179  ls bin
+  180  ./bin/hello 
+  181  htop
+  182  cd cppexample/
+  183  mkdir cookbreakfast
+  184  cp hello/conanfile.txt cookbreakfast/
+  185  cd cookbreakfast/
+  186  mkdir build
+  187  cp ../hello/CMakeLists.txt .
+  188  ls
+  189  cd build/
+  190  conan install ..
+  191  mkdir ../src
+  192  cd ../src/
+  193  vim main.cpp
+  194  cd ../build/
+  195  cmake ,,
+  196  cmake ..
+  197  cmake --build
+  198  cmake --build .
+  199  vim ../CMakeLists.txt 
+  200  cmake ..
+  201  cmake --build .
+  202  ls bin/cookBreakfast 
+  203  ./bin/cookBreakfast 
+  204  cd ../src
+  205  ls
+  206  cp main.cpp main1.cpp 
+  207  nano main
+  208  nano main.cpp 
+  209  cd ../build/
+  210  cmake ..
+  211  cmake --build .
+  212  ./bin/cookBreakfast 
+  213  vim ../src/main.cpp 
+  214  cmake ..
+  215  cmake --build .
+  216  ./bin/cookBreakfast 
+  217  vim ../src/main.cpp 
+  218  cmake ..
+  219  cmake --build .
+  220  ./bin/cookBreakfast 
+  221  vim ../src/main.cpp 
+  222  cmake ..
+  223  cmake --build .
+  224  ./bin/cookBreakfast 
+  225  vim ../src/main.cpp 
+  226  cmake ..
+  227  cmake --build .
+  228  ./bin/cookBreakfast 
+  229  cp ../src/main.cpp ../src/main2.cpp
+  230  vim ../src/main.cpp 
+  231  cmake ..
+  232  cmake --build .
+  233  ./bin/cookBreakfast 
+  234  cd cppexample/TCP_UDP_radio/build/
+  235  ./bin/TCPClient 
+  236  ./bin/TCPClient 127.0.0.1
+  237  ./bin/UDPClient 1.2.3.4 
+  238  ./bin/UDPClient 127.0.0.1
+  239  exit
+  240  ls
+  241  cd cppexample/
+  242  ls
+  243  mkdir robots
+  244  cp hello/CMakeLists.txt robots/
+  245  ls robots/
+  246  ls hello/
+  247  cp hello/src/main.cpp robots/src/
+  248  mkdir robots/src
+  249  cp hello/src/main.cpp robots/src/
+  250  cp hello/conanfile.txt robots/
+  251  cd robots/
+  252  mkdir build
+  253  cd build/
+  254  conan install ..
+  255  df
+  256  vim ../CMakeLists.txt 
+  257  cd ../src
+  258  cd ../build/
+  259  ls
+  260  cmake .
+  261  cmake ..
+  262  cmake --build
+  263  cmake --build .
+  264  ./bin/robot 
+  265  vim ../src/main.cpp 
+  266  cmake ..
+  267  cmake --build .
+  268  vim ../src/main.cpp 
+  269  cmake --build .
+  270  claer
+  271  clear
+  272  cmake ..
+  273  cmake --build .
+  274  vim ../src/main.cpp 
+  275  cmake ..
+  276  cmake --build .
+  277  ./bin/robot 
+  278  cd ../..
+  279  mkdir TCP_UDP_radio
+  280  cd TCP_UDP_radio/
+  281  vim conanfile.txt
+  282  vim CMakeLists.txt
+  283  vim ../hello/CMakeLists.txt 
+  284  vim tcp_server.cpp
+  285  vim tcp_client.cpp
+  286  sudo ufw allow from any to any port 3333 proto tcp
+  287  mkdir build
+  288  cd build/
+  289  ls
+  290  conan install ..
+  291  cmake ..
+  292  ls
+  293  cmake --build .
+  294  hisoty
+  295  history
+  296  vim ../CMakeLists.txt 
+  297  cmake --build .
+  298  cmake ..
+  299  conan install ..
+  300  cmake ..
+  301  cmake --build .
+  302  htop
+  303  ifconfig
+  304  ./bin/TCPServer 
+  305  vim ../udp_server.cpp
+  306  vim ../udp_client.cpp
+  307  vim ../CMakeLists.txt 
+  308  cmake --build .
+  309  cmake ..
+  310  ./bin/UDPServer 
+  311  exit
+  312  ls
+  313  mkdir cppexample/radio
+  314  cd cppexample/
+  315  ls
+  316  cp ../cppbackend/sprint1/problems/radio/precode/* radio/
+  317  cp -r ../cppbackend/sprint1/problems/radio/precode/* radio/
+  318  cd radio/
+  319  ls
+  320  mkdir build
+  321  ls
+  322  vim src/main.cpp 
+  323  ls -a ~
+  324  vim ~/.viminfo 
+  325  vim ~/.vimrc
+  326  vim src/main.cpp 
+  327  vim ~/.vimrc
+  328  sudo poweroff
+  329  vim ~/.vimrc 
+  330  sudo apt-get install clang
+  331  cd ~/.vim/bundle
+  332  mkdir ~/.vim/bundle
+  333  ls
+  334  mkdir .vim
+  335  mkdir ~/.vim/bundle
+  336  git clone https://github.com/Valloric/YouCompleteMe.git
+  337  cd YouCompleteMe/
+  338  ls
+  339  git submodule update --init --recursive
+  340  ./install.sh --clang-completer
+  341  apt install build-essential cmake vim-nox python3-dev
+  342  sudo apt install build-essential cmake vim-nox python3-dev
+  343  sudo apt install mono-complete golang nodejs openjdk-17-jdk openjdk-17-jre npm
+  344  exit
+  345  history >> hist.txt

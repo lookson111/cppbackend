@@ -22,7 +22,6 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(line, "Line", int)
 BOOST_LOG_ATTRIBUTE_KEYWORD(data, "Data", std::string_view)
 BOOST_LOG_ATTRIBUTE_KEYWORD(msg, "Msg", std::string_view)
 
-
 static void JsonFormatter(logging::record_view const& rec, logging::formatting_ostream& strm) {
     // Момент времени приходится вручную конвертировать в строку.
     // Для получени¤ истинного значения атрибута нужно добавить
