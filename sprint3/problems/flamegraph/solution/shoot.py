@@ -48,7 +48,11 @@ def make_shots():
 
 
 server = run(start_server())
+print(server.pid)
+perf = run('perf record -o perf.data -p ' + str(server.pid))
 make_shots()
 stop(server)
 time.sleep(1)
+run('perf script | ~/FlameGraph/stackcollapse-perf.pl | ~/FlameGraph/flamegraph.pl > graph.svg')
+time.sleep(3)
 print('Job done')
