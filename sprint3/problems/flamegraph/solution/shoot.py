@@ -10,8 +10,8 @@ SEED = 123456789
 random.seed(SEED)
 script_name = os.path.basename(__file__)
 script_path = os.path.abspath(__file__).replace(script_name, '')
-perf_fullname = script_path + '/perf.data' 
-graph_fullname = script_path + '/graph.svg'
+perf_fullname = script_path + 'perf.data' 
+graph_fullname = script_path + 'graph.svg'
 
 AMMUNITION = [
     'localhost:8080/api/v1/maps/map1',
@@ -55,12 +55,14 @@ def make_shots():
 server = run(start_server())
 print(server.pid)
 print(script_path)
-perf = run('perf record -o ' + perf_fullname + ' -p ' + str(server.pid))
+perf = run('perf record -g -o ' + perf_fullname + ' -p ' + str(server.pid))
 make_shots()
 stop(server)
 perf.wait(10)
 time.sleep(1)
-flame = run('perf script -i ' + perf_fullname + ' | ~/FlameGraph/stackcollapse-perf.pl | ~/FlameGraph/flamegraph.pl > ' + graph_fullname)
+cmd_flame = 'perf script -i ' + perf_fullname + ' | ../../../../../FlameGraph/stackcollapse-perf.pl | ../../../../../FlameGraph/flamegraph.pl > ' + graph_fullname
+flame = run(cmd_flame)
+print(cmd_flame)
 flame.wait(10)
 time.sleep(1)
 print('Job done')
