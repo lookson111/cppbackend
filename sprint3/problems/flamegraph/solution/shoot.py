@@ -3,10 +3,15 @@ import subprocess
 import time
 import random
 import shlex
+import os
 
 RANDOM_LIMIT = 1000
 SEED = 123456789
 random.seed(SEED)
+script_name = os.path.basename(__file__)
+script_path = os.path.abspath(__file__).replace(script_name, '')
+perf_fullname = script_path + '/perf.data' 
+graph_fullname = script_path + '/graph.svg'
 
 AMMUNITION = [
     'localhost:8080/api/v1/maps/map1',
@@ -49,10 +54,13 @@ def make_shots():
 
 server = run(start_server())
 print(server.pid)
-perf = run('perf record -o perf.data -p ' + str(server.pid))
+print(script_path)
+perf = run('perf record -o ' + perf_fullname + ' -p ' + str(server.pid))
 make_shots()
 stop(server)
+perf.wait(10)
 time.sleep(1)
-run('perf script | ~/FlameGraph/stackcollapse-perf.pl | ~/FlameGraph/flamegraph.pl > graph.svg')
-time.sleep(3)
+flame = run('perf script -i ' + perf_fullname + ' | ~/FlameGraph/stackcollapse-perf.pl | ~/FlameGraph/flamegraph.pl > ' + graph_fullname)
+flame.wait(10)
+time.sleep(1)
 print('Job done')
