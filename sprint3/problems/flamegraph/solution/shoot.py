@@ -12,7 +12,8 @@ script_name = os.path.basename(__file__)
 script_path = os.path.abspath(__file__).replace(script_name, '')
 perf_fullname = script_path + 'perf.data' 
 graph_fullname = script_path + 'graph.svg'
-
+flame_stack = script_path + 'FlameGraph/stackcollapse-perf.pl'
+flame_graph = script_path + 'FlameGraph/flamegraph.pl'
 AMMUNITION = [
     'localhost:8080/api/v1/maps/map1',
     'localhost:8080/api/v1/maps'
@@ -60,7 +61,7 @@ make_shots()
 stop(server)
 perf.wait(10)
 time.sleep(1)
-cmd_flame = 'perf script -i ' + perf_fullname + ' | ../../../../../FlameGraph/stackcollapse-perf.pl | ../../../../../FlameGraph/flamegraph.pl > ' + graph_fullname
+cmd_flame = 'perf script -i ' + perf_fullname + ' | ' + flame_stack + ' | ' + flame_graph + ' > ' + graph_fullname
 flame = run(cmd_flame)
 print(cmd_flame)
 flame.wait(10)
