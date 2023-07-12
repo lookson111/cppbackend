@@ -30,8 +30,15 @@ def start_server():
 
 
 def run(command, output=None):
+    #if output != None:
     process = subprocess.Popen(shlex.split(command), stdout=output, stderr=subprocess.DEVNULL)
     return process
+
+def run_to_file(command, file_name):
+    output = open(file_name, 'w')
+    proc = run(command, output)
+    proc.wait(10)
+    output.close()
 
 
 def stop(process, wait=False):
@@ -54,16 +61,27 @@ def make_shots():
 
 
 server = run(start_server())
-print(server.pid)
-print(script_path)
-perf = run('perf record -g -o ' + perf_fullname + ' -p ' + str(server.pid))
+cmd_perf = 'perf record -g -o ' + perf_fullname + ' -p ' + str(server.pid)
+print(cmd_perf)
+perf = run(cmd_perf)
 make_shots()
 stop(server)
 perf.wait(10)
-time.sleep(1)
-cmd_flame = 'perf script -i ' + perf_fullname + ' | ' + flame_stack + ' | ' + flame_graph + ' > ' + graph_fullname
-flame = run(cmd_flame)
-print(cmd_flame)
-flame.wait(10)
-time.sleep(1)
+if not os.path.exists(perf_fullname):
+    print('File not exist!')
+    exit()
+#cmd_flame = 'perf script -f -i ' + perf_fullname + ' | ' + flame_stack + ' | ' + flame_graph + ' > ' + graph_fullname
+#flame = run(cmd_flame)
+#output = open('perf.results', 'w')
+#run('perf script -f -i ' + perf_fullname, output)
+#output = open('stack-perf.results', 'w')
+#run(flame_stack + ' perf.results', output)
+#output = open(graph_fullname, 'w')
+#run(flame_graph + ' stack-perf.results', output)
+run_to_file('perf script -f -i ' + perf_fullname, 'perf.results')
+run_to_file(flame_stack + ' perf.results', 'stack-perf.results')
+run_to_file('perf script -f -i ' + perf_fullname, graph_fullname)
+#print(cmd_flame)
+#flame.wait(10)
+#time.sleep(10)
 print('Job done')
