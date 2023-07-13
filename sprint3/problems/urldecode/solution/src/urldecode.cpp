@@ -4,21 +4,23 @@
 #include <stdexcept>
 
 std::string UrlDecode(std::string_view src) {
+    static constexpr int code_length = 2;
     std::string ret;
     char ch;
     int i, ii;
     for (i = 0; i < src.length(); i++) {
         if (src[i] == '%') {
-            [[maybe_unused]] auto s = sscanf(src.substr(i + 1, 2).data(), "%x", &ii);
-	    if (ii < 1 || ii > 0xFF)
+            if (i+code_length >= src.length())
+                throw std::invalid_argument("Error code url not full.");
+            [[maybe_unused]] auto s = sscanf(src.substr(i + 1, code_length).data(), "%x", &ii);
+	        if (ii < 0x0F || ii > 0xFF)
                 throw std::invalid_argument("Error decode url code symbol.");
             ch = static_cast<char>(ii);
             ret += ch;
-            i = i + 2;
+            i = i + code_length;
         }
         else if (src[i] == '+') {
             ret += ' ';
-            i = i + 1;
         }
         else if (src[i] >= 'A' && src[i] <= 'Z') {
             ret += src[i] - 'A' + 'a';
