@@ -65,16 +65,17 @@ model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
     return map;
 }
 
-model::ExtraData LoadExtraData(ptree& ptreeMap) {
-    model::ExtraData extra_data;
+void LoadExtraData(model::ExtraData &extra_data, ptree& ptreeMap) {
     auto id = ptreeMap.get<std::string>("id");
-    auto loot_types = ptreeMap.get_child("lootTypes").data();
-    std::cout << "loot_types" << loot_types << std::endl;
+    auto sdf = ptreeMap.get_child("lootTypes");
+    ptree sdd;
+    sdd.put_child("lootTypes", sdf);
+    std::stringstream ss;
+    write_json(ss, sdd);
     size_t cnt = ptreeMap.get_child("lootTypes").size();
     if (cnt < 1)
         throw std::logic_error("The map must contains at least one item!");
-    extra_data.SetLootTypes(id, loot_types, static_cast<int>(cnt));
-    return extra_data;
+    extra_data.SetLootTypes(id, ss.str(), static_cast<int>(cnt));
 }
 
 model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
@@ -102,10 +103,12 @@ model::Game LoadGame(const fs::path& json_path) {
         auto defDogSpeed = pt.get<double>("defaultDogSpeed");
         model::Game game(LoadLootGenConfig(pt));
         ptree jmaps = pt.get_child("maps");
+        model::ExtraData extra_data;
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
             game.AddMap(LoadMap(jmap.second, defDogSpeed));
-            game.AddExtraData(LoadExtraData(jmap.second));
+            LoadExtraData(extra_data, jmap.second);
         }
+        game.AddExtraData(extra_data);
         return game;
     }
     catch (ptree_error &e) {

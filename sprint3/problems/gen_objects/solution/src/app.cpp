@@ -39,7 +39,7 @@ std::string ModelToJson::GetMap(std::string_view nameMap) {
         mapEl["roads"] = GetRoads(map->GetRoads());
         mapEl["buildings"] = GetBuildings(map->GetBuildings());
         mapEl["offices"]   = GetOffice(map->GetOffices());
-        mapEl["lootTypes"] = ToJsonValue(game_.GetLootTypes(map->GetId()));
+        mapEl["lootTypes"] = ToJsonValue(game_.GetLootTypes(map->GetId())).at("lootTypes");
     }
     return serialize(mapEl);
 }
