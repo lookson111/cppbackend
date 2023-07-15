@@ -68,7 +68,8 @@ model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
 model::ExtraData LoadExtraData(ptree& ptreeMap) {
     model::ExtraData extra_data;
     auto id = ptreeMap.get<std::string>("id");
-    auto loot_types = ptreeMap.get<std::string>("lootTypes");
+    auto loot_types = ptreeMap.get_child("lootTypes").data();
+    std::cout << "loot_types" << loot_types << std::endl;
     size_t cnt = ptreeMap.get_child("lootTypes").size();
     if (cnt < 1)
         throw std::logic_error("The map must contains at least one item!");
@@ -80,8 +81,9 @@ model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
     static const double sec_to_ms = 1000.0;
     auto loot_conf = ptree.get_child("lootGeneratorConfig");
     model::LootGeneratorConfig lgc;
-    lgc.period = std::chrono::milliseconds(static_cast<int>(ptree.get<double>("period")*sec_to_ms));
-    lgc.probability = ptree.get<double>("probability");
+    lgc.period = std::chrono::milliseconds(
+        static_cast<int>(loot_conf.get<double>("period")*sec_to_ms));
+    lgc.probability = loot_conf.get<double>("probability");
     return lgc;
 }
 

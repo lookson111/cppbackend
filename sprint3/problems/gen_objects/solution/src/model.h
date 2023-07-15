@@ -7,6 +7,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <list>
 #include "tagged.h"
 #include "dog.h"
 #include "extra_data.h"

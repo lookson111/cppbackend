@@ -51,11 +51,11 @@ target_link_libraries(game_server PRIVATE CONAN_PKG::boost Threads::Threads)
 add_executable(game_server_tests
     src/model.h
     src/model.cpp
-	src/dog.h
-	src/dog.cpp
-	src/extra_data.h
-	src/extra_data.cpp
-	src/dog.cpp
+    src/dog.h
+    src/dog.cpp
+    src/extra_data.h
+    src/extra_data.cpp
+    src/dog.cpp
     src/loot_generator.h
     src/loot_generator.cpp
     src/tagged.h

@@ -90,9 +90,11 @@ js::array ModelToJson::GetOffice(const model::Map::Offices& offices) {
 
 js::value ModelToJson::ToJsonValue(std::string_view json_body)
 {
+    std::cout << "ToJsonValue 1 " << json_body << std::endl;
     js::error_code ec;
     js::string_view jb{json_body.data(), json_body.size()};
     js::value const jv = js::parse(jb, ec);
+    std::cout << "ToJsonValue error " << ec.message() << std::endl;
     if (ec)
         throw std::logic_error("Error convert json body to json value"s);
     return jv;
@@ -154,7 +156,8 @@ App::GetMapBodyJson(std::string_view mapName) const {
     else {
         // if map not found
         body = jmodel.GetMap(mapName);
-        if (!body.size()) {
+        if (body.size() == 2) { 
+            // if body is "" (empty)
             return std::make_pair(JsonMessage("mapNotFound"sv, "Map not found"sv), false);
         }
     }
@@ -305,14 +308,16 @@ App::GetState(const Token& token) const
     }
     js::object players;
     players["players"] = state;
+    js::object js_loot_type;
     const auto& loots = session->GetLoots();
     int id_loot = 0;
     for (const auto& loot : loots) {
         js::object object;
         object["type"] = loot.type; 
         object["pos"] = put_array(loot.pos.x, loot.pos.y);
-        state[std::to_string(id_loot++)] = object;
+        js_loot_type[std::to_string(id_loot++)] = object;
     }
+    players["lostObjects"] = js_loot_type;
     return std::make_pair(
         std::move(serialize(players)),
         error_code::None
