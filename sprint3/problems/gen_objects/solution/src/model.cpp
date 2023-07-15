@@ -39,6 +39,12 @@ void Game::AddMap(const Map &map) {
         }
     }
 }
+/*
+std::string_view Game::GetLootTypes(const Map::Id& id)
+{
+    assert("Need to write");
+    return std::string_view();
+}*/
 
 const Map* Game::FindMap(const Map::Id& id) const noexcept {
     if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
@@ -56,7 +62,9 @@ GameSession* Game::FindGameSession(const Map::Id& id) noexcept {
 }
 
 GameSession* Game::AddGameSession(const Map::Id& id) {
-    GameSession gs{ FindMap(id) , randomize_spawn_points_ };
+    GameSession gs{ FindMap(id) , randomize_spawn_points_, 
+        static_cast<unsigned>(extra_data_.GetCntLootTypes(*id)), 
+        loot_generator_config_};
     const size_t index = game_sessions_.size();
     game_sessions_.emplace_back(std::move(gs));
     try {
@@ -97,32 +105,42 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     return nullptr;
 }
 
-DPoint GameSession::GetRandomRoadCoord()
-{
-    std::time_t now = std::time(0);
+double GameSession::GetRandomDouble(double min, double max) {
+    std::time_t now = std::time(nullptr);
     boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
     auto random_double = [&](auto x1, auto x2) {
-        if (x2 < x1) 
+        if (x2 < x1)
             std::swap(x1, x2);
         std::uniform_real_distribution<double> ur(x1, x2);
         return ur(gen);
     };
+    return random_double(min, max);
+}
+int GameSession::GetRandomInt(int min, int max) {
+    std::time_t now = std::time(nullptr);
+    boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
+    boost::random::uniform_int_distribution<int> dist{min, max};
+    return dist(gen);
+}
+
+DPoint GameSession::GetRandomRoadCoord()
+{
     auto &roads = map_->GetRoads();
     if (roads.size() == 0)
         return DPoint();
-    boost::random::uniform_int_distribution<size_t> dist{0, roads.size()-1};
-    auto &road = roads[dist(gen)];
+    auto &road = roads[static_cast<size_t>(GetRandomInt(0, 
+        static_cast<int>(roads.size() - 1)))];
     DPoint coord;
     if (road.IsHorizontal()) {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
-        coord.x = random_double(start_point.x, end_point.x);
+        coord.x = GetRandomDouble(start_point.x, end_point.x);
         coord.y = end_point.y;
     }
     else {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
-        coord.y = random_double(start_point.y, end_point.y);
+        coord.y = GetRandomDouble(start_point.y, end_point.y);
         coord.x = end_point.x;
     }
     return coord;
@@ -201,6 +219,12 @@ void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
         // if the dog is on the edge, it is necessery to stop him
         if (move_pos != end_pos) 
             dog.Stop();
+    }
+    auto cnt_loot = loot_generator_.Generate(time_delta_ms, 
+        static_cast<int>(loots_.size()), static_cast<int>(dogs_.size()));
+    for (unsigned i = 0; i < cnt_loot; i++) {
+        loots_.push_back(Loot{ .type = GetRandomInt(0, static_cast<int>( cnt_loot_types_)), 
+            .pos = GetRandomRoadCoord() });
     }
 }
 //    |  ______________

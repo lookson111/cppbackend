@@ -38,7 +38,8 @@ std::string ModelToJson::GetMap(std::string_view nameMap) {
         mapEl["name"] = map->GetName();
         mapEl["roads"] = GetRoads(map->GetRoads());
         mapEl["buildings"] = GetBuildings(map->GetBuildings());
-        mapEl["offices"] = GetOffice(map->GetOffices());
+        mapEl["offices"]   = GetOffice(map->GetOffices());
+        mapEl["lootTypes"] = ToJsonValue(game_.GetLootTypes(map->GetId()));
     }
     return serialize(mapEl);
 }
@@ -85,6 +86,16 @@ js::array ModelToJson::GetOffice(const model::Map::Offices& offices) {
         arr.emplace_back(std::move(office));
     }
     return arr;
+}
+
+js::value ModelToJson::ToJsonValue(std::string_view json_body)
+{
+    js::error_code ec;
+    js::string_view jb{json_body.data(), json_body.size()};
+    js::value const jv = js::parse(jb, ec);
+    if (ec)
+        throw std::logic_error("Error convert json body to json value"s);
+    return jv;
 }
 
 void Player::Move(std::string_view move_cmd) {
@@ -255,7 +266,8 @@ App::Tick(std::string_view jsonBody) {
     );
 }
 
-std::pair<std::string, error_code> App::GetPlayers(const Token& token) const {
+std::pair<std::string, error_code> 
+App::GetPlayers(const Token& token) const {
     js::object msg;
     Player* player = player_tokens_.FindPlayer(token);
     auto session = player->GetSession();
@@ -271,7 +283,8 @@ std::pair<std::string, error_code> App::GetPlayers(const Token& token) const {
     );
 }
 
-std::pair<std::string, error_code> App::GetState(const Token& token) const
+std::pair<std::string, error_code> 
+App::GetState(const Token& token) const
 {
     auto put_array = [](const auto &x, const auto &y) {
         js::array jarr;
@@ -292,13 +305,22 @@ std::pair<std::string, error_code> App::GetState(const Token& token) const
     }
     js::object players;
     players["players"] = state;
+    const auto& loots = session->GetLoots();
+    int id_loot = 0;
+    for (const auto& loot : loots) {
+        js::object object;
+        object["type"] = loot.type; 
+        object["pos"] = put_array(loot.pos.x, loot.pos.y);
+        state[std::to_string(id_loot++)] = object;
+    }
     return std::make_pair(
         std::move(serialize(players)),
         error_code::None
     );
 }
 
-std::pair<std::string, error_code> App::CheckToken(const Token& token) const
+std::pair<std::string, error_code> 
+App::CheckToken(const Token& token) const
 {
     Player* player = player_tokens_.FindPlayer(token);
     if (player == nullptr)

@@ -8,8 +8,9 @@
 #include <map>
 #include <memory>
 #include "tagged.h"
-#include "log.h"
 #include "dog.h"
+#include "extra_data.h"
+#include "loot_generator.h"
 
 namespace model {
 
@@ -203,6 +204,17 @@ private:
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
 };
+
+struct LootGeneratorConfig {
+    std::chrono::milliseconds period;
+    double probability = 500.0;
+};
+
+struct Loot {
+    int type = 0;
+    DPoint pos;
+};
+
 struct PointKeyHash {
     std::size_t operator()(const Point& k) const {
         return std::hash<Coord>()(k.x) ^ (std::hash<Coord>()(k.y) << 1);
@@ -218,12 +230,18 @@ class GameSession {
 private:
     using RoadMap = std::unordered_multimap<Point, const Road*, PointKeyHash, PointKeyEqual>;
     using RoadMapIter = decltype(RoadMap{}.equal_range(Point{}));
-
 public:
     using Dogs = std::deque<Dog>;
-    GameSession(const Map* map, bool randomize_spawn_points) 
+    using Loots = std::list<Loot>;
+
+    GameSession(const Map* map, bool randomize_spawn_points, unsigned cnt_loot_types,
+        const LootGeneratorConfig loot_generator_config)
         : map_(map)
-        , randomize_spawn_points_ (randomize_spawn_points) {
+        , randomize_spawn_points_(randomize_spawn_points)
+        , cnt_loot_types_(cnt_loot_types)
+        , loot_generator_(loot_generator_config.period, 
+            loot_generator_config.probability,
+            [&]() {return GetRandomDouble(0.0, 1.0);}) {
         LoadRoadMap();
     }
     const Map::Id& MapId() {
@@ -234,36 +252,50 @@ public:
     const Dogs& GetDogs() const {
         return dogs_;
     }
+    const Loots& GetLoots() const {
+        return loots_;
+    }
     void MoveDog(Dog::Id id, Move move);
     void Tick(std::chrono::milliseconds time_delta_ms);
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
     Dogs dogs_;
+    Loots loots_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
     const bool randomize_spawn_points_ = true;
     RoadMap road_map;
+    const unsigned cnt_loot_types_;
+    loot_gen::LootGenerator loot_generator_;
+
     DPoint GetRandomRoadCoord();
     void LoadRoadMap();
     bool PosInRoads(RoadMapIter roads, DPoint pos);
     DPoint GetExtremePos(RoadMapIter roads, DPoint pos);
     DPoint MoveDog(DPoint start_pos, DPoint end_pos);
+    static double GetRandomDouble(double min, double max);
+    static int GetRandomInt(int min, int max);
 };
 
 class Game {
 public:
     using Maps = std::vector<Map>;
 
+    Game(const LootGeneratorConfig& loot_generator_config) : loot_generator_config_(std::move(loot_generator_config)){
+    }
     void AddMap(const Map& map);
-    void SetDefaultDogSpeed(double speed) {
-        DefaultDogSpeed = speed;
+    void AddExtraData(const ExtraData& extra_data) {
+        extra_data_ = std::move(extra_data);
     }
     void SetRandomizeSpawnPoints(bool randomize_spawn_points) {
         randomize_spawn_points_ = randomize_spawn_points;
     }
     const Maps& GetMaps() const noexcept {
         return maps_;
+    }
+    std::string_view GetLootTypes(const Map::Id& id) {
+        return extra_data_.GetLootTypes(*id);
     }
     const Map* FindMap(const Map::Id& id) const noexcept;
     GameSession* FindGameSession(const Map::Id& id) noexcept;
@@ -276,7 +308,8 @@ private:
     
     bool randomize_spawn_points_ = true;
     Maps maps_;
-    double DefaultDogSpeed = 0;
+    ExtraData extra_data_;
+    const LootGeneratorConfig loot_generator_config_;
     std::deque<GameSession> game_sessions_;
     MapIdToIndex map_id_to_index_;
     MapIdToIndex map_id_to_game_sessions_index_;

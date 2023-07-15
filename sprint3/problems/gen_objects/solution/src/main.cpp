@@ -126,7 +126,7 @@ int main(int argc, const char* argv[]) {
         auto api_strand = net::make_strand(ioc);
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game, args.on_tick_api);
-        // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
+        // Настраиваем вызов метода Application::Tick каждые delta миллисекунд внутри strand
         auto ticker = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }
         );

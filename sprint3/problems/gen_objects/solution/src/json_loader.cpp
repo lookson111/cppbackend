@@ -7,6 +7,7 @@
 
 namespace json_loader {
 using namespace boost::property_tree;
+using namespace std::literals;
 namespace fs = std::filesystem;
 
 model::Road LoadRoad(ptree &ptreeRoad, model::DDimension road_offset) {
@@ -64,31 +65,49 @@ model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
     return map;
 }
 
+model::ExtraData LoadExtraData(ptree& ptreeMap) {
+    model::ExtraData extra_data;
+    auto id = ptreeMap.get<std::string>("id");
+    auto loot_types = ptreeMap.get<std::string>("lootTypes");
+    size_t cnt = ptreeMap.get_child("lootTypes").size();
+    if (cnt < 1)
+        throw std::logic_error("The map must contains at least one item!");
+    extra_data.SetLootTypes(id, loot_types, static_cast<int>(cnt));
+    return extra_data;
+}
+
+model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
+    static const double sec_to_ms = 1000.0;
+    auto loot_conf = ptree.get_child("lootGeneratorConfig");
+    model::LootGeneratorConfig lgc;
+    lgc.period = std::chrono::milliseconds(static_cast<int>(ptree.get<double>("period")*sec_to_ms));
+    lgc.probability = ptree.get<double>("probability");
+    return lgc;
+}
+
 model::Game LoadGame(const fs::path& json_path) {
     // Загрузить содержимое файла json_path, например, в виде строки
     // Распарсить строку как JSON, используя boost::json::parse
     // Загрузить модель игры из файла
-    model::Game game;
     ptree pt;
     try {
         read_json(json_path.generic_string(), pt);
     } 
     catch (ptree_error &e) {
-        std::cout << "Json file read error: " << e.what();
-        throw;
+        throw std::logic_error("Json file read error: "s + e.what());
     }
     try {
         auto defDogSpeed = pt.get<double>("defaultDogSpeed");
-        game.SetDefaultDogSpeed(defDogSpeed);
+        model::Game game(LoadLootGenConfig(pt));
         ptree jmaps = pt.get_child("maps");
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
             game.AddMap(LoadMap(jmap.second, defDogSpeed));
+            game.AddExtraData(LoadExtraData(jmap.second));
         }
+        return game;
     }
     catch (ptree_error &e) {
-        std::cout << "Json parse ptree error: " << e.what();
-        throw;
+        throw std::logic_error("Json parse ptree error: "s + e.what());
     }
-    return game;
 }
 }  // namespace json_loader

@@ -38,6 +38,7 @@ private:
     static js::array GetRoads(const model::Map::Roads& roads);
     static js::array GetBuildings(const model::Map::Buildings& buildings);
     static js::array GetOffice(const model::Map::Offices& offices);
+    static js::value ToJsonValue(std::string_view json_body);
 };
 
 std::string JsonMessage(std::string_view code, std::string_view message);

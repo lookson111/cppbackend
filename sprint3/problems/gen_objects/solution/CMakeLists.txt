@@ -40,8 +40,27 @@ add_executable(game_server
 	src/dog.h
 	src/loot_generator.cpp
 	src/loot_generator.h
+	src/extra_data.cpp
+	src/extra_data.h
 	src/token.h
 	src/ticker.h
 )
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)
 target_link_libraries(game_server PRIVATE CONAN_PKG::boost Threads::Threads) 
+
+add_executable(game_server_tests
+    src/model.h
+    src/model.cpp
+	src/dog.h
+	src/dog.cpp
+	src/extra_data.h
+	src/extra_data.cpp
+	src/dog.cpp
+    src/loot_generator.h
+    src/loot_generator.cpp
+    src/tagged.h
+    tests/model_tests.cpp
+    tests/loot_generator_tests.cpp
+)
+target_include_directories(game_server_tests PRIVATE  CONAN_PKG::boost)
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost Threads::Threads) 
