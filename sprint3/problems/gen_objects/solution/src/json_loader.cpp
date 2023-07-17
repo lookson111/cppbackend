@@ -1,6 +1,7 @@
 #include "json_loader.h"
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
+#include <boost/json.hpp>
 #include "boost/foreach.hpp"
 #include <string>
 #include <iostream>
@@ -9,6 +10,7 @@ namespace json_loader {
 using namespace boost::property_tree;
 using namespace std::literals;
 namespace fs = std::filesystem;
+namespace js = boost::json;
 
 model::Road LoadRoad(ptree &ptreeRoad, model::DDimension road_offset) {
     model::Point start;
@@ -65,17 +67,29 @@ model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
     return map;
 }
 
-void LoadExtraData(model::ExtraData &extra_data, ptree& ptreeMap) {
-    auto id = ptreeMap.get<std::string>("id");
-    auto sdf = ptreeMap.get_child("lootTypes");
-    ptree sdd;
-    sdd.put_child("lootTypes", sdf);
-    std::stringstream ss;
-    write_json(ss, sdd);
-    size_t cnt = ptreeMap.get_child("lootTypes").size();
-    if (cnt < 1)
-        throw std::logic_error("The map must contains at least one item!");
-    extra_data.SetLootTypes(id, ss.str(), static_cast<int>(cnt));
+void LoadExtraData(model::Game &game, const fs::path& json_path) {
+    model::ExtraData extra_data;
+    js::error_code ec;
+    std::string json_string;
+    std::ifstream json_file(json_path);
+    if (!json_file.is_open())
+        throw std::logic_error("Json file error open."s);
+    std::stringstream buffer;
+    buffer << json_file.rdbuf();
+    json_string = buffer.str();
+    js::value const jv = js::parse(json_string, ec);
+    if (ec)
+        throw std::logic_error("Json file read error: "s + ec.what());
+    auto json_maps = jv.at("maps");
+    for (auto& json_map : json_maps.get_array()) {
+        auto id = json_map.at("id").as_string();
+        auto json_loot_types = json_map.at("lootTypes");
+        size_t cnt = json_loot_types.as_array().size();
+        if (cnt < 1)
+            throw std::logic_error("The map must contains at least one item!");
+        extra_data.SetLootTypes(id.c_str(), serialize(json_loot_types), static_cast<int>(cnt));
+    }
+    game.AddExtraData(extra_data);
 }
 
 model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
@@ -103,12 +117,14 @@ model::Game LoadGame(const fs::path& json_path) {
         auto defDogSpeed = pt.get<double>("defaultDogSpeed");
         model::Game game(LoadLootGenConfig(pt));
         ptree jmaps = pt.get_child("maps");
-        model::ExtraData extra_data;
+        //model::ExtraData extra_data;
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
             game.AddMap(LoadMap(jmap.second, defDogSpeed));
-            LoadExtraData(extra_data, jmap.second);
         }
-        game.AddExtraData(extra_data);
+        //game.AddExtraData(extra_data);
+
+        LoadExtraData(game, json_path);
+
         return game;
     }
     catch (ptree_error &e) {
