@@ -4,10 +4,15 @@ project(game_server CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
+include(CTest)
+include(${CONAN_BUILD_DIRS_CATCH2_DEBUG}/Catch.cmake)
+
 conan_basic_setup(TARGETS)
 add_definitions(-DBOOST_BEAST_USE_STD_STRING_VIEW)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
+
+
 
 set(BOOST_LIB CONAN_PKG::boost)
 set(ZLIB_LIB Threads::Threads)
@@ -61,15 +66,14 @@ add_executable(game_server
 	src/token.h
 	src/ticker.h
 )
-#target_include_directories(game_server PRIVATE ${BOOST_LIB})
+
 target_link_libraries(game_server PRIVATE ${BOOST_LIB} ${ZLIB_LIB} ModelLib) 
 
 add_executable(game_server_tests
     tests/model_tests.cpp
     tests/loot_generator_tests.cpp
 )
-#target_include_directories(game_server_tests PRIVATE ModelLib ${BOOST_LIB})
+
 target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib) 
 
-#target_link_libraries(game_server ModelLib)
-#target_link_libraries(game_server_tests ${CATCH2_LIB} ModelLib) 
+catch_discover_tests(game_server_tests)
