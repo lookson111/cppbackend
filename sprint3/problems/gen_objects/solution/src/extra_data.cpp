@@ -3,8 +3,8 @@
 namespace model {
 void ExtraData::SetLootTypes(std::string mapID, const std::string& loot_types, int cnt_loot_types)
 {
-	std::cout << "MAP id \'" << mapID << "\'" << std::endl;
-	std::cout << "loot_type  " << loot_types << std::endl;
+	//std::cout << "MAP id \'" << mapID << "\'" << std::endl;
+	//std::cout << "loot_type  " << loot_types << std::endl;
 	loot_types_in_map_[mapID] = std::make_pair(loot_types, cnt_loot_types);
 }
 std::string_view ExtraData::GetLootTypes(const std::string& mapID) const {
