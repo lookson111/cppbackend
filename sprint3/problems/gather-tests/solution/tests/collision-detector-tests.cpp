@@ -91,7 +91,7 @@ SCENARIO("Collision detector", "[Collision detector]") {
         WHEN("One item and one gatheres") {
             item_gatherer.Set(one_item);
             item_gatherer.Set(one_gatherer);
-
+            
 
         }
     }
