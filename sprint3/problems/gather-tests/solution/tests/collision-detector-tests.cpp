@@ -5,6 +5,7 @@
 
 #include "../src/collision_detector.h"
 using namespace collision_detector;
+using namespace geom;
 // Напишите здесь тесты для функции collision_detector::FindGatherEvents
 namespace Catch {
     template<>
@@ -13,6 +14,14 @@ namespace Catch {
             std::ostringstream tmp;
             tmp << "(" << value.gatherer_id << "," << value.item_id << "," << value.sq_distance << "," << value.time << ")";
 
+            return tmp.str();
+        }
+    };
+    template<>
+    struct StringMaker<collision_detector::CollectionResult> {
+        static std::string convert(collision_detector::CollectionResult const& value) {
+            std::ostringstream tmp;
+            tmp << "(sq_distance=" << value.sq_distance << ",proj_ratio=" << value.proj_ratio << ")";
             return tmp.str();
         }
     };
@@ -54,6 +63,10 @@ bool operator==(const Gatherer& lh, const Gatherer &rh) {
         return lh.start_pos == rh.start_pos && lh.end_pos == rh.end_pos && lh.width == rh.width;
 }
 
+bool operator==(const CollectionResult& lh, const CollectionResult &rh) {
+        return true;
+}
+
 
 static const ItemGatherer::Items one_item = { Item{.position{0.0, 5.0}, .width = 0.2 } };
 static const ItemGatherer::Gatherers one_gatherer =
@@ -86,12 +99,58 @@ SCENARIO("Collision detector", "[Collision detector]") {
             }
         }
     }
+    AND_GIVEN("Track and points") {
+        WHEN("line horizontal") {
+            // линия по абсцисс точка пересекается
+            auto coll = TryCollectPoint(Point2D{0, 0}, Point2D{10, 0}, Point2D{5, 2});
+            WHEN("Point distributed by line") {
+                CHECK(coll.IsCollected(2));
+            }
+            AND_WHEN("Point not distributed by line") {
+                CHECK(!coll.IsCollected(1));
+            }
+        }
+        AND_WHEN("line vertical") {
+            // линия по ординате точка пересекается
+            auto coll = TryCollectPoint(Point2D{0, 0}, Point2D{0, 10}, Point2D{2, 5});
+            WHEN("Point distributed by line") {
+                CHECK(coll.IsCollected(2));
+            }
+            AND_WHEN("Point not distributed by line") {
+                CHECK(!coll.IsCollected(1));
+            }
+        }
+        AND_WHEN("Point in line vertical") {
+            auto coll = TryCollectPoint(Point2D{0, 0}, Point2D{0, 10}, Point2D{0, 5});
+            WHEN("Point") {
+                CHECK(coll.IsCollected(1));
+            }
+            AND_WHEN("Point") {
+                CHECK(coll.IsCollected(10));
+            }
+        }
+        AND_WHEN("Point out abscissa line vertical") {
+            auto coll = TryCollectPoint(Point2D{0, 0}, Point2D{0, 10}, Point2D{12, 2});
+            WHEN("Point does not intersect") {
+                CHECK(!coll.IsCollected(3));
+                CHECK(!coll.IsCollected(2));
+            }
+        }
+        AND_WHEN("Point out abscissa oblique line") {
+            auto coll = TryCollectPoint(Point2D{0, 0}, Point2D{8, -6}, Point2D{6, -2});
+            WHEN("Point does intersect") {
+                CHECK(coll.IsCollected(2));
+            }
+            AND_WHEN("Point does not intersect") {
+                CHECK(!coll.IsCollected(1.9));
+            }
+        }
+    }
     AND_GIVEN("Item gatherer container for check collision") {
         ItemGatherer item_gatherer;
         WHEN("One item and one gatheres") {
             item_gatherer.Set(one_item);
-            item_gatherer.Set(one_gatherer);
-            
+            item_gatherer.Set(one_gatherer);           
 
         }
     }
