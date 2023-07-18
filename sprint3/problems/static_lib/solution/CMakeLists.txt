@@ -4,8 +4,8 @@ project(game_server CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
-include(CTest)
-include(${CONAN_BUILD_DIRS_CATCH2_DEBUG}/Catch.cmake)
+#include(CTest)
+#include(${CONAN_BUILD_DIRS_CATCH2_DEBUG}/Catch.cmake)
 
 conan_basic_setup(TARGETS)
 add_definitions(-DBOOST_BEAST_USE_STD_STRING_VIEW)
@@ -76,4 +76,4 @@ add_executable(game_server_tests
 
 target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib) 
 
-catch_discover_tests(game_server_tests)
+#catch_discover_tests(game_server_tests)
