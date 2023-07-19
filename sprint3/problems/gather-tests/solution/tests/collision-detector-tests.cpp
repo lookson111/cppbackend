@@ -38,29 +38,40 @@ namespace Catch {
     };
 }  // namespace Catch 
 
+bool operator==(const GatheringEvent &lh, const GatheringEvent &rh) {
+    return lh.item_id == rh.item_id &&
+        lh.gatherer_id == rh.gatherer_id &&
+        lh.sq_distance == Catch::Approx(rh.sq_distance).epsilon(epsilon) &&
+        lh.time == Catch::Approx(rh.time).epsilon(epsilon);
+}
+
 template <typename T>
-class IsContainsMatcher : public Catch::Matchers::MatcherBase<T> {
+class IsEqualMatcher : public Catch::Matchers::MatcherBase<T> {
     T m_item_gatherer;
 public:
-    IsContainsMatcher(T item_gatherer) : m_item_gatherer(item_gatherer) {}
+    IsEqualMatcher(T item_gatherer) : m_item_gatherer(item_gatherer) {}
 
     bool match(T const& in) const override {
-        return in.item_id == m_item_gatherer.item_id &&
-            in.gatherer_id == m_item_gatherer.gatherer_id;// && 
-            //in.sq_distance == Approx(m_item_gatherer.sq_distance).epsilon(epsilon);
-            //CHECK_THAT(in.sq_distance, WithinAbs(m_item_gatherer.sq_distance));
-        //return in >= m_begin && in <= m_end;
+        using std::begin;
+        using std::end;
+        return std::equal(begin(in), end(in), begin(m_item_gatherer), end(m_item_gatherer), 
+            [] (const GatheringEvent &a, const GatheringEvent &b) {
+                return a == b;
+        });
     }
 
     std::string describe() const override {
         std::ostringstream ss;
-        ss << "(" << m_item_gatherer.gatherer_id << "," << m_item_gatherer.item_id << "," << m_item_gatherer.sq_distance << "," << m_item_gatherer.time << ")";
+        ss << "{";
+        for (const auto &v : m_item_gatherer)
+            ss << "(" << v.gatherer_id << "," << v.item_id << "," << v.sq_distance << "," << v.time << ")";
+        ss << "}";
         return ss.str();
     }
 };
 
 template <typename T>
-IsContainsMatcher<T> IsContains(T t) {
+IsEqualMatcher<T> IsEqual(T t) {
     return { t };
 }
 
@@ -119,6 +130,12 @@ static const ItemGatherer::Items one_item_7 = { Item{.position{5.0, 0}, .width =
 static const ItemGatherer::Items one_item_inclined_track_1 = { Item{.position{3.0, 6.0}, .width = 1.79 } };
 static const ItemGatherer::Items one_item_inclined_track_2 = { Item{.position{3.0, 6.0}, .width = 1.78 } };
 
+
+static const ItemGatherer::Items subsequence_items = { 
+    Item{.position{1.97, 2.76}, .width = 0.94 },
+    Item{.position{1.36, 2.44}, .width = 0.46 }, 
+    Item{.position{6.00, 5.00}, .width = 0.45 }};
+
 static const ItemGatherer::Gatherers one_gatherer =
     { Gatherer{.start_pos{0.0, 0.0}, .end_pos{10.0, 0.0}, .width = 1.0} };
 static const ItemGatherer::Gatherers one_gatherer_inclined_track =
@@ -126,11 +143,8 @@ static const ItemGatherer::Gatherers one_gatherer_inclined_track =
 
 auto gen_lamda(const auto &ge_exp) {
     return [&ge_exp](GatheringEvent in) {
-                return in.item_id == ge_exp.item_id &&
-                    in.gatherer_id == ge_exp.gatherer_id &&
-                    in.sq_distance == Catch::Approx(ge_exp.sq_distance).epsilon(epsilon) &&
-                    in.time == Catch::Approx(ge_exp.time).epsilon(epsilon);
-            };
+        return in == ge_exp;
+    };
 }
 void contains_gather_event(ItemGatherer &item_gatherer, const ItemGatherer::Items &one_item, const GatheringEvent &ge_exp) {
     item_gatherer.Set(one_item);
@@ -274,6 +288,15 @@ SCENARIO("Collision detector", "[Collision detector]") {
             AND_WHEN("not capture item")  {
                 not_contains_gather_event(item_gatherer, one_item_inclined_track_2, 
                     GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 8.45, .time = 0.48});
+            }
+            AND_WHEN("subsequence items")  {
+                item_gatherer.Set(subsequence_items);
+                std::vector<GatheringEvent> ge_exp{
+                    {.item_id = 1, .gatherer_id = 0, .sq_distance = 0.20808, .time = 0.2064},
+                    {.item_id = 0, .gatherer_id = 0, .sq_distance = 0.2205,  .time = 0.268},
+                    {.item_id = 2, .gatherer_id = 0, .sq_distance = 0.45,    .time = 0.68}};
+                auto ge_res = FindGatherEvents(item_gatherer);
+                CHECK_THAT(ge_res, IsEqual(ge_exp)); 
             }
         }
     }
