@@ -1,11 +1,22 @@
 #define _USE_MATH_DEFINES
 #include <catch2/catch_test_macros.hpp>
-
+#include <catch2/matchers/catch_matchers_contains.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_vector.hpp>
+#include <catch2/matchers/catch_matchers_predicate.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <catch2/catch_approx.hpp>
 #include <sstream>
 
 #include "../src/collision_detector.h"
+
 using namespace collision_detector;
 using namespace geom;
+using Catch::Matchers::Contains; 
+using Catch::Matchers::WithinAbs;
+using Catch::Matchers::Predicate;
+
+static constexpr double epsilon = 1e-10;
 // Напишите здесь тесты для функции collision_detector::FindGatherEvents
 namespace Catch {
     template<>
@@ -26,8 +37,36 @@ namespace Catch {
         }
     };
 }  // namespace Catch 
+
+template <typename T>
+class IsContainsMatcher : public Catch::Matchers::MatcherBase<T> {
+    T m_item_gatherer;
+public:
+    IsContainsMatcher(T item_gatherer) : m_item_gatherer(item_gatherer) {}
+
+    bool match(T const& in) const override {
+        return in.item_id == m_item_gatherer.item_id &&
+            in.gatherer_id == m_item_gatherer.gatherer_id;// && 
+            //in.sq_distance == Approx(m_item_gatherer.sq_distance).epsilon(epsilon);
+            //CHECK_THAT(in.sq_distance, WithinAbs(m_item_gatherer.sq_distance));
+        //return in >= m_begin && in <= m_end;
+    }
+
+    std::string describe() const override {
+        std::ostringstream ss;
+        ss << "(" << m_item_gatherer.gatherer_id << "," << m_item_gatherer.item_id << "," << m_item_gatherer.sq_distance << "," << m_item_gatherer.time << ")";
+        return ss.str();
+    }
+};
+
+template <typename T>
+IsContainsMatcher<T> IsContains(T t) {
+    return { t };
+}
+
+
 namespace collision_detector {
-class ItemGatherer : ItemGathererProvider {
+class ItemGatherer : public ItemGathererProvider {
 public:
     using Items = std::vector<Item>;
     using Gatherers = std::vector <Gatherer>;
@@ -68,10 +107,41 @@ bool operator==(const CollectionResult& lh, const CollectionResult &rh) {
 }
 
 
-static const ItemGatherer::Items one_item = { Item{.position{0.0, 5.0}, .width = 0.2 } };
-static const ItemGatherer::Gatherers one_gatherer =
-    { Gatherer{.start_pos{0.0, 0.0}, .end_pos{0.0, 10.0}, .width = 0.3} };
+static const ItemGatherer::Items one_item = { Item{.position{5.0, 2.0}, .width = 1.0 } };
+static const ItemGatherer::Items one_item_1 = { Item{.position{5.0, 3}, .width = 1.0 } };
+static const ItemGatherer::Items one_item_2 = { Item{.position{5.0, 2}, .width = 0.99 } };
+static const ItemGatherer::Items one_item_3 = { Item{.position{11.0, 0}, .width = 2 } };
+static const ItemGatherer::Items one_item_4 = { Item{.position{10.0, 2}, .width = 1 } };
+static const ItemGatherer::Items one_item_5 = { Item{.position{10.0, 0}, .width = 1 } };
+static const ItemGatherer::Items one_item_6 = { Item{.position{5.0, 0}, .width = 0.5 } };
+static const ItemGatherer::Items one_item_7 = { Item{.position{5.0, 0}, .width = 2.0 } };
 
+static const ItemGatherer::Items one_item_inclined_track_1 = { Item{.position{3.0, 6.0}, .width = 1.79 } };
+static const ItemGatherer::Items one_item_inclined_track_2 = { Item{.position{3.0, 6.0}, .width = 1.78 } };
+
+static const ItemGatherer::Gatherers one_gatherer =
+    { Gatherer{.start_pos{0.0, 0.0}, .end_pos{10.0, 0.0}, .width = 1.0} };
+static const ItemGatherer::Gatherers one_gatherer_inclined_track =
+    { Gatherer{.start_pos{-0.5, 1.0}, .end_pos{9.5, 6.0}, .width = 1.12} };
+
+auto gen_lamda(const auto &ge_exp) {
+    return [&ge_exp](GatheringEvent in) {
+                return in.item_id == ge_exp.item_id &&
+                    in.gatherer_id == ge_exp.gatherer_id &&
+                    in.sq_distance == Catch::Approx(ge_exp.sq_distance).epsilon(epsilon) &&
+                    in.time == Catch::Approx(ge_exp.time).epsilon(epsilon);
+            };
+}
+void contains_gather_event(ItemGatherer &item_gatherer, const ItemGatherer::Items &one_item, const GatheringEvent &ge_exp) {
+    item_gatherer.Set(one_item);
+    auto ge_res = FindGatherEvents(item_gatherer);
+    CHECK_THAT(ge_res, Contains(Predicate<GatheringEvent>(gen_lamda(ge_exp)))); 
+}
+void not_contains_gather_event(ItemGatherer &item_gatherer, const ItemGatherer::Items &one_item, const GatheringEvent &ge_exp) {
+    item_gatherer.Set(one_item);
+    auto ge_res = FindGatherEvents(item_gatherer);
+    CHECK_THAT(ge_res, !Contains(Predicate<GatheringEvent>(gen_lamda(ge_exp)))); 
+}
 
 SCENARIO("Collision detector", "[Collision detector]") {
     GIVEN("Item gatherer container") {
@@ -148,11 +218,64 @@ SCENARIO("Collision detector", "[Collision detector]") {
     }
     AND_GIVEN("Item gatherer container for check collision") {
         ItemGatherer item_gatherer;
-        WHEN("One item and one gatheres") {
+        THEN("add one item") {
             item_gatherer.Set(one_item);
-            item_gatherer.Set(one_gatherer);           
-
+            WHEN("add one item") {
+                CHECK(item_gatherer.ItemsCount() == 1);
+            }
+        }
+        AND_THEN("add one gatheres") {
+            item_gatherer.Set(one_gatherer);
+            WHEN("add one gatherer") {
+                CHECK(item_gatherer.GatherersCount() == 1);
+            }
+        }
+        AND_THEN("One gatherer get one item") {
+            item_gatherer.Set(one_gatherer);
+            WHEN("capture item") {
+                contains_gather_event(item_gatherer, one_item, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 4.0, .time = 0.5});
+            }
+            AND_WHEN("not capture item") {
+                not_contains_gather_event(item_gatherer, one_item_1, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 9.0, .time = 0.5});
+            }
+            AND_WHEN("not capture item") {
+                not_contains_gather_event(item_gatherer, one_item_2, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 4.0, .time = 0.5});
+            }
+            AND_WHEN("not capture item") {
+                not_contains_gather_event(item_gatherer, one_item_3, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 4.0, .time = 0.5});
+            }
+            AND_WHEN("capture item") {
+                contains_gather_event(item_gatherer, one_item_4, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 4.0, .time = 1.0});
+            }
+            AND_WHEN("item inside 1") {
+                contains_gather_event(item_gatherer, one_item_5, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 0.0, .time = 1.0});
+            }
+            AND_WHEN("item inside 2") {
+                contains_gather_event(item_gatherer, one_item_6, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 0.0, .time = 0.5});
+            }
+            AND_WHEN("item inside 3") {
+                contains_gather_event(item_gatherer, one_item_7, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 0.0, .time = 0.5});
+            }
+        }
+        AND_THEN("inclined track") {
+            item_gatherer.Set(one_gatherer_inclined_track);
+            WHEN("capture item") {
+                contains_gather_event(item_gatherer, one_item_inclined_track_1, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 8.45, .time = 0.48});
+            }
+            AND_WHEN("not capture item")  {
+                not_contains_gather_event(item_gatherer, one_item_inclined_track_2, 
+                    GatheringEvent{.item_id = 0, .gatherer_id = 0, .sq_distance = 8.45, .time = 0.48});
+            }
         }
     }
-}
+}   
 
