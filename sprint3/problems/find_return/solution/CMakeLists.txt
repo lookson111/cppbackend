@@ -18,6 +18,13 @@ set(BOOST_LIB CONAN_PKG::boost)
 set(ZLIB_LIB Threads::Threads)
 set(CATCH2LIB CONAN_PKG::catch2)
 
+
+add_library(collision_detection_lib STATIC
+    src/model/collision_detector.h
+    src/model/collision_detector.cpp
+)
+target_link_libraries(collision_detection_lib PUBLIC CONAN_PKG::boost Threads::Threads)
+
 # Добавляем библиотеку, указывая, что она статическая.
 add_library(ModelLib STATIC     
 	src/model/model.h
@@ -29,8 +36,6 @@ add_library(ModelLib STATIC
     src/model/loot_generator.h
     src/model/loot_generator.cpp
     src/model/geom.h
-    src/model/collision_detector.h
-    src/model/collision_detector.cpp
     src/tagged.h
 	src/sdk.h
 )
@@ -38,7 +43,7 @@ add_library(ModelLib STATIC
 # Добавляем сторонние библиотеки. Указываем видимость PUBLIC, т. к. 
 # они должны быть ввидны и в библиотеке ModelLib и в зависимостях.
 target_include_directories(ModelLib PUBLIC ${BOOST_LIB})
-target_link_libraries(ModelLib PUBLIC ${BOOST_LIB} ${ZLIB_LIB})
+target_link_libraries(ModelLib PUBLIC ${BOOST_LIB} ${ZLIB_LIB} collision_detection_lib)
 
 
 add_executable(game_server
@@ -78,5 +83,11 @@ add_executable(game_server_tests
 )
 
 target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib) 
+
+add_executable(collision_detection_tests
+	tests/collision-detector-tests.cpp
+)
+
+target_link_libraries(collision_detection_tests CONAN_PKG::catch2 collision_detection_lib)
 
 #catch_discover_tests(game_server_tests)
