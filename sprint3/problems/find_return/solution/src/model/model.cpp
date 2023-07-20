@@ -14,8 +14,8 @@ namespace model {
 using namespace std::literals;
 
 static constexpr double LOOT_WIDTH = 0.0;
-static constexpr double DOG_WIDTH = 0.6;
-static constexpr double OFFICE_WIDTH = 0.5;
+static constexpr double DOG_WIDTH = 0.6/2;
+static constexpr double OFFICE_WIDTH = 0.5/2;
 
 void Map::AddOffice(const Office &office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
@@ -281,8 +281,8 @@ void GameSession::PushLootsToMap(std::chrono::milliseconds time_delta_ms)
 void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
 {
     MoveDogsInMap(time_delta_ms);
-    CollectAndReturnLoots();
     PushLootsToMap(time_delta_ms);
+    CollectAndReturnLoots();
 }
 //    |  ______________
 // y1 | |              |
