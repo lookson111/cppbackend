@@ -284,6 +284,17 @@ App::GetPlayers(const Token& token) const {
     );
 }
 
+auto App::GetJsonDogBag(const model::Dog &dog) const {
+    js::array jarr;
+    for (const auto& loot : dog.GetLoots()) {
+        js::object val;
+        val["id"] = loot.id;
+        val["type"] = loot.type;
+        jarr.emplace_back(std::move(val));
+    }
+    return jarr;
+}
+
 std::pair<std::string, error_code> 
 App::GetState(const Token& token) const
 {
@@ -302,6 +313,7 @@ App::GetState(const Token& token) const
         dog_param["pos"] = put_array(dog.GetPoint().x, dog.GetPoint().y);
         dog_param["speed"] = put_array(dog.GetSpeed().x, dog.GetSpeed().y);
         dog_param["dir"] = dog.GetDirection();
+        dog_param["bag"] = GetJsonDogBag(dog);
         state[std::to_string(*dog.GetId())] = dog_param;
     }
     js::object players;

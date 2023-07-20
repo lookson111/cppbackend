@@ -1,7 +1,7 @@
 #include <cmath>
 #include <catch2/catch_test_macros.hpp>
 
-#include "../src/model.h"
+#include "../src/model/model.h"
 
 using namespace std::literals;
 

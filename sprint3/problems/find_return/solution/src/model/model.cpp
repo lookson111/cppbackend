@@ -218,8 +218,10 @@ void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
     auto cnt_loot = loot_generator_.Generate(time_delta_ms, 
         static_cast<int>(loots_.size()), static_cast<int>(dogs_.size()));
     for (unsigned i = 0; i < cnt_loot; i++) {
-        loots_.push_back(Loot{ .type = GetRandomInt(0, static_cast<int>( cnt_loot_types_-1)), 
-            .pos = GetRandomRoadCoord() });
+        loots_.push_back(std::move(Loot{
+            .id = loot_id_++, 
+            .type = GetRandomInt(0, static_cast<int>( cnt_loot_types_-1)), 
+            .pos = GetRandomRoadCoord() }));
     }
 }
 //    |  ______________

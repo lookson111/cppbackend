@@ -4,7 +4,7 @@
 #include <boost/asio/strand.hpp>
 #include <string>
 #include <random>
-#include "model.h"
+#include "model/model.h"
 #include "token.h"
 #include "ticker.h"
 
@@ -133,6 +133,7 @@ private:
     PlayerTokens player_tokens_;
     Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
+    auto GetJsonDogBag(const model::Dog& dog) const;
 };
 }
 

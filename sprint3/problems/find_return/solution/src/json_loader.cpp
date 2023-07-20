@@ -12,6 +12,8 @@ using namespace std::literals;
 namespace fs = std::filesystem;
 namespace js = boost::json;
 
+static constexpr size_t default_bag_capacity = 3;
+
 model::Road LoadRoad(ptree &ptreeRoad, model::DDimension road_offset) {
     model::Point start;
     if (ptreeRoad.to_iterator(ptreeRoad.find("y1")) == ptreeRoad.end()) {
@@ -39,18 +41,27 @@ model::Office LoadOffice(ptree &ptO) {
         model::Offset{.dx = ptO.get<int>("offsetX"), .dy = ptO.get<int>("offsetY")});
 }
 
-model::Map LoadMap(ptree &ptreeMap, double def_dog_speed) {
-    auto id   = ptreeMap.get<std::string>("id");
-    auto name = ptreeMap.get<std::string>("name");
-    double dog_speed;
-    if (ptreeMap.to_iterator(ptreeMap.find("dogSpeed")) != ptreeMap.end()) {
-        dog_speed = ptreeMap.get<double>("dogSpeed");
+template<typename T>
+auto GetDefaultParam(ptree& ptree, const std::string& param, T default_value) {
+    T value;
+    if (ptree.to_iterator(ptree.find(param)) != ptree.end()) {
+        value = ptree.get<T>(param);
     }
     else {
-        dog_speed = def_dog_speed;
+        value = default_value;
     }
+    return value;
+}
+
+model::Map LoadMap(ptree &ptreeMap, const model::DefaultMapParam &def_param) {
+    auto id   = ptreeMap.get<std::string>("id");
+    auto name = ptreeMap.get<std::string>("name");
+    model::DefaultMapParam def_map_param;
+    def_map_param.dog_speed = GetDefaultParam(ptreeMap, "dogSpeed"s, def_param.dog_speed);
+    def_map_param.bag_capacity = GetDefaultParam(ptreeMap, "bagCapacity"s, def_param.bag_capacity);
+
     model::Map::Id idmap{id};
-    model::Map map(idmap, name, dog_speed);
+    model::Map map(idmap, name, def_map_param);
 
     ptree jroads = ptreeMap.get_child("roads");
     BOOST_FOREACH(ptree::value_type &jroad, jroads) {
@@ -114,11 +125,14 @@ model::Game LoadGame(const fs::path& json_path) {
         throw std::logic_error("Json file read error: "s + e.what());
     }
     try {
-        auto defDogSpeed = pt.get<double>("defaultDogSpeed");
+        model::DefaultMapParam def_param;
+        def_param.dog_speed = pt.get<double>("defaultDogSpeed");
+        def_param.bag_capacity = GetDefaultParam(pt, "defaultBagCapacity", default_bag_capacity);
+
         model::Game game(LoadLootGenConfig(pt));
         ptree jmaps = pt.get_child("maps");
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
-            game.AddMap(LoadMap(jmap.second, defDogSpeed));
+            game.AddMap(LoadMap(jmap.second, def_param));
         }
         LoadExtraData(game, json_path);
         return game;

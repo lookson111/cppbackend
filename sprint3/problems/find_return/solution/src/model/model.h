@@ -1,5 +1,5 @@
 #pragma once 
-#include "sdk.h"
+#include "../sdk.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -8,7 +8,7 @@
 #include <map>
 #include <memory>
 #include <list>
-#include "tagged.h"
+#include "../tagged.h"
 #include "dog.h"
 #include "extra_data.h"
 #include "loot_generator.h"
@@ -146,6 +146,12 @@ private:
     Offset offset_;
 };
 
+
+struct DefaultMapParam {
+    DDimension dog_speed;
+    size_t bag_capacity;
+};
+
 class Map {
 public:
     using Id = util::Tagged<std::string, Map>;
@@ -153,8 +159,9 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name, DDimension dog_speed) noexcept
-        : id_(std::move(id)), name_(std::move(name)), dog_speed_(dog_speed) {
+    Map(Id id, std::string name, const DefaultMapParam &default_param) noexcept
+        : id_(std::move(id)), name_(std::move(name))
+        , default_param_(default_param) {
     }
 
     const Id& GetId() const noexcept {
@@ -188,10 +195,13 @@ public:
     void AddOffice(const Office &office);
 
     DDimension GetDogSpeed() const {
-        return dog_speed_;
+        return default_param_.dog_speed;
     }
     DDimension GetRoadOffset() const {
         return road_offset_;
+    }
+    auto GetBagCapacity() const {
+        return default_param_.bag_capacity;
     }
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -200,7 +210,9 @@ private:
     std::string name_;
     Roads roads_;
     Buildings buildings_;
-    DDimension dog_speed_;
+    //DDimension dog_speed_;
+    //size_t bag_capacity_;
+    DefaultMapParam default_param_;
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
@@ -209,11 +221,6 @@ private:
 struct LootGeneratorConfig {
     std::chrono::milliseconds period;
     double probability = 500.0;
-};
-
-struct Loot {
-    int type = 0;
-    DPoint pos;
 };
 
 struct PointKeyHash {
@@ -233,7 +240,6 @@ private:
     using RoadMapIter = decltype(RoadMap{}.equal_range(Point{}));
 public:
     using Dogs = std::deque<Dog>;
-    using Loots = std::list<Loot>;
 
     GameSession(const Map* map, bool randomize_spawn_points, unsigned cnt_loot_types,
         const LootGeneratorConfig loot_generator_config)
@@ -258,9 +264,11 @@ public:
     }
     void MoveDog(Dog::Id id, Move move);
     void Tick(std::chrono::milliseconds time_delta_ms);
+
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
+    size_t loot_id_ = 0;
     Dogs dogs_;
     Loots loots_;
     DogsIdToIndex dogs_id_to_index_;

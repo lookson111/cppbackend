@@ -20,14 +20,17 @@ set(CATCH2LIB CONAN_PKG::catch2)
 
 # Добавляем библиотеку, указывая, что она статическая.
 add_library(ModelLib STATIC     
-	src/model.h
-    src/model.cpp
-    src/dog.h
-    src/dog.cpp
-    src/extra_data.h
-    src/extra_data.cpp
-    src/loot_generator.h
-    src/loot_generator.cpp
+	src/model/model.h
+    src/model/model.cpp
+    src/model/dog.h
+    src/model/dog.cpp
+    src/model/extra_data.h
+    src/model/extra_data.cpp
+    src/model/loot_generator.h
+    src/model/loot_generator.cpp
+    src/model/geom.h
+    src/model/collision_detector.h
+    src/model/collision_detector.h	
     src/tagged.h
 	src/sdk.h
 )

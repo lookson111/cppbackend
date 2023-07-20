@@ -1,5 +1,5 @@
 #pragma once 
-#include "sdk.h"
+#include "../sdk.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -8,7 +8,7 @@
 #include <map>
 #include <memory>
 #include <chrono>
-#include "tagged.h"
+#include "../tagged.h"
 
 namespace model {
  
@@ -43,6 +43,12 @@ struct DSpeed {
     }
 };
 
+struct Loot {
+    size_t id;
+    int type = 0;
+    DPoint pos;
+};
+using Loots = std::list<Loot>;
 
 class Dog {
 public:
@@ -68,6 +74,9 @@ public:
     const DPoint& GetPoint() const {
         return coord_;
     }
+    const DPoint& GetPrevPoint() const {
+        return prev_coord_;
+    }
     const DSpeed& GetSpeed() const {
         return speed_;
     }
@@ -75,6 +84,7 @@ public:
     void Diraction(Move move, DDimension speed);
     DPoint GetEndPoint(std::chrono::milliseconds move_time_ms);
     void SetPoint(DPoint coord) {
+        std::swap(prev_coord_, coord_);
         coord_ = coord;
     }
     bool IsStanding() {
@@ -83,14 +93,22 @@ public:
     void Stop() {
         speed_ = zero_speed_;
     }
+    void PutTheLoot(const Loots &session_loots, auto it_loot) {
+        loots_.splice(loots_.end(), session_loots, it_loot);
+    }
+    const Loots& GetLoots() const {
+        return loots_;
+    }
 private:
     static std::atomic<uint64_t> idn;
     static DSpeed zero_speed_;
     Id id_ = Id{0};
     std::string nickname_ = "";
     DPoint coord_;
+    DPoint prev_coord_;
     DSpeed speed_ = zero_speed_;
     Direction dir_ = Direction::NORTH;
+    Loots loots_;
 };
 
 }  // namespace model
