@@ -36,16 +36,16 @@ struct Offset {
 };
 
 class RoadRectangle {
-    DDimension x0, x1, y0, y1;
+    Dimension2D x0, x1, y0, y1;
 public:
-    RoadRectangle(Point start, Point end, DDimension road_offset) noexcept {
-        x0 = static_cast<DDimension>(std::min(start.x, end.x)) -
+    RoadRectangle(Point start, Point end, Dimension2D road_offset) noexcept {
+        x0 = static_cast<Dimension2D>(std::min(start.x, end.x)) -
             road_offset;
-        x1 = static_cast<DDimension>(std::max(start.x, end.x)) +
+        x1 = static_cast<Dimension2D>(std::max(start.x, end.x)) +
             road_offset;
-        y0 = static_cast<DDimension>(std::min(start.y, end.y)) -
+        y0 = static_cast<Dimension2D>(std::min(start.y, end.y)) -
             road_offset;
-        y1 = static_cast<DDimension>(std::max(start.y, end.y)) +
+        y1 = static_cast<Dimension2D>(std::max(start.y, end.y)) +
             road_offset;
     }
     auto Get() const noexcept {
@@ -66,13 +66,13 @@ public:
     constexpr static HorizontalTag HORIZONTAL{};
     constexpr static VerticalTag VERTICAL{};
 
-    Road(HorizontalTag, Point start, Coord end_x, DDimension offset) noexcept
+    Road(HorizontalTag, Point start, Coord end_x, Dimension2D offset) noexcept
         : start_{start}
         , end_{end_x, start.y}
         , road_rectangle_{start_, end_, offset} {
     }
 
-    Road(VerticalTag, Point start, Coord end_y, DDimension offset) noexcept
+    Road(VerticalTag, Point start, Coord end_y, Dimension2D offset) noexcept
         : start_{start}
         , end_{start.x, end_y} 
         , road_rectangle_{start_, end_, offset} {
@@ -148,7 +148,7 @@ private:
 
 
 struct DefaultMapParam {
-    DDimension dog_speed;
+    Dimension2D dog_speed;
     size_t bag_capacity;
 };
 
@@ -194,10 +194,10 @@ public:
 
     void AddOffice(const Office &office);
 
-    DDimension GetDogSpeed() const {
+    Dimension2D GetDogSpeed() const {
         return default_param_.dog_speed;
     }
-    DDimension GetRoadOffset() const {
+    Dimension2D GetRoadOffset() const {
         return road_offset_;
     }
     auto GetBagCapacity() const {
@@ -205,7 +205,7 @@ public:
     }
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
-    DDimension road_offset_ = 0.4;
+    Dimension2D road_offset_ = 0.4;
     Id id_;
     std::string name_;
     Roads roads_;
@@ -278,13 +278,16 @@ private:
     const unsigned cnt_loot_types_;
     loot_gen::LootGenerator loot_generator_;
 
-    DPoint GetRandomRoadCoord();
+    Point2D GetRandomRoadCoord();
     void LoadRoadMap();
-    bool PosInRoads(RoadMapIter roads, DPoint pos);
-    DPoint GetExtremePos(RoadMapIter roads, DPoint pos);
-    DPoint MoveDog(DPoint start_pos, DPoint end_pos);
+    bool PosInRoads(RoadMapIter roads, Point2D pos);
+    Point2D GetExtremePos(RoadMapIter roads, Point2D pos);
+    Point2D MoveDog(Point2D start_pos, Point2D end_pos);
     static double GetRandomDouble(double min, double max);
     static int GetRandomInt(int min, int max);
+    void MoveDogsInMap(std::chrono::milliseconds time_delta_ms);
+    void CollectAndReturnLoots();
+    void PushLootsToMap(std::chrono::milliseconds time_delta_ms);
 };
 
 class Game {

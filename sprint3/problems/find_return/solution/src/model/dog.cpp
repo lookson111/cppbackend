@@ -3,10 +3,9 @@
 #include <stdexcept>
 
 std::atomic<uint64_t> model::Dog::idn = 0;
-model::DSpeed model::Dog::zero_speed_ = DSpeed{0.0, 0.0};  
+geom::Speed2D model::Dog::zero_speed_ = geom::Speed2D{0.0, 0.0};
 namespace model {
 using namespace std::literals;
-
 
 std::string Dog::GetDirection() const
 {
@@ -23,7 +22,7 @@ std::string Dog::GetDirection() const
     return "U";
 }
 
-void Dog::Diraction(Move move, DDimension speed) {
+void Dog::Diraction(Move move, Dimension2D speed) {
     static constexpr double dzero = 0.0; 
     static constexpr double invert = -1.0; 
     switch (move) {
@@ -49,7 +48,7 @@ void Dog::Diraction(Move move, DDimension speed) {
     }
 }
 
-DPoint Dog::GetEndPoint(std::chrono::milliseconds move_time_ms)
+Point2D Dog::GetEndPoint(std::chrono::milliseconds move_time_ms)
 {
     auto msChronoToDoubleSec = [] (auto ms) {
         static constexpr double to_sec = 1000.0;
@@ -58,7 +57,7 @@ DPoint Dog::GetEndPoint(std::chrono::milliseconds move_time_ms)
     if (IsStanding())
         return coord_; 
     double dt_second = msChronoToDoubleSec(move_time_ms);
-    DPoint end_point;
+    Point2D end_point;
     end_point.x = coord_.x + speed_.x * dt_second;
     end_point.y = coord_.y + speed_.y * dt_second;
     return end_point;

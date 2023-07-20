@@ -14,7 +14,7 @@ namespace js = boost::json;
 
 static constexpr size_t default_bag_capacity = 3;
 
-model::Road LoadRoad(ptree &ptreeRoad, model::DDimension road_offset) {
+model::Road LoadRoad(ptree &ptreeRoad, geom::Dimension2D road_offset) {
     model::Point start;
     if (ptreeRoad.to_iterator(ptreeRoad.find("y1")) == ptreeRoad.end()) {
         start.x = ptreeRoad.get<int>("x0");

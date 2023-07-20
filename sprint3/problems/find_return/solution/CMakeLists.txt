@@ -30,7 +30,7 @@ add_library(ModelLib STATIC
     src/model/loot_generator.cpp
     src/model/geom.h
     src/model/collision_detector.h
-    src/model/collision_detector.h	
+    src/model/collision_detector.cpp
     src/tagged.h
 	src/sdk.h
 )

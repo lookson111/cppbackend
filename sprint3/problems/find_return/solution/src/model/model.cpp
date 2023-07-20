@@ -1,4 +1,3 @@
-#include "model.h"
 #include <stdexcept>
 #include <boost/random.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
@@ -6,10 +5,17 @@
 #include <ctime>
 #include <random>
 
+#include "model.h"
+#include "collision_detector.h"
+
 #define MAX_ROADS_TO_FOUND 1000
 
 namespace model {
 using namespace std::literals;
+
+static constexpr double LOOT_WIDTH = 0.0;
+static constexpr double DOG_WIDTH = 0.6;
+static constexpr double OFFICE_WIDTH = 0.5;
 
 void Map::AddOffice(const Office &office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
@@ -80,11 +86,11 @@ void Game::Tick(std::chrono::milliseconds time_delta_ms) {
 
 Dog* GameSession::AddDog(std::string_view nick_name)
 {
-    DPoint coord;
+    Point2D coord;
     if (randomize_spawn_points_)
         coord = GetRandomRoadCoord();
     else
-        coord = { .x = 0.0, .y = 0.0 };
+        coord = Point2D(0.0, 0.0);
     Dog dog = Dog(nick_name, coord);
     const size_t index = dogs_.size();
     auto &o = dogs_.emplace_back(std::move(dog));
@@ -118,14 +124,14 @@ int GameSession::GetRandomInt(int min, int max) {
     return dist(gen);
 }
 
-DPoint GameSession::GetRandomRoadCoord()
+Point2D GameSession::GetRandomRoadCoord()
 {
     auto &roads = map_->GetRoads();
     if (roads.size() == 0)
-        return DPoint();
+        return Point2D();
     auto &road = roads[static_cast<size_t>(GetRandomInt(0, 
         static_cast<int>(roads.size() - 1)))];
-    DPoint coord;
+    Point2D coord;
     if (road.IsHorizontal()) {
         auto start_point = road.GetStart();
         auto end_point = road.GetEnd();
@@ -177,7 +183,7 @@ void GameSession::MoveDog(Dog::Id id, Move move) {
     dog.Diraction(move, map_->GetDogSpeed());
 }
 
-DPoint GameSession::MoveDog(DPoint start_pos, DPoint end_pos) {
+Point2D GameSession::MoveDog(Point2D start_pos, Point2D end_pos) {
     auto pos_round = [](auto &pos) {
         Point point_pos{ .x = static_cast<Coord>(std::round(pos.x)),
             .y = static_cast<Coord>(std::round(pos.y))};
@@ -202,7 +208,7 @@ DPoint GameSession::MoveDog(DPoint start_pos, DPoint end_pos) {
     return start_pos;
 }
 
-void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
+void GameSession::MoveDogsInMap(std::chrono::milliseconds time_delta_ms)
 {
     for (auto& dog : dogs_) {
         if (dog.IsStanding())
@@ -212,17 +218,71 @@ void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
         auto move_pos = MoveDog(start_pos, end_pos);
         dog.SetPoint(move_pos);
         // if the dog is on the edge, it is necessery to stop him
-        if (move_pos != end_pos) 
+        if (move_pos != end_pos)
             dog.Stop();
     }
-    auto cnt_loot = loot_generator_.Generate(time_delta_ms, 
+}
+
+void GameSession::CollectAndReturnLoots()
+{
+    namespace cd = collision_detector;
+    cd::ItemGatherer item_gatherer;
+    std::map<size_t, model::Dog*> dog_numb_to_gather;
+    std::map<size_t, decltype(loots_.begin())> loot_numb_to_item;
+    size_t dog_idx = 0;
+    size_t loot_idx = 0;
+    for (auto& dog : dogs_) {
+        dog_numb_to_gather[dog_idx++] = &dog;
+        item_gatherer.Add(cd::Gatherer{ 
+            .start_pos = dog.GetPrevPoint(), 
+            .end_pos = dog.GetPoint(), .width = DOG_WIDTH});
+    }
+    for (auto it = loots_.begin(); it != loots_.end(); ++it) {
+        loot_numb_to_item[loot_idx] = it;
+        item_gatherer.Add(cd::Item{ .position = it->pos, .width = LOOT_WIDTH });
+    }
+    for (const auto& office : map_->GetOffices()) {
+        auto pos = office.GetPosition();
+        Point2D pos2d{ static_cast<Dimension2D>(pos.x), static_cast<Dimension2D>(pos.y) };
+        item_gatherer.Add(cd::Item{ .position = pos2d, .width = OFFICE_WIDTH });
+    }
+    auto gathering_events = cd::FindGatherEvents(item_gatherer);
+    size_t sz_loots = loots_.size();
+    for (const auto& ge : gathering_events) {
+        // if is office
+        if (ge.item_id >= sz_loots) {
+            // Return all items to the base
+            dog_numb_to_gather[ge.gatherer_id]->LootsClear();
+            continue;
+        }
+        // if is loot
+        if (loot_numb_to_item.contains(ge.item_id)) {
+            // if the bag is full, then we do not collect loot
+            if (dog_numb_to_gather[ge.gatherer_id]->GetLoots().size() > map_->GetBagCapacity())
+                continue;
+            dog_numb_to_gather[ge.gatherer_id]->PutTheLoot(
+                loots_, loot_numb_to_item[ge.item_id]);
+            loot_numb_to_item.erase(ge.item_id);
+        }
+    }
+}
+void GameSession::PushLootsToMap(std::chrono::milliseconds time_delta_ms)
+{
+    auto cnt_loot = loot_generator_.Generate(time_delta_ms,
         static_cast<int>(loots_.size()), static_cast<int>(dogs_.size()));
     for (unsigned i = 0; i < cnt_loot; i++) {
         loots_.push_back(std::move(Loot{
-            .id = loot_id_++, 
-            .type = GetRandomInt(0, static_cast<int>( cnt_loot_types_-1)), 
+            .id = loot_id_++,
+            .type = GetRandomInt(0, static_cast<int>(cnt_loot_types_ - 1)),
             .pos = GetRandomRoadCoord() }));
     }
+}
+
+void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
+{
+    MoveDogsInMap(time_delta_ms);
+    CollectAndReturnLoots();
+    PushLootsToMap(time_delta_ms);
 }
 //    |  ______________
 // y1 | |              |
@@ -233,7 +293,7 @@ void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
 //    |____________________
 //     x0             x1
 //
-bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos)
+bool GameSession::PosInRoads(RoadMapIter roads, Point2D pos)
 {
     for (auto it = roads.first; it != roads.second; ++it) {
         auto &road = *it->second;
@@ -243,11 +303,11 @@ bool GameSession::PosInRoads(RoadMapIter roads, DPoint pos)
     }
     return false;
 }
-DPoint GameSession::GetExtremePos(RoadMapIter roads, DPoint pos)
+Point2D GameSession::GetExtremePos(RoadMapIter roads, Point2D pos)
 {
-    typedef std::numeric_limits<DDimension> dbl; 
-    DPoint min;
-    DDimension min_d = dbl::max(), distance;
+    typedef std::numeric_limits<Dimension2D> dbl; 
+    Point2D min;
+    Dimension2D min_d = dbl::max(), distance;
     for (auto it = roads.first; it != roads.second; ++it) {
         auto& road = *it->second;
         auto [x0, x1, y0, y1] = road.GetRectangle();
