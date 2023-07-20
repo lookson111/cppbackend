@@ -258,7 +258,7 @@ void GameSession::CollectAndReturnLoots()
         // if is loot
         if (loot_numb_to_item.contains(ge.item_id)) {
             // if the bag is full, then we do not collect loot
-            if (dog_numb_to_gather[ge.gatherer_id]->GetLoots().size() > map_->GetBagCapacity())
+            if (dog_numb_to_gather[ge.gatherer_id]->GetLoots().size() >= map_->GetBagCapacity())
                 continue;
             dog_numb_to_gather[ge.gatherer_id]->PutTheLoot(
                 loots_, loot_numb_to_item[ge.item_id]);

@@ -4,7 +4,6 @@
     "period": 5.0,
     "probability": 0.5
   },
-  "defaultBagCapacity": 3,
   "maps": [
     {
       "dogSpeed": 4.0,
@@ -73,7 +72,6 @@
     {
       "id": "town",
       "name": "Town",
-	  "bagCapacity": 5,
       "lootTypes": [
         {
           "name": "key",
