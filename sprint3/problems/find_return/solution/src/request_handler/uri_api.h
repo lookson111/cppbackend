@@ -161,7 +161,7 @@ namespace uri_api
         http_handler::StringResponse Process(const http::request<Body, http::basic_fields<Allocator>>& req)
         {
             std::string target = http_server::uriDecode(req.target());
-            auto stop = target.find('?'); //req.target().find('?');
+            auto stop = target.find('?');
             target = std::string(target.substr(0, stop));
             if (target.find(Endpoint::MAPS) == 0)
                 target = std::string{ Endpoint::MAPS };

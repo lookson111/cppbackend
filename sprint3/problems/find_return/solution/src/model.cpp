@@ -39,12 +39,6 @@ void Game::AddMap(const Map &map) {
         }
     }
 }
-/*
-std::string_view Game::GetLootTypes(const Map::Id& id)
-{
-    assert("Need to write");
-    return std::string_view();
-}*/
 
 const Map* Game::FindMap(const Map::Id& id) const noexcept {
     if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {

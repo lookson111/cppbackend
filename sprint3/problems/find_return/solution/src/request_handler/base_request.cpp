@@ -4,7 +4,7 @@
 
 namespace http_handler {
 std::unordered_map<std::string_view, std::string_view> ContentType::type{
-    { FE::TEXT_HTML_1, TEXT_HTML },
+    { FE::TEXT_HTML_1,   TEXT_HTML },
     { FE::TEXT_HTML_2,   TEXT_HTML },
     { FE::TEXT_CSS,      TEXT_CSS },
     { FE::TEXT_PLAIN,    TEXT_PLAIN },

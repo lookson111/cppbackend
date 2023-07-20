@@ -117,14 +117,10 @@ model::Game LoadGame(const fs::path& json_path) {
         auto defDogSpeed = pt.get<double>("defaultDogSpeed");
         model::Game game(LoadLootGenConfig(pt));
         ptree jmaps = pt.get_child("maps");
-        //model::ExtraData extra_data;
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
             game.AddMap(LoadMap(jmap.second, defDogSpeed));
         }
-        //game.AddExtraData(extra_data);
-
         LoadExtraData(game, json_path);
-
         return game;
     }
     catch (ptree_error &e) {

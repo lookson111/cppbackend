@@ -61,7 +61,6 @@ namespace http_handler
         template <typename Body, typename Allocator>
         auto HandleGameRequest(const http::request<Body, http::basic_fields<Allocator>>& req)
         {
-            //std::lock_guard gm(access);
             auto response = ProcessGameRequest(req);
             response.keep_alive(req.keep_alive());
             response.version(req.version());

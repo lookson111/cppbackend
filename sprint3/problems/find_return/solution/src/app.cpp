@@ -90,11 +90,9 @@ js::array ModelToJson::GetOffice(const model::Map::Offices& offices) {
 
 js::value ModelToJson::ToJsonValue(std::string_view json_body)
 {
-    //std::cout << "ToJsonValue 1 " << json_body << std::endl;
     js::error_code ec;
     js::string_view jb{json_body.data(), json_body.size()};
     js::value const jv = js::parse(jb, ec);
-    //std::cout << "ToJsonValue error " << ec.message() << std::endl;
     if (ec)
         throw std::logic_error("Error convert json body to json value"s);
     return jv;

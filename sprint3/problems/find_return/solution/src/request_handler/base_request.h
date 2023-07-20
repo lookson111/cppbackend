@@ -42,42 +42,42 @@ struct FileExtension {
     // file extension
     constexpr static std::string_view TEXT_HTML_1 = ".htm"sv;
     constexpr static std::string_view TEXT_HTML_2 = ".html"sv;
-    constexpr static std::string_view TEXT_CSS = ".css"sv;
-    constexpr static std::string_view TEXT_PLAIN = ".txt"sv;
-    constexpr static std::string_view TEXT_JS = ".js"sv;
-    constexpr static std::string_view APP_JSON = ".json"sv;
-    constexpr static std::string_view APP_XML = ".xml"sv;
-    constexpr static std::string_view IMAGE_PNG = ".png"sv;
+    constexpr static std::string_view TEXT_CSS    = ".css"sv;
+    constexpr static std::string_view TEXT_PLAIN  = ".txt"sv;
+    constexpr static std::string_view TEXT_JS     = ".js"sv;
+    constexpr static std::string_view APP_JSON    = ".json"sv;
+    constexpr static std::string_view APP_XML     = ".xml"sv;
+    constexpr static std::string_view IMAGE_PNG   = ".png"sv;
     constexpr static std::string_view IMAGE_JPG_1 = ".jpg"sv;
     constexpr static std::string_view IMAGE_JPG_2 = ".jpe"sv;
     constexpr static std::string_view IMAGE_JPG_3 = ".jpeg"sv;
-    constexpr static std::string_view IMAGE_GIF = ".gif"sv;
-    constexpr static std::string_view IMAGE_BMP = ".bmp"sv;
-    constexpr static std::string_view IMAGE_ICO = ".ico"sv;
+    constexpr static std::string_view IMAGE_GIF   = ".gif"sv;
+    constexpr static std::string_view IMAGE_BMP   = ".bmp"sv;
+    constexpr static std::string_view IMAGE_ICO   = ".ico"sv;
     constexpr static std::string_view IMAGE_TIFF_1 = ".tiff"sv;
     constexpr static std::string_view IMAGE_TIFF_2 = ".tif"sv;
     constexpr static std::string_view IMAGE_SVG_1 = ".svg"sv;
     constexpr static std::string_view IMAGE_SVG_2 = ".svgz"sv;
-    constexpr static std::string_view AUDIO_MP3 = ".mp3"sv;
-    constexpr static std::string_view EMPTY = ""sv;
+    constexpr static std::string_view AUDIO_MP3   = ".mp3"sv;
+    constexpr static std::string_view EMPTY       = ""sv;
 };
 struct ContentType {
     ContentType() = delete;
-    constexpr static std::string_view TEXT_HTML = "text/html"sv; // .htm, .html
-    constexpr static std::string_view TEXT_CSS = "text/css"sv; // .css
-    constexpr static std::string_view TEXT_PLAIN = "text/plain"sv; // .txt
-    constexpr static std::string_view TEXT_JS = "text/javascript"sv; // .js
-    constexpr static std::string_view APP_JSON = "application/json"sv; // .json
-    constexpr static std::string_view APP_XML = "application/xml"sv; // .xml
-    constexpr static std::string_view IMAGE_PNG = "image/png"sv; // .png
-    constexpr static std::string_view IMAGE_JPG = "image/jpeg"sv; // .jpg, .jpe, .jpeg
-    constexpr static std::string_view IMAGE_GIF = "image/gif"sv; // .gif
-    constexpr static std::string_view IMAGE_BMP = "image/bmp"sv; // .bmp
-    constexpr static std::string_view IMAGE_ICO = "image/vnd.microsoft.icon"sv; // .ico
-    constexpr static std::string_view IMAGE_TIFF = "image/tiff"sv; // .tiff, .tif
-    constexpr static std::string_view IMAGE_SVG = "image/svg+xml"sv; // .svg, .svgz
-    constexpr static std::string_view AUDIO_MP3 = "audio/mpeg"sv; // .mp3
-    constexpr static std::string_view EMPTY = "application/octet-stream"sv;
+    constexpr static std::string_view TEXT_HTML  = "text/html"sv;       // .htm, .html
+    constexpr static std::string_view TEXT_CSS   = "text/css"sv;        // .css
+    constexpr static std::string_view TEXT_PLAIN = "text/plain"sv;      // .txt
+    constexpr static std::string_view TEXT_JS    = "text/javascript"sv; // .js
+    constexpr static std::string_view APP_JSON   = "application/json"sv;// .json
+    constexpr static std::string_view APP_XML    = "application/xml"sv; // .xml
+    constexpr static std::string_view IMAGE_PNG  = "image/png"sv;       // .png
+    constexpr static std::string_view IMAGE_JPG  = "image/jpeg"sv;      // .jpg, .jpe, .jpeg
+    constexpr static std::string_view IMAGE_GIF  = "image/gif"sv;       // .gif
+    constexpr static std::string_view IMAGE_BMP  = "image/bmp"sv;       // .bmp
+    constexpr static std::string_view IMAGE_ICO  = "image/vnd.microsoft.icon"sv; // .ico
+    constexpr static std::string_view IMAGE_TIFF = "image/tiff"sv;      // .tiff, .tif
+    constexpr static std::string_view IMAGE_SVG  = "image/svg+xml"sv;   // .svg, .svgz
+    constexpr static std::string_view AUDIO_MP3  = "audio/mpeg"sv;      // .mp3
+    constexpr static std::string_view EMPTY      = "application/octet-stream"sv;
 
     static std::string_view get(std::string_view key) {
         if (!type.contains(key))
