@@ -4,6 +4,7 @@
     "period": 5.0,
     "probability": 0.5
   },
+  "defaultBagCapacity": 3,
   "maps": [
     {
       "dogSpeed": 4.0,
@@ -16,7 +17,8 @@
           "type": "obj",
           "rotation": 90,
           "color" : "#338844",
-          "scale": 0.03
+          "scale": 0.03,
+          "value": 10
         },
         {
           "name": "wallet",
@@ -24,7 +26,8 @@
           "type": "obj",
           "rotation": 0,
           "color" : "#883344",
-          "scale": 0.01
+          "scale": 0.01,
+          "value": 30
         }
       ],
       "roads": [
@@ -70,18 +73,25 @@
     {
       "id": "town",
       "name": "Town",
+	  "bagCapacity": 5,
       "lootTypes": [
         {
           "name": "key",
           "file": "assets/key.obj",
           "type": "obj",
-          "scale": 0.03
+          "rotation": 90,
+          "color" : "#338844",
+          "scale": 0.03,
+          "value": 10
         },
         {
-          "name": "wallet",
-          "file": "assets/wallet.obj",
+          "name": "key",
+          "file": "assets/key.obj",
           "type": "obj",
-          "scale": 0.01
+          "rotation": 90,
+          "color" : "#338844",
+          "scale": 0.03,
+          "value": 10
         }
       ],
       "roads": [
