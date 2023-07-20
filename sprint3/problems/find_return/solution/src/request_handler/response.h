@@ -1,5 +1,5 @@
 #pragma once 
-
+#include "../sdk.h"
 #include <string_view>
 #include <string>
 #include <variant>

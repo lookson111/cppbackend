@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../sdk.h"
 #include <optional>
 #include <mutex>
 #include <boost/asio.hpp>
