@@ -99,6 +99,10 @@ Dog* GameSession::AddDog(std::string_view nick_name)
         dogs_.pop_back();
         throw;
     }
+    loots_.push_back(std::move(Loot{
+        .id = loot_id_++,
+        .type = GetRandomInt(0, static_cast<int>(cnt_loot_types_ - 1)),
+        .pos = GetRandomRoadCoord() }));
     return &dogs_.back();
 }
 
