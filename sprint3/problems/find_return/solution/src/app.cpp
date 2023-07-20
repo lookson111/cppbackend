@@ -100,7 +100,6 @@ js::value ModelToJson::ToJsonValue(std::string_view json_body)
 
 void Player::Move(std::string_view move_cmd) {
     model::Move dog_move;
-    std::cout << "Move: " << move_cmd << std::endl;
     if (move_cmd == "L"sv) 
         dog_move = model::Move::LEFT;
     else if (move_cmd == "R"sv)
@@ -320,12 +319,11 @@ App::GetState(const Token& token) const
     players["players"] = state;
     js::object js_loot_type;
     const auto& loots = session->GetLoots();
-    int id_loot = 0;
     for (const auto& loot : loots) {
         js::object object;
         object["type"] = loot.type; 
         object["pos"] = put_array(loot.pos.x, loot.pos.y);
-        js_loot_type[std::to_string(id_loot++)] = object;
+        js_loot_type[std::to_string(loot.id)] = object;
     }
     players["lostObjects"] = js_loot_type;
     return std::make_pair(

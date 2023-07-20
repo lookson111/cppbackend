@@ -83,7 +83,7 @@ struct Args {
     if (!vm.contains("www-root"s)) {
         throw std::runtime_error("Static file path is not specified"s);
     }
-    if (!vm.contains("randomize-spawn-points"s)) {
+    if (vm.contains("randomize-spawn-points"s)) {
         args.randomize_spawn_points = true;
     }
     // С опциями программы всё в порядке, возвращаем структуру args

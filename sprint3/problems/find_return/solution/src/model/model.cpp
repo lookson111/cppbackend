@@ -89,8 +89,6 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     Point2D coord;
     if (randomize_spawn_points_)
         coord = GetRandomRoadCoord();
-    else
-        coord = Point2D(0.0, 0.0);
     Dog dog = Dog(nick_name, coord);
     const size_t index = dogs_.size();
     auto &o = dogs_.emplace_back(std::move(dog));
@@ -101,8 +99,6 @@ Dog* GameSession::AddDog(std::string_view nick_name)
         dogs_.pop_back();
         throw;
     }
-    loots_.push_back(Loot{ .type = GetRandomInt(0, static_cast<int>(cnt_loot_types_ - 1)),
-        .pos = GetRandomRoadCoord() });
     return &dogs_.back();
 }
 
@@ -238,7 +234,7 @@ void GameSession::CollectAndReturnLoots()
             .end_pos = dog.GetPoint(), .width = DOG_WIDTH});
     }
     for (auto it = loots_.begin(); it != loots_.end(); ++it) {
-        loot_numb_to_item[loot_idx] = it;
+        loot_numb_to_item[loot_idx++] = it;
         item_gatherer.Add(cd::Item{ .position = it->pos, .width = LOOT_WIDTH });
     }
     for (const auto& office : map_->GetOffices()) {
