@@ -29,25 +29,14 @@ enum class Direction {
     EAST
 };
 
-/*struct DPoint {
-    DDimension x = 0, y = 0;
-    bool operator==(const DPoint& p) const {
-        return this->x == p.x && this->y == p.y;
-    }
-};
-struct DSpeed {
-    double x = 0, y = 0;
-    bool operator==(const DSpeed& p) const {
-        return this->x == p.x && this->y == p.y;
-    }
-};*/
-
 struct Loot {
     size_t id;
     int type = 0;
     Point2D pos;
 };
 using Loots = std::list<Loot>;
+using LootParam = int;
+using LootsParam = std::vector<LootParam>;
 
 class Dog {
 public:
@@ -98,8 +87,14 @@ public:
     const Loots& GetLoots() const {
         return loots_;
     }
-    void LootsClear() {
+    void LootsReturn(const LootsParam& loots_param) {
+        for (const auto& loot : loots_) {
+            score_ += loots_param[loot.type];
+        }
         return loots_.clear();
+    }
+    int GetScore() const {
+        return score_;
     }
 private:
     static std::atomic<uint64_t> idn;
@@ -111,6 +106,7 @@ private:
     Speed2D speed_ = zero_speed_;
     Direction dir_ = Direction::NORTH;
     Loots loots_;
+    int score_ = 0;
 };
 
 }  // namespace model

@@ -313,6 +313,7 @@ App::GetState(const Token& token) const
         dog_param["speed"] = put_array(dog.GetSpeed().x, dog.GetSpeed().y);
         dog_param["dir"] = dog.GetDirection();
         dog_param["bag"] = GetJsonDogBag(dog);
+        dog_param["score"] = dog.GetScore();
         state[std::to_string(*dog.GetId())] = dog_param;
     }
     js::object players;

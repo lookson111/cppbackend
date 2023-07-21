@@ -75,10 +75,14 @@ model::Map LoadMap(ptree &ptreeMap, const model::DefaultMapParam &def_param) {
     BOOST_FOREACH(ptree::value_type &joffice, joffices) {
         map.AddOffice(LoadOffice(joffice.second));
     }
+    ptree jloots_param = ptreeMap.get_child("lootTypes");
+    BOOST_FOREACH(auto& jloot_param, jloots_param) {
+        map.AddLoot(jloot_param.second.get<model::LootParam>("value"));
+    }
     return map;
 }
 
-void LoadExtraData(model::Game &game, const fs::path& json_path) {
+model::ExtraData LoadExtraData(const fs::path& json_path) {
     model::ExtraData extra_data;
     js::error_code ec;
     std::string json_string;
@@ -100,7 +104,7 @@ void LoadExtraData(model::Game &game, const fs::path& json_path) {
             throw std::logic_error("The map must contains at least one item!");
         extra_data.SetLootTypes(id.c_str(), serialize(json_loot_types), static_cast<int>(cnt));
     }
-    game.AddExtraData(extra_data);
+    return extra_data;
 }
 
 model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
@@ -134,7 +138,7 @@ model::Game LoadGame(const fs::path& json_path) {
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
             game.AddMap(LoadMap(jmap.second, def_param));
         }
-        LoadExtraData(game, json_path);
+        game.AddExtraData(LoadExtraData(json_path));
         return game;
     }
     catch (ptree_error &e) {

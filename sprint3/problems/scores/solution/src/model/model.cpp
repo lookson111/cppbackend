@@ -63,7 +63,6 @@ GameSession* Game::FindGameSession(const Map::Id& id) noexcept {
 
 GameSession* Game::AddGameSession(const Map::Id& id) {
     GameSession gs{ FindMap(id) , randomize_spawn_points_, 
-        static_cast<unsigned>(extra_data_.GetCntLootTypes(*id)), 
         loot_generator_config_};
     const size_t index = game_sessions_.size();
     game_sessions_.emplace_back(std::move(gs));
@@ -101,7 +100,7 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     }
     loots_.push_back(std::move(Loot{
         .id = loot_id_++,
-        .type = GetRandomInt(0, static_cast<int>(cnt_loot_types_ - 1)),
+        .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
         .pos = GetRandomRoadCoord() }));
     return &dogs_.back();
 }
@@ -252,7 +251,7 @@ void GameSession::CollectAndReturnLoots()
         // if is office
         if (ge.item_id >= sz_loots) {
             // Return all items to the base
-            dog_numb_to_gather[ge.gatherer_id]->LootsClear();
+            dog_numb_to_gather[ge.gatherer_id]->LootsReturn(map_->GetLootsParam());
             continue;
         }
         // if is loot
@@ -273,7 +272,7 @@ void GameSession::PushLootsToMap(std::chrono::milliseconds time_delta_ms)
     for (unsigned i = 0; i < cnt_loot; i++) {
         loots_.push_back(std::move(Loot{
             .id = loot_id_++,
-            .type = GetRandomInt(0, static_cast<int>(cnt_loot_types_ - 1)),
+            .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
             .pos = GetRandomRoadCoord() }));
     }
 }

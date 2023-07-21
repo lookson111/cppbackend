@@ -159,7 +159,8 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name, const DefaultMapParam &default_param) noexcept
+    Map(Id id, std::string name, 
+        const DefaultMapParam &default_param) noexcept
         : id_(std::move(id)), name_(std::move(name))
         , default_param_(default_param) {
     }
@@ -184,6 +185,10 @@ public:
         return offices_;
     }
 
+    const auto& GetLootsParam() const noexcept {
+        return loots_param_;
+    }
+
     void AddRoad(const Road& road) {
         roads_.emplace_back(road);
     }
@@ -193,6 +198,10 @@ public:
     }
 
     void AddOffice(const Office &office);
+
+    void AddLoot(LootParam loot_param) {
+        loots_param_.push_back(loot_param);
+    }
 
     Dimension2D GetDogSpeed() const {
         return default_param_.dog_speed;
@@ -210,12 +219,12 @@ private:
     std::string name_;
     Roads roads_;
     Buildings buildings_;
-    //DDimension dog_speed_;
-    //size_t bag_capacity_;
-    DefaultMapParam default_param_;
+    DefaultMapParam default_param_; 
+    LootsParam loots_param_;
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
+
 };
 
 struct LootGeneratorConfig {
@@ -241,11 +250,10 @@ private:
 public:
     using Dogs = std::deque<Dog>;
 
-    GameSession(const Map* map, bool randomize_spawn_points, unsigned cnt_loot_types,
+    GameSession(const Map* map, bool randomize_spawn_points,
         const LootGeneratorConfig loot_generator_config)
         : map_(map)
         , randomize_spawn_points_(randomize_spawn_points)
-        , cnt_loot_types_(cnt_loot_types)
         , loot_generator_(loot_generator_config.period, 
             loot_generator_config.probability,
             [&]() {return GetRandomDouble(0.0, 1.0);}) {
@@ -275,7 +283,7 @@ private:
     const Map* map_;
     const bool randomize_spawn_points_ = true;
     RoadMap road_map;
-    const unsigned cnt_loot_types_;
+    //const unsigned cnt_loot_types_;
     loot_gen::LootGenerator loot_generator_;
 
     Point2D GetRandomRoadCoord();
