@@ -15,7 +15,6 @@ public:
 	FileRequestHandler(const fs::path& static_path)
 		: static_path_{ CheckStaticPath(static_path) } {}
     virtual ~FileRequestHandler() {}
-//
 private: 
     TypeRequest ParseTarget(std::string_view target, std::string& res) const;
     virtual FileRequestResult MakeGetResponse(

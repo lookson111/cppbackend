@@ -283,7 +283,6 @@ private:
     const Map* map_;
     const bool randomize_spawn_points_ = true;
     RoadMap road_map;
-    //const unsigned cnt_loot_types_;
     loot_gen::LootGenerator loot_generator_;
 
     Point2D GetRandomRoadCoord();

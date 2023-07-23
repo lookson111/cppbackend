@@ -202,7 +202,6 @@ App::ResponseJoin(std::string_view jsonBody) {
     uint64_t id;
     auto player = GetPlayer(userName, mapId);
     token = *player_tokens_.AddPlayer(player);
-    //token = player_tokens_.FindPlayer();
     id = *player->GetId();
     msg["authToken"] = token;
     msg["playerId"]  = id;

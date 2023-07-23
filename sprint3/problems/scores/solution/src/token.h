@@ -15,7 +15,6 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 namespace security
 {
-
     static inline std::string_view GetToken(std::string_view autorization_text) {
         std::string_view bearer = "Bearer "sv;
         std::string_view ex_token = "6516861d89ebfff147bf2eb2b5153ae1"sv;
