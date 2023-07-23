@@ -80,14 +80,11 @@ target_link_libraries(game_server PRIVATE ${BOOST_LIB} ${ZLIB_LIB} ModelLib)
 add_executable(game_server_tests
     tests/model_tests.cpp
     tests/loot_generator_tests.cpp
-)
-
-target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib) 
-
-add_executable(collision_detection_tests
 	tests/collision-detector-tests.cpp
+	../src/json_loader.h
+	../src/json_loader.cpp
 )
 
-target_link_libraries(collision_detection_tests CONAN_PKG::catch2 collision_detection_lib)
+target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib collision_detection_lib) 
 
 #catch_discover_tests(game_server_tests)

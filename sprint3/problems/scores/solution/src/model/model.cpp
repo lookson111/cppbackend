@@ -62,7 +62,10 @@ GameSession* Game::FindGameSession(const Map::Id& id) noexcept {
 }
 
 GameSession* Game::AddGameSession(const Map::Id& id) {
-    GameSession gs{ FindMap(id) , randomize_spawn_points_, 
+    auto map = FindMap(id);
+    if (map == nullptr)
+        throw std::invalid_argument("Bad id, map not found");
+    GameSession gs{ map , randomize_spawn_points_, 
         loot_generator_config_};
     const size_t index = game_sessions_.size();
     game_sessions_.emplace_back(std::move(gs));
@@ -72,7 +75,7 @@ GameSession* Game::AddGameSession(const Map::Id& id) {
     catch (...) {
         // Удаляем офис из вектора, если не удалось вставить в unordered_map
         game_sessions_.pop_back();
-        throw;
+        throw std::bad_alloc();
     }
     return &game_sessions_.back();
 }
