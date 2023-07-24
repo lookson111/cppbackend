@@ -6,28 +6,27 @@
 namespace http_server {
 
 std::string uriDecode(std::string_view src) {
-    std::string ret;
-    char ch;
-    int i, ii;
-    for (i = 0; i < src.length(); i++) {
-        if (src[i] == '%') {
-            [[maybe_unused]] auto s = sscanf(src.substr(i + 1, 2).data(), "%x", &ii);
-            ch = static_cast<char>(ii);
-            ret += ch;
-            i = i + 2;
+    std::string out;
+    for (int pos = 0; pos < src.length(); pos++) {
+        if (src[pos] == '%') {
+            int from_hex_char;
+            [[maybe_unused]] auto s = sscanf(
+                src.substr(pos + 1, 2).data(), "%x", &from_hex_char);
+            out += static_cast<char>(from_hex_char);
+            pos += 2;
         }
-        else if (src[i] == '+') {
-            ret += ' ';
-            i = i + 1;
+        else if (src[pos] == '+') {
+            out += ' ';
+            pos += 1;
         }
-        else if (src[i] >= 'A' && src[i] <= 'Z') {
-            ret += src[i] - 'A' + 'a';
+        else if (src[pos] >= 'A' && src[pos] <= 'Z') {
+            out += src[pos] - 'A' + 'a';
         }
         else {
-            ret += src[i];
+            out += src[pos];
         }
     }
-    return ret;
+    return out;
 }
 
 void SessionBase::Run() {

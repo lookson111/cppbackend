@@ -2,8 +2,9 @@
 
 #include <string_view>
 #include <string>
-using namespace std::literals;
 
+namespace defs {
+using namespace std::literals;
 enum class TypeRequest {
     None,
     StaticFiles,
@@ -49,6 +50,7 @@ struct ErrorCode
     static inline constexpr std::string_view INVALID_ARGUMENT = "invalidArgument"sv;
     static inline constexpr std::string_view INVALID_TOKEN = "invalidToken"sv;
     static inline constexpr std::string_view UNKNOWN_TOKEN = "unknownToken"sv;
+    static inline constexpr std::string_view MAP_NOT_FOUND = "mapNotFound"sv;
 };
 
 struct ErrorMessage
@@ -59,6 +61,17 @@ struct ErrorMessage
     static inline constexpr std::string_view GET_IS_EXPECTED = "Only GET method is expected"sv;
     static inline constexpr std::string_view INVALID_TOKEN = "Authorization header is missing"sv;
     static inline constexpr std::string_view UNKNOWN_TOKEN = "Player token has not been found"sv;
+    static inline constexpr std::string_view MAP_NOT_FOUND = "Map not found"sv;
+    static inline constexpr std::string_view JOIN_GAME_PARSE = "Join game request parse error"sv; 
+    static inline constexpr std::string_view INVALID_NAME = "Invalid name"sv;
+    static inline constexpr std::string_view FAIL_PARSE_ACTION = "Failed to parse action"sv;
+    static inline constexpr std::string_view FAIL_PARSE_TICK_JSON = "Failed to parse tick request JSON"sv;
+};
+
+struct ThrowMessage {
+    static inline const char* ERROR_CONVERT_JSON = "Error convert json body to json value\0";
+    static inline const char* NOT_UINT64 = "not an uint64_t\0";
+    static inline const char* TIME_NOT_ZERO = "The time should not be zero\0";
 };
 
 struct MiscDefs
@@ -84,4 +97,4 @@ struct Endpoint
     static inline constexpr std::string_view GAME_STATE     = "/api/v1/game/state"sv;
     static inline constexpr std::string_view GAME_ACTION    = "/api/v1/game/player/action"sv;
 };
-
+} // namespace defs

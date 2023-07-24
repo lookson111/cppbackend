@@ -1,5 +1,6 @@
 #include "app.h"
 #include "log.h"
+#include "request_handler/defs.h"
 #include <boost/format.hpp>
 
 std::atomic<uint64_t> app::Player::idn = 0;
@@ -13,6 +14,7 @@ std::string app::JsonMessage(std::string_view code, std::string_view message) {
 
 namespace app {
 using namespace std::literals;
+using namespace defs;
 
 static auto to_booststr = [](std::string_view str) {
     return boost::string_view(str.data(), str.size());
@@ -94,7 +96,7 @@ js::value ModelToJson::ToJsonValue(std::string_view json_body)
     js::string_view jb{json_body.data(), json_body.size()};
     js::value const jv = js::parse(jb, ec);
     if (ec)
-        throw std::logic_error("Error convert json body to json value"s);
+        throw std::logic_error(ThrowMessage::ERROR_CONVERT_JSON);
     return jv;
 }
 
@@ -127,6 +129,12 @@ Token PlayerTokens::AddPlayer(Player* player)
     return token;
 }
 
+std::string PlayerTokens::GetToken() {
+     std::string r1 = ToHex(generator1_());
+     std::string r2 = ToHex(generator2_());
+     return r1 + r2;
+}
+
 std::string PlayerTokens::ToHex(uint64_t n) const {
     std::string hex;
     //loop runs til n is greater than 0
@@ -155,7 +163,8 @@ App::GetMapBodyJson(std::string_view mapName) const {
         body = jmodel.GetMap(mapName);
         if (body.size() == 2) { 
             // if body is "" (empty)
-            return std::make_pair(JsonMessage("mapNotFound"sv, "Map not found"sv), false);
+            return std::make_pair(JsonMessage(ErrorCode::MAP_NOT_FOUND, 
+                ErrorMessage::MAP_NOT_FOUND), false);
         }
     }
     return std::make_pair(std::move(body), true);
@@ -164,7 +173,7 @@ App::GetMapBodyJson(std::string_view mapName) const {
 std::pair<std::string, JoinError>
 App::ResponseJoin(std::string_view jsonBody) {
     auto parseError = std::make_pair(
-        JsonMessage("invalidArgument"sv, "Join game request parse error"sv),
+        JsonMessage(ErrorCode::INVALID_ARGUMENT, ErrorMessage::JOIN_GAME_PARSE),
         JoinError::BadJson
     );
     js::error_code ec;
@@ -187,14 +196,14 @@ App::ResponseJoin(std::string_view jsonBody) {
     }
     if (userName.empty())
         return std::make_pair(
-            JsonMessage("invalidArgument"sv, "Invalid name"sv),
+            JsonMessage(ErrorCode::INVALID_ARGUMENT, ErrorMessage::INVALID_NAME),
             JoinError::InvalidName
         );
     model::Map::Id idmap{mapId.data()};
     auto map = game_.FindMap({ idmap });
     if (map == nullptr)
         return std::make_pair(
-            JsonMessage("mapNotFound"sv, "Map not found"sv),
+            JsonMessage(ErrorCode::MAP_NOT_FOUND, ErrorMessage::MAP_NOT_FOUND),
             JoinError::MapNotFound
         );
     js::object msg;
@@ -220,7 +229,7 @@ App::ActionMove(const Token& token, std::string_view jsonBody) {
     }
     catch (...) {
         return std::make_pair(
-            JsonMessage("invalidArgument"sv, "Failed to parse action"sv),
+            JsonMessage(ErrorCode::INVALID_ARGUMENT, ErrorMessage::FAIL_PARSE_ACTION),
             error_code::InvalidArgument
         );
     }    
@@ -245,15 +254,16 @@ App::Tick(std::string_view jsonBody) {
         } else if (const auto* n = jv_time_delta.if_uint64()) { // [ 2^63 .. 2^64 - 1 ]
             mc = *n;
         } else {
-            throw std::out_of_range{"not an uint64_t"};
+            throw std::out_of_range{ThrowMessage::NOT_UINT64};
         }
         if (mc == 0)
-            throw std::out_of_range{"The time should not be zero"};
+            throw std::out_of_range{ThrowMessage::TIME_NOT_ZERO};
         time_delta_mc = std::chrono::milliseconds(mc);
     }
     catch (...) {
         return std::make_pair(
-            JsonMessage("invalidArgument"sv, "Failed to parse tick request JSON"sv),
+            JsonMessage(ErrorCode::INVALID_ARGUMENT, 
+                ErrorMessage::FAIL_PARSE_TICK_JSON),
             error_code::InvalidArgument
         );
     }    
@@ -338,7 +348,8 @@ App::CheckToken(const Token& token) const
     Player* player = player_tokens_.FindPlayer(token);
     if (player == nullptr)
         return std::make_pair(
-            std::move(app::JsonMessage("unknownToken"sv, "Player token has not been found"sv)),
+            std::move(app::JsonMessage(ErrorCode::UNKNOWN_TOKEN, 
+                ErrorMessage::UNKNOWN_TOKEN)),
             error_code::UnknownToken
         );
     return std::make_pair(

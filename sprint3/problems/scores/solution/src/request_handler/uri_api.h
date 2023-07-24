@@ -15,6 +15,7 @@ namespace uri_api
 {
     namespace beast = boost::beast;
     namespace http = beast::http;
+    using namespace defs;
     using FunctionWithAuthorize = std::function<http_handler::StringResponse(const Token& token, std::string_view body)>;
     using FunctionWithoutAuthorize = std::function<http_handler::StringResponse(std::string_view body)>;
     using FunctionTargetProcessing = std::function<http_handler::StringResponse(std::string_view target, std::string_view body)>;

@@ -22,6 +22,7 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
+using namespace defs;
 
 class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
     using Strand = net::strand<net::io_context::executor_type>;

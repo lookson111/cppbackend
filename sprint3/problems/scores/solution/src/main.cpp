@@ -93,6 +93,7 @@ struct Args {
 }  // namespace
 
 int main(int argc, const char* argv[]) {
+    using namespace defs;
     Args args;
     try {
         if (auto args_opt = ParseCommandLine(argc, argv))

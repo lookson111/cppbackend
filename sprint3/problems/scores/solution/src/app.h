@@ -85,11 +85,7 @@ private:
         std::uniform_int_distribution<std::mt19937_64::result_type> dist;
         return dist(random_device_);
     }()};
-    std::string GetToken() {
-        std::string r1 = ToHex(generator1_());
-        std::string r2 = ToHex(generator2_());
-        return r1 + r2;
-    }
+    std::string GetToken();
     // Чтобы сгенерировать токен, получите из generator1_ и generator2_
     // два 64-разрядных числа и, переведя их в hex-строки, склейте в одну.
     // Вы можете поэкспериментировать с алгоритмом генерирования токенов,

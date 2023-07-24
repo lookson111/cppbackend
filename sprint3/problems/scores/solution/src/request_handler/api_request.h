@@ -12,6 +12,7 @@
 namespace http_handler
 {
     namespace net = boost::asio;
+    using namespace defs;
     class ApiRequestHandler
     {
         using Strand = net::strand<net::io_context::executor_type>;

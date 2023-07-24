@@ -45,8 +45,6 @@ private:
 
     void OnTick(sys::error_code ec) {
         using namespace std::chrono;
-        assert(strand_.running_in_this_thread());
-
         if (!ec) {
             auto this_tick = Clock::now();
             auto delta = duration_cast<milliseconds>(this_tick - last_tick_);
