@@ -8,7 +8,7 @@ on:
 permissions:
   checks: write
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 
 
@@ -32,7 +32,7 @@ jobs:
         with:
           repository: 'cpppracticum/cpp-backend-tests-practicum'
           path: 'cpp-backend-tests-practicum'
-          ref: 'may'
+          ref: 'april'
 
       - name: Install dependencies
         run: |
@@ -106,7 +106,7 @@ jobs:
         with:
           repository: 'cpppracticum/cpp-backend-tests-practicum'
           path: 'cpp-backend-tests-practicum'
-          ref: 'may'
+          ref: 'april'
 
       - name: Install dependencies
         run: |
@@ -166,7 +166,7 @@ jobs:
         with:
           repository: 'cpppracticum/cpp-backend-tests-practicum'
           path: 'cpp-backend-tests-practicum'
-          ref: 'may'
+          ref: 'april'
 
       - name: Install dependencies
         run: |
@@ -286,7 +286,7 @@ jobs:
         with:
           repository: 'cpppracticum/cpp-backend-tests-practicum'
           path: 'cpp-backend-tests-practicum'
-          ref: 'may'
+          ref: 'april'
 
 
       - name: Install dependencies
@@ -326,7 +326,7 @@ jobs:
         with:
           repository: 'cpppracticum/cpp-backend-tests-practicum'
           path: 'cpp-backend-tests-practicum'
-          ref: 'may'
+          ref: 'april'
 
 
       - name: run tests sprint3 ammo
@@ -381,7 +381,7 @@ jobs:
         with:
           repository: 'cpppracticum/cpp-backend-tests-practicum'
           path: 'cpp-backend-tests-practicum'
-          ref: 'may'
+          ref: 'april'
 
       - name: Install dependencies
         run: |
