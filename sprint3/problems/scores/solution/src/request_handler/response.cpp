@@ -2,6 +2,7 @@
 #include "defs.h"
 
 namespace http_handler {
+    using namespace defs;
     // Создаёт корректный HttpResponse с заданными параметрами
     StringResponse Response::Make(http::status status, 
                                 std::string_view body, 

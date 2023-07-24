@@ -6,6 +6,7 @@
 
 namespace http_handler {
 namespace fs = std::filesystem;
+using namespace defs;
 	
 class FileRequestHandler : public BaseRequestHandler {
 private:
