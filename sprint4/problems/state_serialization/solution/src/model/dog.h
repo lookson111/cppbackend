@@ -14,6 +14,11 @@
 namespace model {
 using namespace geom;
 
+using LootParam = int;
+using LootsParam = std::vector<LootParam>;
+using Score = unsigned;
+using LostObjectType = unsigned;
+
 enum class Move {
     LEFT,
     RIGHT,
@@ -30,13 +35,21 @@ enum class Direction {
 };
 
 struct Loot {
+    using Id = util::Tagged<uint32_t, Loot>;
+
+    Id id{ 0u };
+    LostObjectType type{ 0u };
+    Point2D pos;
+
+    [[nodiscard]] auto operator<=>(const Loot&) const = default;
+};
+using Loots = std::list<Loot>;
+/*
+struct Loot {
     size_t id;
     int type = 0;
     Point2D pos;
-};
-using Loots = std::list<Loot>;
-using LootParam = int;
-using LootsParam = std::vector<LootParam>;
+};*/
 
 class Dog {
 public:
@@ -56,7 +69,7 @@ public:
     const Id& GetId() const {
         return id_;
     }
-    std::string_view GetName() const noexcept {
+    const std::string& GetName() const noexcept {
         return nickname_;
     }
     const Point2D& GetPoint() const {
@@ -69,6 +82,9 @@ public:
         return speed_;
     }
     std::string GetDirection() const;
+    Direction GetDir() const {
+        return dir_;
+    }
     void Diraction(Move move, Dimension2D speed);
     Point2D GetEndPoint(std::chrono::milliseconds move_time_ms);
     void SetPoint(Point2D coord) {
@@ -93,8 +109,17 @@ public:
         }
         return loots_.clear();
     }
-    int GetScore() const {
+    Score GetScore() const {
         return score_;
+    }
+    void SetSpeed(const Speed2D& speed) {
+        speed_ = speed;
+    }
+    void SetDirection(Direction dir) {
+        dir_ = dir;
+    }
+    void AddScore(Score score) {
+        score_ = score;
     }
 private:
     static std::atomic<uint64_t> idn;
@@ -106,7 +131,7 @@ private:
     Speed2D speed_ = zero_speed_;
     Direction dir_ = Direction::NORTH;
     Loots loots_;
-    int score_ = 0;
+    Score score_ = 0;
 };
 
 }  // namespace model

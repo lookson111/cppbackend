@@ -39,9 +39,12 @@ SCENARIO_METHOD(Fixture, "Point serialization") {
 SCENARIO_METHOD(Fixture, "Dog Serialization") {
     GIVEN("a dog") {
         const auto dog = [] {
-            Dog dog{Dog::Id{42}, "Pluto"s, {42.2, 12.5}, 3};
+            //Dog dogz{Dog::Id{42}, "Pluto"s, {42.2, 12.5}, 3};
+            Dog dog{"Pluto"s, geom::Point2D{42.2, 12.5}};
             dog.AddScore(42);
-            CHECK(dog.PutToBag({FoundObject::Id{10}, 2u}));
+            Loots loots{ { Loot::Id{10}, 2u, Point2D{0.0, 0.0} } };
+            dog.PutTheLoot(loots, loots.begin());
+            CHECK(dog.GetLoots().size() == 1);
             dog.SetDirection(Direction::EAST);
             dog.SetSpeed({2.3, -1.2});
             return dog;
@@ -61,10 +64,10 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
 
                 CHECK(dog.GetId() == restored.GetId());
                 CHECK(dog.GetName() == restored.GetName());
-                CHECK(dog.GetPosition() == restored.GetPosition());
+                CHECK(dog.GetPoint() == restored.GetPoint());
                 CHECK(dog.GetSpeed() == restored.GetSpeed());
-                CHECK(dog.GetBagCapacity() == restored.GetBagCapacity());
-                CHECK(dog.GetBagContent() == restored.GetBagContent());
+                //CHECK(dog.GetBagCapacity() == restored.GetBagCapacity());
+                CHECK(dog.GetLoots() == restored.GetLoots());
             }
         }
     }

@@ -276,7 +276,7 @@ public:
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
-    size_t loot_id_ = 0;
+    Loot::Id loot_id_{ 0 };
     Dogs dogs_;
     Loots loots_;
     DogsIdToIndex dogs_id_to_index_;
@@ -291,10 +291,11 @@ private:
     Point2D GetExtremePos(RoadMapIter roads, Point2D pos);
     Point2D MoveDog(Point2D start_pos, Point2D end_pos);
     static double GetRandomDouble(double min, double max);
-    static int GetRandomInt(int min, int max);
+    static LostObjectType GetRandomInt(int min, int max);
     void MoveDogsInMap(std::chrono::milliseconds time_delta_ms);
     void CollectAndReturnLoots();
     void PushLootsToMap(std::chrono::milliseconds time_delta_ms);
+    Loot::Id GetNextLootId();
 };
 
 class Game {

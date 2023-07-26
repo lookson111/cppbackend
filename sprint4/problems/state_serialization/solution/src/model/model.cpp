@@ -102,7 +102,7 @@ Dog* GameSession::AddDog(std::string_view nick_name)
         throw;
     }
     loots_.push_back(std::move(Loot{
-        .id = loot_id_++,
+        .id = GetNextLootId(),
         .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
         .pos = GetRandomRoadCoord() }));
     return &dogs_.back();
@@ -119,7 +119,7 @@ double GameSession::GetRandomDouble(double min, double max) {
     };
     return random_double(min, max);
 }
-int GameSession::GetRandomInt(int min, int max) {
+LostObjectType GameSession::GetRandomInt(int min, int max) {
     std::time_t now = std::time(nullptr);
     boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};
     boost::random::uniform_int_distribution<int> dist{min, max};
@@ -274,10 +274,15 @@ void GameSession::PushLootsToMap(std::chrono::milliseconds time_delta_ms)
         static_cast<int>(loots_.size()), static_cast<int>(dogs_.size()));
     for (unsigned i = 0; i < cnt_loot; i++) {
         loots_.push_back(std::move(Loot{
-            .id = loot_id_++,
+            .id = GetNextLootId(),
             .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
             .pos = GetRandomRoadCoord() }));
     }
+}
+
+Loot::Id GameSession::GetNextLootId()
+{
+    return Loot::Id{(*loot_id_)++};
 }
 
 void GameSession::Tick(std::chrono::milliseconds time_delta_ms)

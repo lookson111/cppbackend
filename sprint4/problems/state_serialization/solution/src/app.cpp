@@ -296,7 +296,7 @@ auto App::GetJsonDogBag(const model::Dog &dog) const {
     js::array jarr;
     for (const auto& loot : dog.GetLoots()) {
         js::object val;
-        val["id"] = loot.id;
+        val["id"] = *loot.id;
         val["type"] = loot.type;
         jarr.emplace_back(std::move(val));
     }
@@ -333,7 +333,7 @@ App::GetState(const Token& token) const
         js::object object;
         object["type"] = loot.type; 
         object["pos"] = put_array(loot.pos.x, loot.pos.y);
-        js_loot_type[std::to_string(loot.id)] = object;
+        js_loot_type[std::to_string(*loot.id)] = object;
     }
     players["lostObjects"] = js_loot_type;
     return std::make_pair(

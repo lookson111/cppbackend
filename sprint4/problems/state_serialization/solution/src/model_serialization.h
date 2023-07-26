@@ -16,16 +16,28 @@ void serialize(Archive& ar, Vec2D& vec, [[maybe_unused]] const unsigned version)
     ar& vec.y;
 }
 
+template <typename Archive>
+void serialize(Archive& ar, Speed2D& vec, [[maybe_unused]] const unsigned version) {
+    ar& vec.x;
+    ar& vec.y;
+}
+
 }  // namespace geom
 
 namespace model {
 
 template <typename Archive>
-void serialize(Archive& ar, FoundObject& obj, [[maybe_unused]] const unsigned version) {
+void serialize(Archive& ar, Loot& obj, [[maybe_unused]] const unsigned version) {
     ar&(*obj.id);
     ar&(obj.type);
+    ar&(obj.pos);
 }
 
+template <typename Archive>
+void serialize(Archive& ar, Loots& obj, [[maybe_unused]] const unsigned version) {
+    for (auto &loot : obj)
+        ar& (loot);
+}
 }  // namespace model
 
 namespace serialization {
@@ -38,23 +50,24 @@ public:
     explicit DogRepr(const model::Dog& dog)
         : id_(dog.GetId())
         , name_(dog.GetName())
-        , pos_(dog.GetPosition())
-        , bag_capacity_(dog.GetBagCapacity())
+        , pos_(dog.GetPoint())
+        //, bag_capacity_(dog.GetBagCapacity())
         , speed_(dog.GetSpeed())
-        , direction_(dog.GetDirection())
+        , direction_(dog.GetDir())
         , score_(dog.GetScore())
-        , bag_content_(dog.GetBagContent()) {
+        , bag_content_(dog.GetLoots()) 
+    {
     }
 
     [[nodiscard]] model::Dog Restore() const {
-        model::Dog dog{id_, name_, pos_, bag_capacity_};
+        model::Dog dog{name_, pos_/*, bag_capacity_*/};
         dog.SetSpeed(speed_);
         dog.SetDirection(direction_);
         dog.AddScore(score_);
-        for (const auto& item : bag_content_) {
-            if (!dog.PutToBag(item)) {
-                throw std::runtime_error("Failed to put bag content");
-            }
+        model::Loots bag_content = bag_content_;
+        for (auto it = bag_content.begin(), itn = bag_content.begin(); it != bag_content.end(); it = itn) {
+            itn = std::next(it);
+            dog.PutTheLoot(bag_content, it);
         }
         return dog;
     }
@@ -64,7 +77,7 @@ public:
         ar&* id_;
         ar& name_;
         ar& pos_;
-        ar& bag_capacity_;
+        //ar& bag_capacity_;
         ar& speed_;
         ar& direction_;
         ar& score_;
@@ -75,11 +88,11 @@ private:
     model::Dog::Id id_ = model::Dog::Id{0u};
     std::string name_;
     geom::Point2D pos_;
-    size_t bag_capacity_ = 0;
-    geom::Vec2D speed_;
+    //size_t bag_capacity_ = 0;
+    geom::Speed2D speed_;
     model::Direction direction_ = model::Direction::NORTH;
     model::Score score_ = 0;
-    model::Dog::BagContent bag_content_;
+    model::Loots bag_content_;
 };
 
 /* Другие классы модели сериализуются и десериализуются похожим образом */
