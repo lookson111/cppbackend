@@ -36,6 +36,8 @@ struct Args {
     std::vector<std::string> source;
     std::string config_file;
     std::string www_root;
+    std::string state_file;
+    std::chrono::milliseconds save_state_period;
     std::chrono::milliseconds tick_period;
     bool on_tick_api = false;
     bool randomize_spawn_points = false;
@@ -47,6 +49,7 @@ struct Args {
     // Выводим описание параметров программы
     Args args;
     uint64_t time = 0;
+    uint64_t period_serialization = 0;
     desc.add_options()
         // Добавляем опцию --help и её короткую версию -h
         ("help,h", "produce help message")
@@ -57,7 +60,11 @@ struct Args {
         // Задаёт путь к каталогу со статическими файлами игры
         ("www-root,w", po::value(&args.www_root)->value_name("dir"s), "set static files root")
         // включает режим, при котором пёс игрока появляется в случайной точке случайно выбранной дороги карты.
-        ("randomize-spawn-points", "spawn dogs at random positions");
+        ("randomize-spawn-points", "spawn dogs at random positions")
+        // get file name to save serialization file
+        ("state-file", po::value(&args.state_file)->value_name("file"s), "set serialization file path")
+        // get period to save serialization
+        ("save-state-period,t", po::value(&period_serialization)->value_name("milliseconds"s), "set serialization period");
     
     // variables_map хранит значения опций после разбора
     po::variables_map vm;
@@ -75,6 +82,13 @@ struct Args {
     else {
         args.tick_period = std::chrono::milliseconds{ 0 };
         args.on_tick_api = true;
+    }
+    if (vm.contains("save-state-period"s)) {
+        args.save_state_period = 
+            std::chrono::milliseconds{ period_serialization };
+    } else {
+        args.save_state_period = 
+            std::chrono::milliseconds{ 0 };
     }
     // Проверяем наличие опций src и dst
     if (!vm.contains("config-file"s)) {
