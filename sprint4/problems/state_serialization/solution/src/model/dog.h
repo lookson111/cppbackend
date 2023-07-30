@@ -48,6 +48,7 @@ using Loots = std::list<Loot>;
 class Dog {
 public:
     using Id = util::Tagged<uint64_t, Dog>;
+
     Dog(Id id, std::string_view nickname, const Point2D& coord) :
         nickname_(nickname.data(), nickname.size()), id_(id),
         coord_(coord){

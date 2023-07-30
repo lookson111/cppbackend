@@ -3,6 +3,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <fstream>
 #include <filesystem>
+#include "../log.h"
 
 namespace infrastructure {
 using InputArchive = boost::archive::text_iarchive;
@@ -14,7 +15,7 @@ SerializingListiner::SerializingListiner(model::Game &game,
     , state_file_(state_file)
     , save_period_(save_period) 
 {
-    //std::ifstream infile(state_file);
+    time_since_save_ = 0ms;
     if (std::filesystem::exists(state_file))
         Load();
 }
@@ -22,6 +23,8 @@ void SerializingListiner::OnTick(milliseconds time_delta_ms) {
     using namespace std::chrono_literals;
     time_since_save_ += time_delta_ms;
     if (time_since_save_ >= save_period_) {
+        LOGSRV().Msg("Tick", "serializing "s + std::to_string(time_since_save_.count()) +
+            " out"s + std::to_string(save_period_.count()));
         Save();
         time_since_save_ = 0ms;
     }

@@ -64,7 +64,7 @@ struct Args {
         // get file name to save serialization file
         ("state-file", po::value(&args.state_file)->value_name("file"s), "set serialization file path")
         // get period to save serialization
-        ("save-state-period,t", po::value(&period_serialization)->value_name("milliseconds"s), "set serialization period");
+        ("save-state-period", po::value(&period_serialization)->value_name("milliseconds"s), "set serialization period");
     
     // variables_map хранит значения опций после разбора
     po::variables_map vm;

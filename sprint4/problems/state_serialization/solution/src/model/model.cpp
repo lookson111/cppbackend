@@ -83,6 +83,7 @@ GameSession* Game::AddGameSession(const Map::Id& id) {
 Game::GameSessions& Game::GetGameSessions() {
     return game_sessions_;
 }
+
 void Game::SetGameSessions(const Game::GameSessions& game_sessions) {
     for (const auto& game_session: game_sessions) {
         auto gs = game_session;
