@@ -12,6 +12,7 @@ namespace app {
 namespace js = boost::json;
 namespace net = boost::asio;
 namespace sys = boost::system;
+using milliseconds = std::chrono::milliseconds;
 using Token = security::Token;
 
 enum class JoinError {

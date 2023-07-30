@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "../src/model/model.h"
-#include "../src/model_serialization.h"
+#include "../src/infrastructure/model_serialization.h"
 
 using namespace model;
 using namespace std::literals;
@@ -40,7 +40,7 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
     GIVEN("a dog") {
         const auto dog = [] {
             //Dog dogz{Dog::Id{42}, "Pluto"s, {42.2, 12.5}, 3};
-            Dog dog{"Pluto"s, geom::Point2D{42.2, 12.5}};
+            Dog dog{Dog::Id{42}, "Pluto"s, geom::Point2D{42.2, 12.5}};
             dog.AddScore(42);
             Loots loots{ { Loot::Id{10}, 2u, Point2D{0.0, 0.0} } };
             dog.PutTheLoot(loots, loots.begin());

@@ -11,6 +11,7 @@
 #include "app.h"
 #include "ticker.h"
 #include "http_server.h"
+#include "infrastructure/infrastructure.h"
 
 using namespace std::literals;
 namespace sys = boost::system;
@@ -121,16 +122,20 @@ int main(int argc, const char* argv[]) {
     try {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(args.config_file);
-        game.SetRandomizeSpawnPoints(args.randomize_spawn_points);        
-        // 1.a Get and check path
-        fs::path static_path = args.www_root;
+        game.SetRandomizeSpawnPoints(args.randomize_spawn_points);
+        // 1.a добавляем инфраструктрурные методы
+        infrastructure::SerializingListiner ser_listiner(game, args.state_file, args.save_state_period);
+        auto conn = game.DoOnTick([&ser_listiner] (std::chrono::milliseconds delta) mutable {
+            ser_listiner.OnTick(delta);
+        });
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
-        signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
+        signals.async_wait([&ioc, &ser_listiner] (const sys::error_code& ec, [[maybe_unused]] int signal_number) {
             if (!ec) {
+                ser_listiner.Save();
                 LOGSRV().End(ec);
                 ioc.stop();
             }
@@ -138,13 +143,13 @@ int main(int argc, const char* argv[]) {
         // strand, используемый для доступа к API
         auto api_strand = net::make_strand(ioc);
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        auto handler = std::make_shared<http_handler::RequestHandler>(static_path, api_strand, game, args.on_tick_api);
+        auto handler = std::make_shared<http_handler::RequestHandler>(args.www_root, api_strand, game, args.on_tick_api);
         // Настраиваем вызов метода Application::Tick каждые delta миллисекунд внутри strand
         auto ticker = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }
         );
         // Оборачиваем его в логирующий декоратор
-        server_logging::LoggingRequestHandler logging_handler{
+        server_logging::LoggingRequestHandler logging_handler {
             [handler](auto&& endpoint, auto&& req, auto&& send) {
                 // Обрабатываем запрос
                 (*handler)(std::forward<decltype(endpoint)>(endpoint),

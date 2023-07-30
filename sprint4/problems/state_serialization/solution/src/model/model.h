@@ -1,5 +1,6 @@
 #pragma once 
 #include "../sdk.h"
+#include <boost/signals2.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -14,6 +15,9 @@
 #include "loot_generator.h"
 
 namespace model {
+
+namespace sig = boost::signals2;
+using milliseconds = std::chrono::milliseconds;
 
 using Dimension = int;
 using Coord = Dimension;
@@ -228,7 +232,7 @@ private:
 };
 
 struct LootGeneratorConfig {
-    std::chrono::milliseconds period;
+    milliseconds period;
     double probability = 500.0;
 };
 
@@ -259,24 +263,30 @@ public:
             [&]() {return GetRandomDouble(0.0, 1.0);}) {
         LoadRoadMap();
     }
-    const Map::Id& MapId() {
+    const Map::Id& MapId() const {
         return map_->GetId();
     } 
     Dog* FindDog(std::string_view nick_name);
     Dog* AddDog(std::string_view nick_name);
-    const Dogs& GetDogs() const {
-        return dogs_;
-    }
-    const Loots& GetLoots() const {
-        return loots_;
-    }
+    void SetDogs(const Dogs& dogs);
+    const Dogs& GetDogs() const;
+    void SetLoots(const Loots& loots) ;
+    const Loots& GetLoots() const;
     void MoveDog(Dog::Id id, Move move);
-    void Tick(std::chrono::milliseconds time_delta_ms);
+    void Tick(milliseconds time_delta_ms);
+    const Loot::Id& GetLastLootId() const;
+    void SetLastLootId(const Loot::Id& loot_id);
+    const Dog::Id& GetLastDogId() const;
+    void SetLastDogId(const Dog::Id& dog_id);
+    bool RandomizeSpawnPoints() const {
+        return randomize_spawn_points_;
+    }
 
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
     using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
     Loot::Id loot_id_{ 0 };
+    Dog::Id dog_id_{ 0 };
     Dogs dogs_;
     Loots loots_;
     DogsIdToIndex dogs_id_to_index_;
@@ -292,15 +302,19 @@ private:
     Point2D MoveDog(Point2D start_pos, Point2D end_pos);
     static double GetRandomDouble(double min, double max);
     static LostObjectType GetRandomInt(int min, int max);
-    void MoveDogsInMap(std::chrono::milliseconds time_delta_ms);
+    void MoveDogsInMap(milliseconds time_delta_ms);
     void CollectAndReturnLoots();
-    void PushLootsToMap(std::chrono::milliseconds time_delta_ms);
+    void PushLootsToMap(milliseconds time_delta_ms);
+    Dog::Id GetNextDogId();
     Loot::Id GetNextLootId();
+    void MoveDogToContainerAndIndexing(Dog &&dog);
 };
 
 class Game {
 public:
     using Maps = std::vector<Map>;
+    using GameSessions = std::deque<GameSession>;
+    using TickSignal = sig::signal<void(milliseconds delta)>;
 
     Game(const LootGeneratorConfig& loot_generator_config) : loot_generator_config_(std::move(loot_generator_config)){
     }
@@ -311,6 +325,9 @@ public:
     void SetRandomizeSpawnPoints(bool randomize_spawn_points) {
         randomize_spawn_points_ = randomize_spawn_points;
     }
+    bool GetRandomizeSpawnPoints() const {
+        return randomize_spawn_points_;
+    }
     const Maps& GetMaps() const noexcept {
         return maps_;
     }
@@ -320,8 +337,17 @@ public:
     const Map* FindMap(const Map::Id& id) const noexcept;
     GameSession* FindGameSession(const Map::Id& id) noexcept;
     GameSession* AddGameSession(const Map::Id& id);
-    void Tick(std::chrono::milliseconds time_delta_ms);
-
+    GameSessions& GetGameSessions();
+    void SetGameSessions(const GameSessions& game_session);
+    void Tick(milliseconds time_delta_ms);
+    // Добавляем обработчик сигнала tick и возвращаем объект connection для управления,
+    // при помощи которого можно отписаться от сигнала
+    [[nodiscard]] sig::connection DoOnTick(const TickSignal::slot_type& handler) {
+        return tick_signal_.connect(handler);
+    }
+    const LootGeneratorConfig& GetLootGeneratorConfig() const {
+        return loot_generator_config_;
+    }
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
@@ -330,9 +356,10 @@ private:
     Maps maps_;
     ExtraData extra_data_;
     const LootGeneratorConfig loot_generator_config_;
-    std::deque<GameSession> game_sessions_;
+    GameSessions game_sessions_;
     MapIdToIndex map_id_to_index_;
     MapIdToIndex map_id_to_game_sessions_index_;
+    TickSignal tick_signal_;
 };
 
 }  // namespace model

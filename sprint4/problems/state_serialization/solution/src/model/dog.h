@@ -48,8 +48,8 @@ using Loots = std::list<Loot>;
 class Dog {
 public:
     using Id = util::Tagged<uint64_t, Dog>;
-    Dog(std::string_view nickname, const Point2D& coord) :
-        nickname_(nickname.data(), nickname.size()), id_(Id{ idn++ }),
+    Dog(Id id, std::string_view nickname, const Point2D& coord) :
+        nickname_(nickname.data(), nickname.size()), id_(id),
         coord_(coord){
     }
     Dog(const Dog& other) : id_(other.id_), nickname_(other.nickname_),
@@ -116,7 +116,6 @@ public:
         score_ = score;
     }
 private:
-    static std::atomic<uint64_t> idn;
     static Speed2D zero_speed_;
     Id id_ = Id{0};
     std::string nickname_ = "";

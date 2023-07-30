@@ -244,7 +244,7 @@ App::ActionMove(const Token& token, std::string_view jsonBody) {
 
 std::pair<std::string, error_code> 
 App::Tick(std::string_view jsonBody) {
-    std::chrono::milliseconds time_delta_mc;
+    milliseconds time_delta_mc;
     try {
         auto jv = js::parse(to_booststr(jsonBody));
         auto jv_time_delta = jv.at("timeDelta");
@@ -258,7 +258,7 @@ App::Tick(std::string_view jsonBody) {
         }
         if (mc == 0)
             throw std::out_of_range{ThrowMessage::TIME_NOT_ZERO};
-        time_delta_mc = std::chrono::milliseconds(mc);
+        time_delta_mc = milliseconds(mc);
     }
     catch (...) {
         return std::make_pair(

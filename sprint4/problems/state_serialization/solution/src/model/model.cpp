@@ -28,7 +28,7 @@ void Map::AddOffice(const Office &office) {
     } catch (...) {
         // Удаляем офис из вектора, если не удалось вставить в unordered_mapS
         offices_.pop_back();
-        throw;
+        throw std::bad_alloc(); // "failed to allocate memory for Office"
     }
 }
 
@@ -41,7 +41,7 @@ void Game::AddMap(const Map &map) {
             maps_.emplace_back(std::move(map));
         } catch (...) {
             map_id_to_index_.erase(it);
-            throw;
+            throw std::bad_alloc(); // "failed to allocate memory for Map"
         }
     }
 }
@@ -75,23 +75,53 @@ GameSession* Game::AddGameSession(const Map::Id& id) {
     catch (...) {
         // Удаляем офис из вектора, если не удалось вставить в unordered_map
         game_sessions_.pop_back();
-        throw std::bad_alloc();
+        throw std::bad_alloc(); // "failed to allocate memory for GameSession"
     }
     return &game_sessions_.back();
 }
 
-void Game::Tick(std::chrono::milliseconds time_delta_ms) {
-    for (auto &game_session : game_sessions_) {
-        game_session.Tick(time_delta_ms);
+Game::GameSessions& Game::GetGameSessions() {
+    return game_sessions_;
+}
+void Game::SetGameSessions(const Game::GameSessions& game_sessions) {
+    for (const auto& game_session: game_sessions) {
+        auto gs = game_session;
+        auto id = game_session.MapId();
+        const size_t index = game_sessions_.size();
+        game_sessions_.emplace_back(std::move(gs));
+        try {
+            map_id_to_game_sessions_index_.emplace(id, index);
+        }
+        catch (...) {
+            // Удаляем офис из вектора, если не удалось вставить в unordered_map
+            game_sessions_.pop_back();
+            throw std::bad_alloc(); // "failed to allocate memory for GameSession"
+        }
     }
 }
 
-Dog* GameSession::AddDog(std::string_view nick_name)
-{
+void Game::Tick(milliseconds time_delta_ms) {
+    for (auto &game_session : game_sessions_) {
+        game_session.Tick(time_delta_ms);
+    }
+    tick_signal_(time_delta_ms);
+}
+
+Dog* GameSession::AddDog(std::string_view nick_name) {
     Point2D coord;
     if (randomize_spawn_points_)
         coord = GetRandomRoadCoord();
-    Dog dog = Dog(nick_name, coord);
+    auto dog_id = GetNextDogId();
+    Dog dog = Dog(dog_id, nick_name, coord);
+    MoveDogToContainerAndIndexing(std::move(dog));
+    loots_.push_back(std::move(Loot{
+        .id = GetNextLootId(),
+        .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
+        .pos = GetRandomRoadCoord() }));
+    return &dogs_.back();
+}
+
+void GameSession::MoveDogToContainerAndIndexing(Dog &&dog) {
     const size_t index = dogs_.size();
     auto &o = dogs_.emplace_back(std::move(dog));
     try {
@@ -99,13 +129,35 @@ Dog* GameSession::AddDog(std::string_view nick_name)
     }
     catch (...) {
         dogs_.pop_back();
-        throw;
+        throw std::bad_alloc(); //"failed to allocate memory for Dog"
     }
-    loots_.push_back(std::move(Loot{
-        .id = GetNextLootId(),
-        .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
-        .pos = GetRandomRoadCoord() }));
-    return &dogs_.back();
+}
+
+void GameSession::SetDogs(const Dogs& dogs) {
+    for (auto it = dogs.begin(); it != dogs.end(); ++it) {
+        auto dog = *it;
+        MoveDogToContainerAndIndexing(std::move(dog));
+    }
+}
+
+const GameSession::Dogs& GameSession::GetDogs() const {
+    return dogs_;
+}
+
+void GameSession::SetLoots(const Loots& loots) {
+    loots_ = loots;
+}
+
+const Loots& GameSession::GetLoots() const {
+    return loots_;
+}
+
+Dog* GameSession::FindDog(std::string_view nick_name) {
+    for (auto &dog : dogs_) {
+        if (dog.GetName() == nick_name)
+            return &dog;
+    }
+    return nullptr;
 }
 
 double GameSession::GetRandomDouble(double min, double max) {
@@ -126,8 +178,7 @@ LostObjectType GameSession::GetRandomInt(int min, int max) {
     return dist(gen);
 }
 
-Point2D GameSession::GetRandomRoadCoord()
-{
+Point2D GameSession::GetRandomRoadCoord() {
     auto &roads = map_->GetRoads();
     if (roads.size() == 0)
         return Point2D();
@@ -171,15 +222,6 @@ void GameSession::LoadRoadMap() {
     }
 }
 
-Dog* GameSession::FindDog(std::string_view nick_name)
-{
-    for (auto &dog : dogs_) {
-        if (dog.GetName() == nick_name)
-            return &dog;
-    }
-    return nullptr;
-}
-
 void GameSession::MoveDog(Dog::Id id, Move move) {
     auto& dog = dogs_[dogs_id_to_index_[id]];
     dog.Diraction(move, map_->GetDogSpeed());
@@ -210,8 +252,7 @@ Point2D GameSession::MoveDog(Point2D start_pos, Point2D end_pos) {
     return start_pos;
 }
 
-void GameSession::MoveDogsInMap(std::chrono::milliseconds time_delta_ms)
-{
+void GameSession::MoveDogsInMap(milliseconds time_delta_ms) {
     for (auto& dog : dogs_) {
         if (dog.IsStanding())
             continue;
@@ -225,8 +266,7 @@ void GameSession::MoveDogsInMap(std::chrono::milliseconds time_delta_ms)
     }
 }
 
-void GameSession::CollectAndReturnLoots()
-{
+void GameSession::CollectAndReturnLoots() {
     namespace cd = collision_detector;
     cd::ItemGatherer item_gatherer;
     std::map<size_t, model::Dog*> dog_numb_to_gather;
@@ -268,8 +308,8 @@ void GameSession::CollectAndReturnLoots()
         }
     }
 }
-void GameSession::PushLootsToMap(std::chrono::milliseconds time_delta_ms)
-{
+
+void GameSession::PushLootsToMap(milliseconds time_delta_ms) {
     auto cnt_loot = loot_generator_.Generate(time_delta_ms,
         static_cast<int>(loots_.size()), static_cast<int>(dogs_.size()));
     for (unsigned i = 0; i < cnt_loot; i++) {
@@ -280,13 +320,30 @@ void GameSession::PushLootsToMap(std::chrono::milliseconds time_delta_ms)
     }
 }
 
-Loot::Id GameSession::GetNextLootId()
-{
+Loot::Id GameSession::GetNextLootId() {
     return Loot::Id{(*loot_id_)++};
 }
+Dog::Id GameSession::GetNextDogId() {
+    return Dog::Id{(*dog_id_)++};
+}
 
-void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
-{
+const Loot::Id& GameSession::GetLastLootId() const {
+    return loot_id_;
+}
+
+void GameSession::SetLastLootId(const Loot::Id& loot_id) {
+    loot_id_ = loot_id;
+}
+
+const Dog::Id& GameSession::GetLastDogId() const {
+    return dog_id_;
+}
+
+void GameSession::SetLastDogId(const Dog::Id& dog_id) {
+    dog_id_ = dog_id;
+}
+
+void GameSession::Tick(milliseconds time_delta_ms) {
     MoveDogsInMap(time_delta_ms);
     PushLootsToMap(time_delta_ms);
     CollectAndReturnLoots();
@@ -300,8 +357,7 @@ void GameSession::Tick(std::chrono::milliseconds time_delta_ms)
 //    |____________________
 //     x0             x1
 //
-bool GameSession::PosInRoads(RoadMapIter roads, Point2D pos)
-{
+bool GameSession::PosInRoads(RoadMapIter roads, Point2D pos) {
     for (auto it = roads.first; it != roads.second; ++it) {
         auto &road = *it->second;
         auto [x0, x1, y0, y1] = road.GetRectangle();
@@ -310,8 +366,7 @@ bool GameSession::PosInRoads(RoadMapIter roads, Point2D pos)
     }
     return false;
 }
-Point2D GameSession::GetExtremePos(RoadMapIter roads, Point2D pos)
-{
+Point2D GameSession::GetExtremePos(RoadMapIter roads, Point2D pos) {
     typedef std::numeric_limits<Dimension2D> dbl; 
     Point2D min;
     Dimension2D min_d = dbl::max(), distance;
