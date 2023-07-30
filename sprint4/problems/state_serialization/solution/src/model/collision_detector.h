@@ -1,9 +1,8 @@
 #pragma once
 
-#include "geom.h"
-
 #include <algorithm>
 #include <vector>
+#include "geom.h"
 
 namespace collision_detector {
 using geom::Dimension2D;

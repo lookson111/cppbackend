@@ -5,7 +5,6 @@
 #include <boost/program_options.hpp>
 #include <thread>
 
-
 #include "json_loader.h"
 #include "request_handler/request_handler.h"
 #include "log.h"
@@ -103,7 +102,6 @@ struct Args {
     // С опциями программы всё в порядке, возвращаем структуру args
     return args;
 }
-
 }  // namespace
 
 int main(int argc, const char* argv[]) {

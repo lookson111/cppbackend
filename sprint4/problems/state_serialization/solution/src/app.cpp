@@ -1,7 +1,7 @@
 #include "app.h"
+#include <boost/format.hpp>
 #include "log.h"
 #include "request_handler/defs.h"
-#include <boost/format.hpp>
 
 std::atomic<uint64_t> app::Player::idn = 0;
 

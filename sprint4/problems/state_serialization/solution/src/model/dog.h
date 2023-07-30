@@ -44,12 +44,6 @@ struct Loot {
     [[nodiscard]] auto operator<=>(const Loot&) const = default;
 };
 using Loots = std::list<Loot>;
-/*
-struct Loot {
-    size_t id;
-    int type = 0;
-    Point2D pos;
-};*/
 
 class Dog {
 public:

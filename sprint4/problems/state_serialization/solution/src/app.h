@@ -12,6 +12,7 @@ namespace app {
 namespace js = boost::json;
 namespace net = boost::asio;
 namespace sys = boost::system;
+using Token = security::Token;
 
 enum class JoinError {
     None,
@@ -75,7 +76,8 @@ public:
     Token AddPlayer(Player* player);
 
 private:
-    std::unordered_map<Token, Player*, util::TaggedHasher<Token>> token_to_player;
+    std::unordered_map<Token, Player*, 
+        util::TaggedHasher<Token>> token_to_player;
     std::random_device random_device_;
     std::mt19937_64 generator1_{[this] {
         std::uniform_int_distribution<std::mt19937_64::result_type> dist;

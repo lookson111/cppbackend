@@ -103,7 +103,4 @@ FileRequestResult BaseRequestHandler::Handle(const StringRequest& req) const {
             req.version(), req.keep_alive());
     }
 }
-
-
-
 }

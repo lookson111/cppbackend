@@ -9,12 +9,12 @@
 #include "log.h"
 
 namespace http_server {
-
+    
 namespace net = boost::asio;
-using tcp = net::ip::tcp;
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace sys = boost::system;
+using tcp = net::ip::tcp;
 using namespace std::literals;
 using namespace std::chrono;
 
