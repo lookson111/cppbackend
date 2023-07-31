@@ -157,9 +157,9 @@ public:
     }
 
 private:
-    model::Map::Id map_id_;
-    model::Loot::Id last_loot_id_;
-    model::Dog::Id last_dog_id_;
+    model::Map::Id map_id_{0};
+    model::Loot::Id last_loot_id_{0};
+    model::Dog::Id last_dog_id_{0};
     model::Loots loots_;
     std::list<DogRepr> dogs_repr_;
 };
