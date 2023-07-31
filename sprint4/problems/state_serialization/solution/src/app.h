@@ -48,8 +48,8 @@ std::string JsonMessage(std::string_view code, std::string_view message);
 class Player {
 public:
     using Id = util::Tagged<uint64_t, Player>;
-    Player(model::GameSession* session, model::Dog* dog) : 
-        session_(session), dog_(dog), id_({idn++}) {}
+    Player(Id id, model::GameSession* session, model::Dog* dog) : 
+        session_(session), dog_(dog), id_(id) {}
     const Id& GetId() const {
         return id_;
     }
@@ -65,7 +65,6 @@ public:
     void Move(std::string_view move_cmd);
 
 private:
-    static std::atomic<uint64_t> idn;
     Id id_;
     model::GameSession* session_;
     model::Dog* dog_;
@@ -99,16 +98,19 @@ private:
 
 class Players {
 public:
-    Player* Add(model::Dog *dog, model::GameSession *session);
+    using PlayersContainer = std::deque<std::unique_ptr<Player>>;
+    Player* Add(Player::Id player_id, model::Dog *dog, model::GameSession *session);
     Player* FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcept;
     const Player::Id* FindPlayerId(std::string_view player_name) const noexcept;
     Player* FindPlayer(Player::Id player_id) const noexcept;
+    const PlayersContainer& GetPlayers() const;
     
 private:
     using PlayerIdHasher = util::TaggedHasher<Player::Id>;
     using PlayerIdToIndex = std::unordered_map<Player::Id, size_t, PlayerIdHasher>;
-    std::deque<std::unique_ptr<Player>> players_;
+    PlayersContainer players_;
     PlayerIdToIndex player_id_to_index_;
+
 };
 
 class App
@@ -117,6 +119,9 @@ public:
     explicit App(model::Game& game)
         : game_{ game } {
     }
+    model::Game& GetGameModel();
+    void SetLastPlayerId(Player::Id id);
+    Player::Id GetLastPlayerId() const;
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
     std::pair<std::string, error_code> ActionMove(
@@ -130,6 +135,7 @@ private:
     model::Game& game_;
     Players players_;
     PlayerTokens player_tokens_;
+    Player::Id last_player_id_{0};
     Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
     auto GetJsonDogBag(const model::Dog& dog) const;

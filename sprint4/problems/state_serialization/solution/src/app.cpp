@@ -151,6 +151,18 @@ std::string PlayerTokens::ToHex(uint64_t n) const {
     return hex;
 }
 
+model::Game& App::GetGameModel() {
+    return game_;
+}
+
+void App::SetLastPlayerId(Player::Id last_id) {
+    last_player_id_ = last_id;
+}
+
+Player::Id App::GetLastPlayerId() const {
+    return last_player_id_;
+}
+
 std::pair<std::string, bool>
 App::GetMapBodyJson(std::string_view mapName) const {
     ModelToJson jmodel(game_);
@@ -371,7 +383,8 @@ Player* App::GetPlayer(std::string_view nickName, std::string_view mapId)
     if (session == nullptr)
         session = game_.AddGameSession(map_id);
     model::Dog* dog = session->AddDog(nickName);
-    auto player = players_.Add(dog, session);
+    auto player = players_.Add(last_player_id, dog, session);
+    last_player_id_ = {(*last_player_id)++};
     return player;
 }
 
@@ -408,9 +421,9 @@ const Player::Id* Players::FindPlayerId(std::string_view player_name) const noex
         if (player->GetName() == player_name) {
             return &player->GetId();
         }
-    }
     return nullptr;
 }
+
 Player* Players::FindPlayer(Player::Id player_id) const noexcept
 {
     if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
@@ -419,4 +432,13 @@ Player* Players::FindPlayer(Player::Id player_id) const noexcept
     }
     return nullptr;
 }
+
+const PlayersContainer& Players::GetPlayers() const {
+    return players_;
+}
+
+
+
+
+
 };
