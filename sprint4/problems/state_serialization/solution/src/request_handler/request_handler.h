@@ -27,10 +27,10 @@ using namespace defs;
 class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
     using Strand = net::strand<net::io_context::executor_type>;
 public:
-    RequestHandler(const fs::path& static_path, Strand api_strand, model::Game& game, bool on_tick_api)
+    RequestHandler(const fs::path& static_path, Strand api_strand, app::App &app, bool on_tick_api)
         : file_handler{ static_path }
         , api_strand_(api_strand)
-        , api_handler_(api_strand, game, on_tick_api) {
+        , api_handler_(api_strand, app, on_tick_api) {
     }
 
     RequestHandler(const RequestHandler&) = delete;

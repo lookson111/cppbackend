@@ -161,6 +161,15 @@ Dog* GameSession::FindDog(std::string_view nick_name) {
     return nullptr;
 }
 
+Dog* GameSession::FindDog(Dog::Id dog_id)
+{
+    for (auto& dog : dogs_) {
+        if (dog.GetId() == dog_id)
+            return &dog;
+    }
+    return {};
+}
+
 double GameSession::GetRandomDouble(double min, double max) {
     std::time_t now = std::time(nullptr);
     boost::random::mt19937 gen{static_cast<std::uint32_t>(now)};

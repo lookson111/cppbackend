@@ -18,10 +18,10 @@ class ApiRequestHandler
     using Strand = net::strand<net::io_context::executor_type>;
     http::status ErrorCodeToStatus(app::error_code ec) const;
 public:
-    ApiRequestHandler(Strand api_strand, model::Game& game, bool on_tick_api)
+    ApiRequestHandler(Strand api_strand, app::App& app, bool on_tick_api)
     : uri_handler_()
     , api_strand_(api_strand)
-    , app_(game)
+    , app_(app)
     {
         ///----------- Register endpoints here ----------------------
         //Add endpoint without authorization and with POST allowed methods
@@ -85,7 +85,7 @@ public:
 private:
     uri_api::UriData uri_handler_;
     Strand api_strand_;
-    app::App app_;
+    app::App &app_;
 
     void LinkJoinWithoutAuthorize();
     void LinkPlayersToUriHandler();

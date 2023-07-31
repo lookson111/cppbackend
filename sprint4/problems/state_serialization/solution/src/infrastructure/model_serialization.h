@@ -41,6 +41,11 @@ void serialize(Archive& ar, Loot& obj, [[maybe_unused]] const unsigned version) 
 }
 
 template <typename Archive>
+void serialize(Archive& ar, Dog::Id& obj, [[maybe_unused]] const unsigned version) {
+    ar& (*obj);
+}
+
+template <typename Archive>
 void serialize(Archive& ar, Loots& obj, [[maybe_unused]] const unsigned version) {
     for (auto &loot : obj)
         ar& (loot);

@@ -9,9 +9,9 @@ namespace infrastructure {
 using InputArchive = boost::archive::text_iarchive;
 using OutputArchive = boost::archive::text_oarchive;
 
-SerializingListiner::SerializingListiner(model::Game &game, 
+SerializingListiner::SerializingListiner(app::App& app,
         const std::string& state_file, milliseconds save_period) 
-    : game_(game)
+    : app_(app)
     , state_file_(state_file)
     , save_period_(save_period) 
 {
@@ -31,17 +31,39 @@ void SerializingListiner::OnTick(milliseconds time_delta_ms) {
 }
 
 void SerializingListiner::Load() {
-    std::ifstream archive_{state_file_};
-    InputArchive input_archive{archive_};
-    serialization::GameRepr repr(game_);
-    input_archive >> repr;
-    repr.Restore(game_);
+    try {
+        std::ifstream archive_{state_file_};
+        InputArchive input_archive{ archive_ };
+        serialization::AppRepr repr;
+        input_archive >> repr;
+        repr.Restore(app_);
+    }
+    catch (const std::exception& ex) {
+        LOGSRV().Msg("Error load save", ex.what());
+        throw;
+    }
+    catch (...) {
+        LOGSRV().Msg("Error load serialize", "");
+        std::cout << "error" << std::endl;
+        throw;
+    }
 }
 
 void SerializingListiner::Save() {
-    std::ofstream archive_{state_file_};
-    OutputArchive output_archive{archive_};
-    output_archive << serialization::GameRepr{game_};
+    try {
+        std::ofstream archive_{state_file_};
+        OutputArchive output_archive{archive_};
+        output_archive << serialization::AppRepr{app_};
+    }
+    catch (const std::exception& ex) {
+        LOGSRV().Msg("Error save serialize", ex.what());
+        throw;
+    }
+    catch (...) {
+        LOGSRV().Msg("Error save serialize", "");
+        std::cout << "error" << std::endl;
+        throw;
+    }
 }
 
 } // namespace infrastructure

@@ -123,8 +123,9 @@ int main(int argc, const char* argv[]) {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(args.config_file);
         game.SetRandomizeSpawnPoints(args.randomize_spawn_points);
+        auto app = app::App{ game };
         // 1.a добавляем инфраструктрурные методы
-        infrastructure::SerializingListiner ser_listiner(game, args.state_file, args.save_state_period);
+        infrastructure::SerializingListiner ser_listiner(app, args.state_file, args.save_state_period);
         auto conn = game.DoOnTick([&ser_listiner] (std::chrono::milliseconds delta) mutable {
             ser_listiner.OnTick(delta);
         });
@@ -143,7 +144,7 @@ int main(int argc, const char* argv[]) {
         // strand, используемый для доступа к API
         auto api_strand = net::make_strand(ioc);
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        auto handler = std::make_shared<http_handler::RequestHandler>(args.www_root, api_strand, game, args.on_tick_api);
+        auto handler = std::make_shared<http_handler::RequestHandler>(args.www_root, api_strand, app, args.on_tick_api);
         // Настраиваем вызов метода Application::Tick каждые delta миллисекунд внутри strand
         auto ticker = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game.Tick(delta); }

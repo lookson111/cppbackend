@@ -67,6 +67,7 @@ add_executable(game_server
 	src/request_handler/uri_api.h
 	src/request_handler/defs.h
 	src/infrastructure/model_serialization.h
+	src/infrastructure/app_serialization.h
 	src/infrastructure/infrastructure.h
 	src/infrastructure/infrastructure.cpp
 	src/log.cpp

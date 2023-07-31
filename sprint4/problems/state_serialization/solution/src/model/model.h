@@ -267,6 +267,7 @@ public:
         return map_->GetId();
     } 
     Dog* FindDog(std::string_view nick_name);
+    Dog* FindDog(Dog::Id dog_id);
     Dog* AddDog(std::string_view nick_name);
     void SetDogs(const Dogs& dogs);
     const Dogs& GetDogs() const;

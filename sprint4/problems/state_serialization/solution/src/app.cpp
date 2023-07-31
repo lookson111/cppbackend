@@ -3,7 +3,7 @@
 #include "log.h"
 #include "request_handler/defs.h"
 
-std::atomic<uint64_t> app::Player::idn = 0;
+//std::atomic<uint64_t> app::Player::idn = 0;
 
 std::string app::JsonMessage(std::string_view code, std::string_view message) {
     js::object msg;
@@ -129,6 +129,14 @@ Token PlayerTokens::AddPlayer(Player* player)
     return token;
 }
 
+void PlayerTokens::AddToken(Token token, Player* player) {
+    token_to_player[token] = player;
+}
+
+const PlayerTokens::TokenToPlayerContainer& PlayerTokens::GetTokens() const {
+    return token_to_player;
+}
+
 std::string PlayerTokens::GetToken() {
      std::string r1 = ToHex(generator1_());
      std::string r2 = ToHex(generator2_());
@@ -161,6 +169,22 @@ void App::SetLastPlayerId(Player::Id last_id) {
 
 Player::Id App::GetLastPlayerId() const {
     return last_player_id_;
+}
+
+const Players& App::GetPlayers() const {
+    return players_;
+}
+
+Players& App::GetPlayers() {
+    return players_;
+}
+
+PlayerTokens& App::PlayersTokens() {
+    return player_tokens_;
+}
+
+const PlayerTokens& App::GetPlayerTokens() const {
+    return player_tokens_;
 }
 
 std::pair<std::string, bool>
@@ -259,7 +283,7 @@ App::Tick(std::string_view jsonBody) {
     milliseconds time_delta_mc;
     try {
         auto jv = js::parse(to_booststr(jsonBody));
-        auto jv_time_delta = jv.at("timeDelta");
+        auto &jv_time_delta = jv.at("timeDelta");
         uint64_t mc;
         if (const auto* n = jv_time_delta.if_int64(); n && *n > 0) { // [ 1 .. 2^63 - 1 ]
             mc = *n;
@@ -383,16 +407,14 @@ Player* App::GetPlayer(std::string_view nickName, std::string_view mapId)
     if (session == nullptr)
         session = game_.AddGameSession(map_id);
     model::Dog* dog = session->AddDog(nickName);
-    auto player = players_.Add(last_player_id, dog, session);
-    last_player_id_ = {(*last_player_id)++};
+    auto player = players_.Add(last_player_id_, dog, session);
+    last_player_id_ = Player::Id{(*last_player_id_)++};
     return player;
 }
 
-Player* Players::Add(model::Dog* dog, model::GameSession* session) {
+Player* Players::PushPlayer(PlayerContainer&& player) {
     const size_t index = players_.size();
-    std::unique_ptr<Player> player = std::make_unique<Player>(session, dog);
-    Player::Id id{*dog->GetId()};
-    if (auto [it, inserted] = player_id_to_index_.emplace(id, index); !inserted) {
+    if (auto [it, inserted] = player_id_to_index_.emplace(player->GetId(), index); !inserted) {
         throw std::invalid_argument("Player with id "s + std::to_string(*player->GetId()) + " already exists"s);
     }
     else {
@@ -407,6 +429,15 @@ Player* Players::Add(model::Dog* dog, model::GameSession* session) {
     return players_.back().get();
 }
 
+Player* Players::Add(Player::Id player_id, model::Dog* dog, model::GameSession* session) {
+    std::unique_ptr<Player> player = std::make_unique<Player>(player_id, session, dog);
+    return PushPlayer(std::move(player));
+}
+
+void Players::Add(PlayerContainer&& player) {
+    PushPlayer(std::move(player));
+}
+
 Player* Players::FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcept {
     if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
         auto pl = players_.at(it->second).get();
@@ -415,17 +446,16 @@ Player* Players::FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcep
     }
     return nullptr;
 }
-const Player::Id* Players::FindPlayerId(std::string_view player_name) const noexcept
-{
+const Player::Id* Players::FindPlayerId(std::string_view player_name) const noexcept {
     for (const auto& player : players_) {
         if (player->GetName() == player_name) {
             return &player->GetId();
         }
+    }
     return nullptr;
 }
 
-Player* Players::FindPlayer(Player::Id player_id) const noexcept
-{
+Player* Players::FindPlayer(Player::Id player_id) const noexcept {
     if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
         auto pl = players_.at(it->second).get();
         return pl;
@@ -433,7 +463,7 @@ Player* Players::FindPlayer(Player::Id player_id) const noexcept
     return nullptr;
 }
 
-const PlayersContainer& Players::GetPlayers() const {
+const Players::PlayersContainer& Players::GetPlayers() const {
     return players_;
 }
 
