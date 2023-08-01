@@ -123,6 +123,7 @@ int main(int argc, const char* argv[]) {
         // 1. Загружаем карту из файла и построить модель игры
         model::Game game = json_loader::LoadGame(args.config_file);
         game.SetRandomizeSpawnPoints(args.randomize_spawn_points);
+        // 1. Инициализаруем аппу
         auto app = app::App{ game };
         // 1.a добавляем инфраструктрурные методы
         infrastructure::SerializingListiner ser_listiner(app, args.state_file, args.save_state_period);
