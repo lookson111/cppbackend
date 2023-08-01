@@ -44,13 +44,13 @@ template <typename Archive>
 void serialize(Archive& ar, Dog::Id& obj, [[maybe_unused]] const unsigned version) {
     ar& (*obj);
 }
-
+/*
 template <typename Archive>
 void serialize(Archive& ar, Loots& obj, [[maybe_unused]] const unsigned version) {
     for (auto &loot : obj)
         ar& (loot);
 }
-
+*/
 template <typename Archive>
 void serialize(Archive& ar, GameSession::Dogs& obj, [[maybe_unused]] const unsigned version) {
     for (auto &dog : obj)
@@ -162,7 +162,7 @@ public:
     }
 
 private:
-    model::Map::Id map_id_{0};
+    model::Map::Id map_id_{""};
     model::Loot::Id last_loot_id_{0};
     model::Dog::Id last_dog_id_{0};
     model::Loots loots_;

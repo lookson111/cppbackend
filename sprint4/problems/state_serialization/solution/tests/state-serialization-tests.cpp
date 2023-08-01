@@ -5,6 +5,7 @@
 
 #include "../src/model/model.h"
 #include "../src/infrastructure/model_serialization.h"
+#include "../src/json_loader.h"
 
 using namespace model;
 using namespace std::literals;
@@ -49,6 +50,20 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
             dog.SetSpeed({2.3, -1.2});
             return dog;
         }();
+        auto game = [] {
+            model::Game game = 
+                json_loader::LoadGame("../tests/config_test.json"sv);
+            return game;
+        } ();
+        auto game_session = [&game] {
+            auto map_id = game.GetMaps().front().GetId();
+            auto game_session = game.AddGameSession(map_id);
+            return game_session;
+        }();
+        auto dog_nop = [&game_session] {
+            auto dog = game_session->AddDog("nop");
+            return dog;
+        }();
 
         WHEN("dog is serialized") {
             {
@@ -69,6 +84,37 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
                 //CHECK(dog.GetBagCapacity() == restored.GetBagCapacity());
                 CHECK(dog.GetLoots() == restored.GetLoots());
             }
+        }
+        AND_WHEN("game session is serialized") {
+            {
+                serialization::GameSessionRepr repr{*game_session};
+                output_archive << repr;
+            }
+            
+            THEN("it can be deserialized") {
+                InputArchive input_archive{strm};
+                serialization::GameSessionRepr repr;
+                input_archive >> repr;
+            }
+        }
+        AND_WHEN("game is serialized") {
+            {
+                serialization::GameRepr repr{game};
+                output_archive << repr;
+            }
+            
+            THEN("it can be deserialized") {
+                InputArchive input_archive{strm};
+                serialization::GameRepr repr;
+                input_archive >> repr;
+            /*    model::Game game_r = 
+                    json_loader::LoadGame("../tests/config_test.json"sv);
+                repr.Restore(game_r);
+                CHECK(game_r.GetGameSessions().size() == 
+                    game.GetGameSessions().size());*/
+            }
+
+
         }
     }
 }

@@ -41,7 +41,7 @@ public:
 
 private:
     app::Player::Id player_id_{0};
-    model::Map::Id game_session_id_{0};
+    model::Map::Id game_session_id_{""};
     model::Dog::Id dog_id_{0};
 };
 
