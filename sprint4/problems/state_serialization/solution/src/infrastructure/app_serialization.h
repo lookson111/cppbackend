@@ -29,7 +29,7 @@ public:
     void Restore(app::App& app) const {
         model::GameSession* session = app.GetGameModel().FindGameSession(game_session_id_);
         model::Dog* dog = session->FindDog(dog_id_);
-        app.GetPlayers().Add(player_id_, dog, session);
+        app.EditPlayers().Add(player_id_, dog, session);
     }
 
     template <typename Archive>
@@ -49,8 +49,7 @@ class PlayersRepr {
 public:
     PlayersRepr() = default;
 
-    explicit PlayersRepr(const app::Players& players)        
-    {
+    explicit PlayersRepr(const app::Players& players) {
         for(auto &player : players.GetPlayers()) 
             players_repr_.push_back(std::move(PlayerRepr(player.get())));
     }
@@ -83,8 +82,8 @@ public:
 
     void Restore(app::App& app) const {
         for (auto &player_token : player_tokens_) {
-            app.PlayersTokens().AddToken(security::Token{ player_token.first },
-                app.GetPlayers().FindPlayer(app::Player::Id{ player_token.second}));
+            app.EditPlayerTokens().AddToken(security::Token{ player_token.first },
+                app.EditPlayers().FindPlayer(app::Player::Id{ player_token.second}));
         }
     }
 

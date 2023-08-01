@@ -3,8 +3,6 @@
 #include "log.h"
 #include "request_handler/defs.h"
 
-//std::atomic<uint64_t> app::Player::idn = 0;
-
 std::string app::JsonMessage(std::string_view code, std::string_view message) {
     js::object msg;
     msg["code"] = code.data();
@@ -175,11 +173,11 @@ const Players& App::GetPlayers() const {
     return players_;
 }
 
-Players& App::GetPlayers() {
+Players& App::EditPlayers() {
     return players_;
 }
 
-PlayerTokens& App::PlayersTokens() {
+PlayerTokens& App::EditPlayerTokens() {
     return player_tokens_;
 }
 
@@ -283,7 +281,7 @@ App::Tick(std::string_view jsonBody) {
     milliseconds time_delta_mc;
     try {
         auto jv = js::parse(to_booststr(jsonBody));
-        auto &jv_time_delta = jv.at("timeDelta");
+        auto jv_time_delta = jv.at("timeDelta");
         uint64_t mc;
         if (const auto* n = jv_time_delta.if_int64(); n && *n > 0) { // [ 1 .. 2^63 - 1 ]
             mc = *n;
@@ -340,8 +338,7 @@ auto App::GetJsonDogBag(const model::Dog &dog) const {
 }
 
 std::pair<std::string, error_code> 
-App::GetState(const Token& token) const
-{
+App::GetState(const Token& token) const {
     auto put_array = [](const auto &x, const auto &y) {
         js::array jarr;
         jarr.emplace_back(x);
@@ -379,8 +376,7 @@ App::GetState(const Token& token) const
 }
 
 std::pair<std::string, error_code> 
-App::CheckToken(const Token& token) const
-{
+App::CheckToken(const Token& token) const {
     Player* player = player_tokens_.FindPlayer(token);
     if (player == nullptr)
         return std::make_pair(
@@ -394,21 +390,19 @@ App::CheckToken(const Token& token) const
     );
 }
 
-Player* App::GetPlayer(const Token& token) const
-{
+Player* App::GetPlayer(const Token& token) const {
     Player* player = player_tokens_.FindPlayer(token);
     return player;
 }
 
-Player* App::GetPlayer(std::string_view nickName, std::string_view mapId)
-{
+Player* App::GetPlayer(std::string_view nickName, std::string_view mapId) {
     model::Map::Id map_id{mapId.data()};
     auto session = game_.FindGameSession(map_id);
     if (session == nullptr)
         session = game_.AddGameSession(map_id);
     model::Dog* dog = session->AddDog(nickName);
     auto player = players_.Add(last_player_id_, dog, session);
-    last_player_id_ = Player::Id{(*last_player_id_)++};
+    (*last_player_id_)++;
     return player;
 }
 
@@ -466,9 +460,5 @@ Player* Players::FindPlayer(Player::Id player_id) const noexcept {
 const Players::PlayersContainer& Players::GetPlayers() const {
     return players_;
 }
-
-
-
-
 
 };

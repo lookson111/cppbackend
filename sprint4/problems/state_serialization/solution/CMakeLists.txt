@@ -87,6 +87,8 @@ add_executable(game_server_tests
 	tests/state-serialization-tests.cpp
 	../src/json_loader.h
 	../src/json_loader.cpp
+	../src/app.cpp
+	../src/app.h
 )
 
 target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib collision_detection_lib) 

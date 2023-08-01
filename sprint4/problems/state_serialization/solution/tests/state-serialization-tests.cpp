@@ -3,11 +3,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <sstream>
 
-#include "../src/model/model.h"
-#include "../src/infrastructure/model_serialization.h"
+#include "../src/app.h"
+#include "../src/infrastructure/app_serialization.h"
 #include "../src/json_loader.h"
 
 using namespace model;
+using namespace app;
 using namespace std::literals;
 namespace {
 
@@ -38,7 +39,7 @@ SCENARIO_METHOD(Fixture, "Point serialization") {
 }
 
 SCENARIO_METHOD(Fixture, "Dog Serialization") {
-    GIVEN("a dog") {
+    GIVEN("game") {
         const auto dog = [] {
             //Dog dogz{Dog::Id{42}, "Pluto"s, {42.2, 12.5}, 3};
             Dog dog{Dog::Id{42}, "Pluto"s, geom::Point2D{42.2, 12.5}};
@@ -57,13 +58,20 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
         } ();
         auto game_session = [&game] {
             auto map_id = game.GetMaps().front().GetId();
-            auto game_session = game.AddGameSession(map_id);
+            auto game_session = *game.AddGameSession(map_id);
+            game_session.AddDog("nop");
+            game_session.AddDog("nopp");
             return game_session;
         }();
         auto dog_nop = [&game_session] {
-            auto dog = game_session->AddDog("nop");
+            auto dog = game_session.AddDog("nop");
             return dog;
         }();
+		model::Game game_a =
+			json_loader::LoadGame("../tests/config_test.json"sv);
+        app::App t_app{ game_a };
+        app::PlayerTokens &tokens = t_app.EditPlayerTokens();
+        app::Players &players = t_app.EditPlayers();
 
         WHEN("dog is serialized") {
             {
@@ -87,14 +95,20 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
         }
         AND_WHEN("game session is serialized") {
             {
-                serialization::GameSessionRepr repr{*game_session};
+                serialization::GameSessionRepr repr{game_session};
                 output_archive << repr;
             }
-            
             THEN("it can be deserialized") {
                 InputArchive input_archive{strm};
                 serialization::GameSessionRepr repr;
                 input_archive >> repr;
+                auto game_session_r = repr.Restore(game.FindMap(repr.GetMapId()), 
+                    game.GetRandomizeSpawnPoints(), 
+                    game.GetLootGeneratorConfig());
+                CHECK(game_session.MapId() == game_session_r.MapId());
+                CHECK(game_session.GetLastLootId() == game_session_r.GetLastLootId());
+                CHECK(game_session.GetLastDogId() == game_session_r.GetLastDogId());
+                CHECK(game_session.GetLoots() == game_session_r.GetLoots());
             }
         }
         AND_WHEN("game is serialized") {
@@ -107,14 +121,39 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
                 InputArchive input_archive{strm};
                 serialization::GameRepr repr;
                 input_archive >> repr;
-            /*    model::Game game_r = 
+                model::Game game_r = 
                     json_loader::LoadGame("../tests/config_test.json"sv);
                 repr.Restore(game_r);
                 CHECK(game_r.GetGameSessions().size() == 
-                    game.GetGameSessions().size());*/
+                    game.GetGameSessions().size());
+            }
+        }
+        AND_WHEN("game is serialized") {
+			
+		}
+    }
+    AND_GIVEN("app") {
+		model::Game game_a =
+			json_loader::LoadGame("../tests/config_test.json"sv);
+        App t_app{ game_a };
+        PlayerTokens &tokens = t_app.EditPlayerTokens();
+        Players &players = t_app.EditPlayers();
+        WHEN("dog is serialized") {
+            {
+                serialization::AppRepr repr{t_app};
+                output_archive << repr;
             }
 
-
+            THEN("it can be deserialized") {
+                InputArchive input_archive{ strm };
+                serialization::AppRepr repr;
+                input_archive >> repr;
+                model::Game game_r =
+                    json_loader::LoadGame("../tests/config_test.json"sv);
+                App app_r{ game_r };
+                repr.Restore(app_r);
+                CHECK(t_app.EditPlayerTokens().GetTokens().size() == app_r.EditPlayerTokens().GetTokens().size());
+            }
         }
     }
 }

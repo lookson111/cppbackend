@@ -48,6 +48,7 @@ std::string JsonMessage(std::string_view code, std::string_view message);
 class Player {
 public:
     using Id = util::Tagged<uint64_t, Player>;
+    Player() = default;
     Player(Id id, model::GameSession* session, model::Dog* dog) : 
         session_(session), dog_(dog), id_(id) {}
     const Id& GetId() const {
@@ -66,11 +67,20 @@ public:
         return dog_;
     }
     void Move(std::string_view move_cmd);
-
+    Player(const Player& other) {
+        id_ = other.id_;
+        session_ = other.session_;
+        dog_ = other.dog_;
+    }
+    Player(Player&& other) {
+        id_ = std::move(id_);
+        session_ = other.session_;
+        dog_ = other.dog_;
+    }
 private:
-    Id id_;
-    model::GameSession* session_;
-    model::Dog* dog_;
+    Id id_{0};
+    model::GameSession* session_ = nullptr;
+    model::Dog* dog_ = nullptr;
 };
 
 class PlayerTokens {
@@ -119,7 +129,6 @@ private:
     PlayersContainer players_;
     PlayerIdToIndex player_id_to_index_;
     Player* PushPlayer(PlayerContainer&& player);
-
 };
 
 class App
@@ -133,8 +142,8 @@ public:
     Player::Id GetLastPlayerId() const;
     const Players& GetPlayers() const;
     const PlayerTokens& GetPlayerTokens() const;
-    Players& GetPlayers();
-    PlayerTokens& PlayersTokens();
+    Players& EditPlayers();
+    PlayerTokens& EditPlayerTokens();
 
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
