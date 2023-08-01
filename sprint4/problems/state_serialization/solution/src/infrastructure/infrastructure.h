@@ -9,14 +9,14 @@ using namespace std::literals;
 
 class SerializingListiner {
 public:
-    SerializingListiner(app::App &app, const std::string& state_file, 
+    SerializingListiner(std::shared_ptr<app::App> &app, const std::string& state_file, 
         milliseconds save_period);
     void OnTick(milliseconds time_delta_ms);
     void Save();
     void Load();
 
 private:
-    app::App& app_;
+    std::shared_ptr<app::App> &app_;
     const std::string state_file_;
     milliseconds save_period_;
     milliseconds time_since_save_;

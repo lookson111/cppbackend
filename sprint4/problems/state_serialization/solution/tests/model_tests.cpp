@@ -69,29 +69,29 @@ SCENARIO("Game model") {
 		}
 	}
 	AND_GIVEN("a game model") {
-		model::Game game = json_loader::LoadGame("../tests/config_test.json"sv);
+		auto game = json_loader::LoadGame("../tests/config_test.json"sv);
 		THEN("check loaded tested game model") {
 			WHEN("model contains one map") {
-				CHECK(game.GetMaps().size() == 1);
+				CHECK(game->GetMaps().size() == 1);
 			}
 		}
 		AND_THEN("add game session") {
-			auto map_id = game.GetMaps().front().GetId();
+			auto map_id = game->GetMaps().front().GetId();
 			THEN("empty game session") {
 				WHEN("model not contains game session") {
-					CHECK(game.FindGameSession(map_id) == nullptr);
+					CHECK(game->FindGameSession(map_id) == nullptr);
 				}
 			}
 			AND_THEN("try add game session with bad map id") {
 				model::Map::Id bad_id = model::Map::Id{"bad_id"};
 				WHEN("add game seesion with bad id") {
-					CHECK_THROWS(game.AddGameSession(bad_id));
+					CHECK_THROWS(game->AddGameSession(bad_id));
 				}
 			}
 			AND_THEN("add game session") {
-				auto game_session = game.AddGameSession(map_id);
+				auto game_session = game->AddGameSession(map_id);
 				WHEN("game session is added, and empty") {
-					CHECK(game.FindGameSession(map_id) == game_session);
+					CHECK(game->FindGameSession(map_id) == game_session);
 					CHECK(game_session->GetLoots().empty());
 				}
 				AND_WHEN("dog add") {
@@ -103,8 +103,8 @@ SCENARIO("Game model") {
 				}
 			}
 			AND_THEN("move dog") {
-				game.SetRandomizeSpawnPoints(false);
-				auto game_session = game.AddGameSession(map_id);
+				game->SetRandomizeSpawnPoints(false);
+				auto game_session = game->AddGameSession(map_id);
 				auto dog = game_session->AddDog("nop");
 				THEN("default direction") {
 					CHECK(dog->GetDirection() == "U");
@@ -118,28 +118,28 @@ SCENARIO("Game model") {
 				}
 			}
 			AND_THEN("move dog tick") {
-				game.SetRandomizeSpawnPoints(false);
-				auto game_session = game.AddGameSession(map_id);
+				game->SetRandomizeSpawnPoints(false);
+				auto game_session = game->AddGameSession(map_id);
 				auto dog = game_session->AddDog("nop");
 				game_session->MoveDog(dog->GetId(), model::Move::RIGHT);
 				THEN("move") {
-					game.Tick(1000ms);
+					game->Tick(1000ms);
 					CHECK_THAT(dog->GetPoint(), Is2D<geom::Point2D>({ 4.0, 0.0 }));
 					CHECK_THAT(dog->GetSpeed(), Is2D<geom::Speed2D>({ 4.0, 0.0 }));
 				}
 				AND_THEN("movement to the walls") {
-					game.Tick(1000s);
+					game->Tick(1000s);
 					CHECK_THAT(dog->GetPoint(), Is2D<geom::Point2D>({40.4, 0.0 }));
 					CHECK_THAT(dog->GetSpeed(), Is2D<geom::Speed2D>({ 0.0, 0.0 }));
 				}
 				AND_THEN("circling") {
-					game.Tick(1000s);
+					game->Tick(1000s);
 					game_session->MoveDog(dog->GetId(), model::Move::DOWN);
-					game.Tick(1000s);
+					game->Tick(1000s);
 					game_session->MoveDog(dog->GetId(), model::Move::LEFT);
-					game.Tick(1000s);
+					game->Tick(1000s);
 					game_session->MoveDog(dog->GetId(), model::Move::UP);
-					game.Tick(1000s);
+					game->Tick(1000s);
 					CHECK_THAT(dog->GetPoint(), Is2D<geom::Point2D>({-0.4,-0.4 }));
 					CHECK_THAT(dog->GetSpeed(), Is2D<geom::Speed2D>({ 0.0, 0.0 }));
 				}

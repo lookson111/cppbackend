@@ -117,7 +117,7 @@ model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
     return lgc;
 }
 
-model::Game LoadGame(const fs::path& json_path) {
+std::unique_ptr<model::Game> LoadGame(const fs::path& json_path) {
     // Загрузить содержимое файла json_path, например, в виде строки
     // Распарсить строку как JSON, используя boost::json::parse
     // Загрузить модель игры из файла
@@ -133,13 +133,13 @@ model::Game LoadGame(const fs::path& json_path) {
         def_param.dog_speed = pt.get<double>("defaultDogSpeed");
         def_param.bag_capacity = GetDefaultParam(pt, "defaultBagCapacity", default_bag_capacity);
 
-        model::Game game(LoadLootGenConfig(pt));
+        std::unique_ptr<model::Game> game = std::make_unique<model::Game>(LoadLootGenConfig(pt));
         ptree jmaps = pt.get_child("maps");
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
-            game.AddMap(LoadMap(jmap.second, def_param));
+            game->AddMap(LoadMap(jmap.second, def_param));
         }
-        game.AddExtraData(LoadExtraData(json_path));
-        return game;
+        game->AddExtraData(LoadExtraData(json_path));
+        return std::move(game);
     }
     catch (ptree_error &e) {
         throw std::logic_error("Json parse ptree error: "s + e.what());

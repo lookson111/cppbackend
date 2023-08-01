@@ -52,13 +52,13 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
             return dog;
         }();
         auto game = [] {
-            model::Game game = 
+            auto game = 
                 json_loader::LoadGame("../tests/config_test.json"sv);
             return game;
         } ();
         auto game_session = [&game] {
-            auto map_id = game.GetMaps().front().GetId();
-            auto game_session = *game.AddGameSession(map_id);
+            auto map_id = game->GetMaps().front().GetId();
+            auto game_session = *game->AddGameSession(map_id);
             game_session.AddDog("nop");
             game_session.AddDog("nopp");
             return game_session;
@@ -67,9 +67,9 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
             auto dog = game_session.AddDog("nop");
             return dog;
         }();
-		model::Game game_a =
+		auto game_a =
 			json_loader::LoadGame("../tests/config_test.json"sv);
-        app::App t_app{ game_a };
+        app::App t_app{ *game_a };
         app::PlayerTokens &tokens = t_app.EditPlayerTokens();
         app::Players &players = t_app.EditPlayers();
 
@@ -102,9 +102,9 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
                 InputArchive input_archive{strm};
                 serialization::GameSessionRepr repr;
                 input_archive >> repr;
-                auto game_session_r = repr.Restore(game.FindMap(repr.GetMapId()), 
-                    game.GetRandomizeSpawnPoints(), 
-                    game.GetLootGeneratorConfig());
+                auto game_session_r = repr.Restore(game->FindMap(repr.GetMapId()), 
+                    game->GetRandomizeSpawnPoints(), 
+                    game->GetLootGeneratorConfig());
                 CHECK(game_session.MapId() == game_session_r.MapId());
                 CHECK(game_session.GetLastLootId() == game_session_r.GetLastLootId());
                 CHECK(game_session.GetLastDogId() == game_session_r.GetLastDogId());
@@ -113,7 +113,7 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
         }
         AND_WHEN("game is serialized") {
             {
-                serialization::GameRepr repr{game};
+                serialization::GameRepr repr{*game};
                 output_archive << repr;
             }
             
@@ -121,11 +121,11 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
                 InputArchive input_archive{strm};
                 serialization::GameRepr repr;
                 input_archive >> repr;
-                model::Game game_r = 
+                auto game_r = 
                     json_loader::LoadGame("../tests/config_test.json"sv);
-                repr.Restore(game_r);
-                CHECK(game_r.GetGameSessions().size() == 
-                    game.GetGameSessions().size());
+                repr.Restore(*game_r);
+                CHECK(game_r->GetGameSessions().size() == 
+                    game->GetGameSessions().size());
             }
         }
         AND_WHEN("game is serialized") {
@@ -133,9 +133,9 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
 		}
     }
     AND_GIVEN("app") {
-		model::Game game_a =
+		auto game_a =
 			json_loader::LoadGame("../tests/config_test.json"sv);
-        App t_app{ game_a };
+        App t_app{ *game_a };
         PlayerTokens &tokens = t_app.EditPlayerTokens();
         Players &players = t_app.EditPlayers();
         WHEN("dog is serialized") {
@@ -148,9 +148,9 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
                 InputArchive input_archive{ strm };
                 serialization::AppRepr repr;
                 input_archive >> repr;
-                model::Game game_r =
+                auto game_r =
                     json_loader::LoadGame("../tests/config_test.json"sv);
-                App app_r{ game_r };
+                App app_r{ *game_r };
                 repr.Restore(app_r);
                 CHECK(t_app.EditPlayerTokens().GetTokens().size() == app_r.EditPlayerTokens().GetTokens().size());
             }

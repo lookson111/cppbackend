@@ -30,13 +30,13 @@ enum class error_code {
 
 class ModelToJson {
 public:
-    explicit ModelToJson(model::Game& game)
+    explicit ModelToJson(const model::Game& game)
         : game_{ game } {
     }
-    std::string GetMaps();
-    std::string GetMap(std::string_view nameMap);
+    std::string GetMaps() const;
+    std::string GetMap(std::string_view nameMap) const;
 private:
-    model::Game& game_;
+    const model::Game& game_;
     static js::array GetRoads(const model::Map::Roads& roads);
     static js::array GetBuildings(const model::Map::Buildings& buildings);
     static js::array GetOffice(const model::Map::Offices& offices);
@@ -68,14 +68,20 @@ public:
     }
     void Move(std::string_view move_cmd);
     Player(const Player& other) {
-        id_ = other.id_;
-        session_ = other.session_;
-        dog_ = other.dog_;
+        *this = other;
     }
-    Player(Player&& other) {
+    Player(Player&& other) noexcept {
         id_ = std::move(id_);
         session_ = other.session_;
         dog_ = other.dog_;
+    }    
+    Player& operator=(const Player& other) {
+        if (this == &other)
+            return *this;
+        id_ = other.id_;
+        session_ = other.session_;
+        dog_ = other.dog_;
+        return *this;
     }
 private:
     Id id_{0};
@@ -91,7 +97,14 @@ public:
     Token AddPlayer(Player* player);
     void AddToken(Token token, Player* player);
     const TokenToPlayerContainer& GetTokens() const;
-
+    PlayerTokens() = default;
+    PlayerTokens(const PlayerTokens& other) {
+        token_to_player = other.token_to_player;
+    }
+    PlayerTokens& operator=(const PlayerTokens& other) {
+        token_to_player = other.token_to_player;
+        return *this;
+    }
 private:
     TokenToPlayerContainer token_to_player;
     std::random_device random_device_;
@@ -114,7 +127,7 @@ private:
 
 class Players {
 public:
-    using PlayerContainer = std::unique_ptr<Player>;
+    using PlayerContainer = std::shared_ptr<Player>;
     using PlayersContainer = std::deque<PlayerContainer>;
     Player* Add(Player::Id player_id, model::Dog *dog, model::GameSession *session);
     void Add(PlayerContainer&& player);
@@ -153,7 +166,12 @@ public:
     std::pair<std::string, error_code> GetPlayers(const Token& token) const;
     std::pair<std::string, error_code> GetState(const Token& token) const;
     std::pair<std::string, error_code> CheckToken(const Token& token) const;
-    
+    /*App(const App& other) {
+        game_ = other.game_;
+        players_ = other.players_;
+        player_tokens_ = other.player_tokens_;
+        last_player_id_ = other.last_player_id_;
+    }*/
 private:
     model::Game& game_;
     Players players_;

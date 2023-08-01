@@ -104,6 +104,7 @@ public:
         : game_repr_(app.GetGameModel())
         , players_repr_(app.GetPlayers())
         , player_tokens_repr_(app.GetPlayerTokens()) 
+        , last_player_id_(app.GetLastPlayerId())
     {
     }
 
@@ -111,7 +112,7 @@ public:
         game_repr_.Restore(app.GetGameModel());
         players_repr_.Restore(app);
         player_tokens_repr_.Restore(app);
-        
+        app.SetLastPlayerId(last_player_id_);
     }
 
     template <typename Archive>
@@ -119,12 +120,14 @@ public:
         ar& game_repr_;
         ar& players_repr_;
         ar& player_tokens_repr_;
+        ar& last_player_id_;
     }
 
 private:
     GameRepr game_repr_;
     PlayersRepr players_repr_;
     PlayerTokensRepr player_tokens_repr_;
+    app::Player::Id last_player_id_{0};
 };
 
 }  // namespace serialization

@@ -18,7 +18,7 @@ static auto to_booststr = [](std::string_view str) {
     return boost::string_view(str.data(), str.size());
 };
 
-std::string ModelToJson::GetMaps() {
+std::string ModelToJson::GetMaps() const {
     const auto& maps = game_.GetMaps();
     js::array obj;
     for (auto& map : maps) {
@@ -30,7 +30,7 @@ std::string ModelToJson::GetMaps() {
     return serialize(obj);
 }
 
-std::string ModelToJson::GetMap(std::string_view nameMap) {
+std::string ModelToJson::GetMap(std::string_view nameMap) const {
     model::Map::Id idmap{nameMap.data()};
     js::object mapEl;
     if (auto map = game_.FindMap({ idmap }); map != nullptr) {

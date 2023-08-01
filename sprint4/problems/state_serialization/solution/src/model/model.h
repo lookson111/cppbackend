@@ -232,7 +232,7 @@ private:
 };
 
 struct LootGeneratorConfig {
-    milliseconds period;
+    milliseconds period{0};
     double probability = 500.0;
 };
 
@@ -258,6 +258,7 @@ public:
         const LootGeneratorConfig loot_generator_config)
         : map_(map)
         , randomize_spawn_points_(randomize_spawn_points)
+        , loot_generator_config_(loot_generator_config)
         , loot_generator_(loot_generator_config.period, 
             loot_generator_config.probability,
             [&]() {return GetRandomDouble(0.0, 1.0);}) {
@@ -282,6 +283,20 @@ public:
     bool RandomizeSpawnPoints() const {
         return randomize_spawn_points_;
     }
+    GameSession(const GameSession& other) {
+        loot_id_ = other.loot_id_;
+        dog_id_ = other.dog_id_;
+        dogs_ = other.dogs_;
+        loots_ = other.loots_;
+        dogs_id_to_index_ = other.dogs_id_to_index_;
+        map_ = other.map_;
+        randomize_spawn_points_ = other.randomize_spawn_points_;
+        road_map = other.road_map;
+        loot_generator_config_ = other.loot_generator_config_;
+        loot_generator_ = loot_gen::LootGenerator{ loot_generator_config_.period,
+            loot_generator_config_.probability,
+            [&]() {return GetRandomDouble(0.0, 1.0); } };
+    }
 
 private:
     using DogsIdHasher = util::TaggedHasher<Dog::Id>;
@@ -292,9 +307,10 @@ private:
     Loots loots_;
     DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
-    const bool randomize_spawn_points_ = true;
+    bool randomize_spawn_points_ = true;
     RoadMap road_map;
-    loot_gen::LootGenerator loot_generator_;
+    LootGeneratorConfig loot_generator_config_;
+    loot_gen::LootGenerator loot_generator_{loot_gen::LootGenerator::TimeInterval{0}, 0.0};
 
     Point2D GetRandomRoadCoord();
     void LoadRoadMap();
@@ -316,7 +332,7 @@ public:
     using Maps = std::vector<Map>;
     using GameSessions = std::deque<GameSession>;
     using TickSignal = sig::signal<void(milliseconds delta)>;
-
+    Game() = default;
     Game(const LootGeneratorConfig& loot_generator_config) : loot_generator_config_(std::move(loot_generator_config)){
     }
     void AddMap(const Map& map);
@@ -332,7 +348,7 @@ public:
     const Maps& GetMaps() const noexcept {
         return maps_;
     }
-    std::string_view GetLootTypes(const Map::Id& id) {
+    std::string_view GetLootTypes(const Map::Id& id) const {
         return extra_data_.GetLootTypes(*id);
     }
     const Map* FindMap(const Map::Id& id) const noexcept;
@@ -349,6 +365,22 @@ public:
     const LootGeneratorConfig& GetLootGeneratorConfig() const {
         return loot_generator_config_;
     }
+    Game(const Game& other) {
+        *this = other;
+    }
+    Game& operator=(const Game& other) {
+        if (this == &other)
+            return *this;
+        randomize_spawn_points_ = other.randomize_spawn_points_;
+        maps_ = other.maps_;
+        extra_data_ = other.extra_data_;
+        loot_generator_config_ = other.loot_generator_config_;
+        game_sessions_ = other.game_sessions_;
+        map_id_to_index_ = other.map_id_to_index_;
+        map_id_to_game_sessions_index_ = other.map_id_to_game_sessions_index_;
+        tick_signal_.connect(other.tick_signal_);
+        return *this;
+    }
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
@@ -356,7 +388,7 @@ private:
     bool randomize_spawn_points_ = true;
     Maps maps_;
     ExtraData extra_data_;
-    const LootGeneratorConfig loot_generator_config_;
+    LootGeneratorConfig loot_generator_config_;
     GameSessions game_sessions_;
     MapIdToIndex map_id_to_index_;
     MapIdToIndex map_id_to_game_sessions_index_;
