@@ -11,10 +11,10 @@ find_package(Threads REQUIRED)
 set(BOOST_LIB CONAN_PKG::boost)
 set(PQXX_LIB CONAN_PKG::libpqxx)
 
-add_executable(db_manager 
+add_executable(book_manager 
     main.cpp
     json_books.cpp
     json_books.h
     db_books.cpp
     db_books.h)
-target_link_libraries(db_manager ${PQXX_LIB} ${BOOST_LIB})
+target_link_libraries(book_manager ${PQXX_LIB} ${BOOST_LIB})
