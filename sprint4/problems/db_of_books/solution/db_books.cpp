@@ -43,7 +43,8 @@ Books BooksDB::AllBooks() {
     using o_string = std::optional<std::string>;
     Books books;
     pqxx::read_transaction r(conn);
-    auto query_text = "SELECT id, title, author, year, ISBN FROM books;"_zv;
+    auto query_text = "SELECT id, title, author, year, ISBN FROM books "
+        "ORDER BY year DESC, title ASC, author ASC, ISBN ASC;"_zv;
     // Выполняем запрос и итерируемся по строкам ответа
     for (auto [id, title, author, year, isbn] : 
             r.query<o_int, o_string, o_string, o_int, o_string>(query_text)) {

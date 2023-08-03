@@ -31,7 +31,6 @@ std::string JsonBooks::Command(std::string& command)
 std::string JsonBooks::BooksConvert(const db_books::Books& books){
     js::array js_books;
     for (const auto &book : books) {
-        std::cout << "here" << std::endl;
         js::object js_book;
         js_book["id"] = book.id;
         js_book["title"] = book.title;
