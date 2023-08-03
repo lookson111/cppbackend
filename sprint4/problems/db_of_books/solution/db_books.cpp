@@ -1,5 +1,5 @@
 #include "db_books.h"
-
+#include <iostream>
 namespace db_books {
 
 BooksDB::BooksDB(const char* db_string)
@@ -10,26 +10,55 @@ BooksDB::BooksDB(const char* db_string)
 void BooksDB::CreateTable()
 {
     auto create_table =
-        "CREATE TABLE books (\""
+        "CREATE TABLE IF NOT EXISTS books ("
         "id              SERIAL PRIMARY KEY NOT NULL,"
-        "firm            varchar(100) NOT NULL,"
+        "title           varchar(100) NOT NULL,"
         "author          varchar(100) NOT NULL,"
         "year            integer NOT NULL,"
-        "serial          char(13) UNIQUE"
-        "\"); "_zv;
+        "ISBN            char(13) UNIQUE"
+        ");"_zv;
     pqxx::work w(conn);
     w.exec(create_table);
+    w.commit();
     conn.prepare(Tags::ins_book, "INSERT INTO books values (DEFAULT, $1, $2, $3, $4);"_zv);
 }
 
-bool BooksDB::AddBook(const std::string& title, const std::string& author, int year, std::optional<std::string> isbn)
+bool BooksDB::AddBook(const Book& book)
 {
     pqxx::work w(conn);
-    auto res = w.exec_prepared(Tags::ins_book, title, author, year, isbn);
-    w.commit();
-    return true;
+    try {
+        auto res = w.exec_prepared(Tags::ins_book, 
+            book.title, 
+            book.author, 
+            book.year, 
+            book.isbn);
+        w.commit();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    }
+    //std::cout << pqxx::to_string(res) << std::endl;
+    return true; // res.empty();
 }
-
+Books BooksDB::AllBooks() {
+    using o_int = std::optional<int>;
+    using o_string = std::optional<std::string>;
+    Books books;
+    pqxx::read_transaction r(conn);
+    auto query_text = "SELECT id, title, author, year, ISBN FROM books;"_zv;
+    // Выполняем запрос и итерируемся по строкам ответа
+    for (auto [id, title, author, year, isbn] : 
+            r.query<o_int, o_string, o_string, o_int, o_string>(query_text)) {
+        Book book;
+        book.id = *id;
+        book.title = *title;
+        book.author = *author;
+        book.year = *year;
+        book.isbn = isbn;
+        books.push_back(book);
+    }
+    return books;
+}
 
 
 } // namespace db_books

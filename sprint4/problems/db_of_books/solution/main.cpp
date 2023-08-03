@@ -18,9 +18,12 @@ int main(int argc, const char* argv[]) {
         json_books::JsonBooks json_books{books_db};
         std::string command;
         for (std::string line; std::getline(std::cin, line); ) {
-            std::cout << json_books.Command(line) << std::endl;
+            auto ans = json_books.Command(line);
+            if (ans.empty())
+                break;
+            std::cout << ans << std::endl;
         }
-        json_books.Exit();
+        
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
