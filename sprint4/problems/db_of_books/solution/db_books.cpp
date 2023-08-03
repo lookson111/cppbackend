@@ -3,7 +3,7 @@
 namespace db_books {
 
 BooksDB::BooksDB(const char* db_string)
-	: conn(db_string)
+    : conn(db_string)
 {
 }
 
@@ -28,17 +28,15 @@ bool BooksDB::AddBook(const Book& book)
     pqxx::work w(conn);
     try {
         auto res = w.exec_prepared(Tags::ins_book, 
-            book.title, 
-            book.author, 
-            book.year, 
-            book.isbn);
-        w.commit();
+        book.title, 
+        book.author, 
+        book.year, 
+        book.isbn);
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
         return false;
     }
-    //std::cout << pqxx::to_string(res) << std::endl;
-    return true; // res.empty();
+    w.commit();
+    return true;
 }
 Books BooksDB::AllBooks() {
     using o_int = std::optional<int>;
@@ -59,6 +57,4 @@ Books BooksDB::AllBooks() {
     }
     return books;
 }
-
-
 } // namespace db_books
