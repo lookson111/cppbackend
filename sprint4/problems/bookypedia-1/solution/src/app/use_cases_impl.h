@@ -11,7 +11,7 @@ public:
     }
 
     void AddAuthor(const std::string& name) override;
-
+    void GetAuthors(ui::detail::AuthorsInfo& authors_info) override;
 private:
     domain::AuthorRepository& authors_;
 };

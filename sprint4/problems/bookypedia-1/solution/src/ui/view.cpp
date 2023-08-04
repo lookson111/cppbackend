@@ -142,7 +142,10 @@ std::optional<std::string> View::SelectAuthor() const {
 
 std::vector<detail::AuthorInfo> View::GetAuthors() const {
     std::vector<detail::AuthorInfo> dst_autors;
-    assert(!"TODO: implement GetAuthors()");
+    detail::AuthorsInfo authors_info;
+    use_cases_.GetAuthors(authors_info);
+    dst_autors = std::move(authors_info);    
+    //assert(!"TODO: implement GetAuthors()");
     return dst_autors;
 }
 

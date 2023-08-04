@@ -1,6 +1,7 @@
 #include "postgres.h"
 
 #include <pqxx/zview.hxx>
+#include <pqxx/pqxx>
 
 namespace postgres {
 
@@ -23,20 +24,14 @@ ON CONFLICT (id) DO UPDATE SET name=$2;
 }
 
 void AuthorRepositoryImpl::GetAuthors(domain::Authors &autors) {
-    // Пока каждое обращение к репозиторию выполняется внутри отдельной транзакции
-    // В будущих уроках вы узнаете про паттерн Unit of Work, при помощи которого сможете несколько
-    // запросов выполнить в рамках одной транзакции.
-    // Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
     pqxx::read_transaction r{connection_};
     auto query_text = R"(SELECT id, name FROM authors 
 ORDER BY name DESC;
 )"_zv;
-    for (auto [id, name] : 
-            r.query<std::string, std::string>(R"(SELECT id, name FROM authors 
-ORDER BY name DESC;
-)"_zv)) {
-        //domain::Author author(domain::AuthorId::FromString(id), name);
-        //autors.push_back(std::move(author));
+    auto res =  r.query<std::string, std::string>(query_text);
+    for (const auto [id, name] : res) {
+        domain::Author author(domain::AuthorId::FromString(id), name);
+        autors.push_back(std::move(author));
     }
 }
 
