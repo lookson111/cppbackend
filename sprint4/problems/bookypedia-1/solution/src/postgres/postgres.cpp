@@ -26,7 +26,7 @@ ON CONFLICT (id) DO UPDATE SET name=$2;
 void AuthorRepositoryImpl::GetAuthors(domain::Authors &autors) {
     pqxx::read_transaction r{connection_};
     auto query_text = R"(SELECT id, name FROM authors 
-ORDER BY name DESC;
+ORDER BY name ASC;
 )"_zv;
     auto res =  r.query<std::string, std::string>(query_text);
     for (const auto [id, name] : res) {
