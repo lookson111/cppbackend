@@ -23,6 +23,7 @@ struct BookInfo {
 };
 
 using AuthorsInfo = std::vector<AuthorInfo>;
+using BooksInfo = std::vector<BookInfo>;
 
 } // namespace detail
 } // namespace ui

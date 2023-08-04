@@ -68,7 +68,7 @@ bool View::AddAuthor(std::istream& cmd_input) const {
 bool View::AddBook(std::istream& cmd_input) const {
     try {
         if (auto params = GetBookParams(cmd_input)) {
-            assert(!"TODO: implement book adding");
+            use_cases_.AddBook(params.value());
         }
     } catch (const std::exception&) {
         output_ << "Failed to add book"sv << std::endl;
@@ -144,20 +144,21 @@ std::vector<detail::AuthorInfo> View::GetAuthors() const {
     std::vector<detail::AuthorInfo> dst_autors;
     detail::AuthorsInfo authors_info;
     use_cases_.GetAuthors(authors_info);
-    dst_autors = std::move(authors_info);    
-    //assert(!"TODO: implement GetAuthors()");
+    dst_autors = std::move(authors_info);
     return dst_autors;
 }
 
 std::vector<detail::BookInfo> View::GetBooks() const {
     std::vector<detail::BookInfo> books;
-    assert(!"TODO: implement GetBooks()");
+    detail::BooksInfo books_info = use_cases_.GetBooks();
+    books = std::move(books_info);
     return books;
 }
 
 std::vector<detail::BookInfo> View::GetAuthorBooks(const std::string& author_id) const {
     std::vector<detail::BookInfo> books;
-    assert(!"TODO: implement GetAuthorBooks()");
+    detail::BooksInfo books_info = use_cases_.GetAuthorBooks(author_id);
+    books = std::move(books_info);
     return books;
 }
 

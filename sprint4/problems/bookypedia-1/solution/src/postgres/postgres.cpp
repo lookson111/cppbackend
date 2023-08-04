@@ -2,6 +2,7 @@
 
 #include <pqxx/zview.hxx>
 #include <pqxx/pqxx>
+#include <iostream>
 
 namespace postgres {
 
@@ -35,6 +36,40 @@ ORDER BY name ASC;
     }
 }
 
+void BookRepositoryImpl::Save(const domain::Book& book) {
+    pqxx::work work{connection_};
+    work.exec_params(
+        R"(
+INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4);
+)"_zv,
+        book.GetBookId().ToString(), 
+        book.GetAuthorId().ToString(), 
+        book.GetTitle(),
+        book.GetYear());
+    work.commit();
+}
+
+domain::Books BookRepositoryImpl::GetAuthorBooks(const domain::AuthorId& author_id) {
+    using o_str = std::optional<std::string>;
+    using o_int = std::optional<int>;
+    pqxx::read_transaction r{connection_};
+    domain::Books books;
+    auto query_text = "SELECT id, author_id, title, publication_year FROM books "
+        "WHERE author_id=" + r.quote(author_id.ToString()) + 
+        "ORDER BY publication_year ASC, title ASC;";
+    return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_int>(query_text));
+}
+
+domain::Books BookRepositoryImpl::GetBooks() {
+    using o_str = std::optional<std::string>;
+    using o_int = std::optional<int>;
+    pqxx::read_transaction r{connection_};
+    domain::Books books;
+    auto query_text = "SELECT id, author_id, title, publication_year FROM books "
+        "ORDER BY title ASC;";
+    return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_int>(query_text));
+}
+
 Database::Database(pqxx::connection connection)
     : connection_{std::move(connection)} {
     pqxx::work work{connection_};
@@ -52,7 +87,6 @@ CREATE TABLE IF NOT EXISTS books (
     publication_year    integer
 );
 )"_zv);
-    // ... создать другие таблицы
 
     // коммитим изменения
     work.commit();
