@@ -36,6 +36,15 @@ ORDER BY name ASC;
     }
 }
 
+domain::AuthorId AuthorRepositoryImpl::GetAuthorId(const std::string& name){
+    pqxx::read_transaction r{connection_};
+    auto query_text = "SELECT id FROM authors "
+        "WHERE name=" + r.quote(name) + 
+        "LIMIT 1;";
+    auto [author_id] =  r.query1<std::string>(query_text);
+    return domain::AuthorId::FromString(author_id);
+}
+
 void BookRepositoryImpl::Save(const domain::Book& book) {
     pqxx::work work{connection_};
     work.exec_params(
@@ -45,7 +54,17 @@ INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $
         book.GetBookId().ToString(), 
         book.GetAuthorId().ToString(), 
         book.GetTitle(),
-        book.GetYear());
+        book.GetYear()
+    );
+    for (const auto& tag : book.GetTags()) {
+        work.exec_params(
+            R"(
+INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);
+)"_zv,
+            book.GetBookId().ToString(), 
+            tag
+        );
+    }
     work.commit();
 }
 
@@ -70,6 +89,22 @@ domain::Books BookRepositoryImpl::GetBooks() {
     return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_int>(query_text));
 }
 
+
+void BooksTagsRepositoryImpl::Save(const domain::BookTags& book_tags) {
+    pqxx::work work{connection_};
+    for (const auto& tag :book_tags.GetTags()) {
+        work.exec_params(
+            R"(
+INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);
+)"_zv,
+            book_tags.GetBookId().ToString(), 
+            tag
+        );
+    }
+    work.commit();
+}
+
+
 Database::Database(pqxx::connection connection)
     : connection_{std::move(connection)} {
     pqxx::work work{connection_};
@@ -85,6 +120,12 @@ CREATE TABLE IF NOT EXISTS books (
     author_id           UUID REFERENCES authors (id) NOT NULL, 
     title               varchar(100) NOT NULL,
     publication_year    integer
+);
+)"_zv);
+    work.exec(R"(
+CREATE TABLE IF NOT EXISTS book_tags (
+    book_id             UUID REFERENCES books (id) NOT NULL, 
+    tag                 varchar(30) NOT NULL
 );
 )"_zv);
 

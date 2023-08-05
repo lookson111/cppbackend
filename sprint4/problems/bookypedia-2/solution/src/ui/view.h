@@ -27,9 +27,12 @@ private:
 
     std::optional<detail::AddBookParams> GetBookParams(std::istream& cmd_input) const;
     std::optional<std::string> SelectAuthor() const;
+    std::optional<std::string> EnterAuthor() const;
     std::vector<detail::AuthorInfo> GetAuthors() const;
     std::vector<detail::BookInfo> GetBooks() const;
     std::vector<detail::BookInfo> GetAuthorBooks(const std::string& author_id) const;
+
+    std::set<std::string> GetBookTags() const;
 
     menu::Menu& menu_;
     app::UseCases& use_cases_;

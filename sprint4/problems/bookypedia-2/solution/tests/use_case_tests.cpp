@@ -2,6 +2,7 @@
 
 #include "../src/app/use_cases_impl.h"
 #include "../src/domain/book.h"
+#include "../src/domain/book_tags.h"
 
 namespace {
 
@@ -15,6 +16,14 @@ struct MockAuthorRepository : domain::AuthorRepository {
         saved_authors.clear();
         for (auto author : authors)
             saved_authors.emplace_back(author);
+    }
+    domain::AuthorId GetAuthorId(const std::string& name) override {
+        domain::AuthorId id = domain::AuthorId::FromString(name);
+        for ( auto& author : saved_authors) {
+            if (author.GetId() == id) 
+                return author.GetId();
+        }
+        return {};
     }
 };
 
@@ -33,16 +42,31 @@ struct MockBookRepository : domain::BookRepository {
 
 };
 
+struct MockBooksTagsRepository : domain::BooksTagsRepository {
+    std::vector<domain::BookTags> saved_books_tags;
+
+    void Save(const domain::BookTags& book) override {
+        saved_books_tags.emplace_back(book);
+    }
+    /*domain::Books GetAuthorBooks(const domain::AuthorId& author_id) override {
+        return saved_books_tags;
+    }
+    domain::Books GetBooks() override {
+        return saved_books_tags;
+    }*/
+};
+
 struct Fixture {
     MockAuthorRepository authors;
     MockBookRepository books;
+    MockBooksTagsRepository books_tags;
 };
 
 }  // namespace
 
 SCENARIO_METHOD(Fixture, "Book Adding") {
     GIVEN("Use cases") {
-        app::UseCasesImpl use_cases{authors, books};
+        app::UseCasesImpl use_cases{authors, books, books_tags};
 
         WHEN("Adding an author") {
             const auto author_name = "Joanne Rowling";

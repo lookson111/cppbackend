@@ -1,6 +1,7 @@
 #include "view.h"
 
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <cassert>
 #include <iostream>
 
@@ -40,7 +41,7 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
     , output_{output} {
     menu_.AddAction(  //
         "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-        // ����
+        // or
         // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
     );
     menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
@@ -68,6 +69,7 @@ bool View::AddAuthor(std::istream& cmd_input) const {
 bool View::AddBook(std::istream& cmd_input) const {
     try {
         if (auto params = GetBookParams(cmd_input)) {
+            params->tags = GetBookTags();
             use_cases_.AddBook(params.value());
         }
     } catch (const std::exception&) {
@@ -104,14 +106,15 @@ std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input
     cmd_input >> params.publication_year;
     std::getline(cmd_input, params.title);
     boost::algorithm::trim(params.title);
-
-    auto author_id = SelectAuthor();
+    if (params.title.empty())
+        return std::nullopt;
+    auto author_id = EnterAuthor();
     if (not author_id.has_value())
         return std::nullopt;
     else {
         params.author_id = author_id.value();
-        return params;
     }
+    return params;
 }
 
 std::optional<std::string> View::SelectAuthor() const {
@@ -138,6 +141,64 @@ std::optional<std::string> View::SelectAuthor() const {
     }
 
     return authors[author_idx].id;
+}
+
+std::optional<std::string> View::EnterAuthor() const {
+    output_ << "Enter author name or empty line to select from list:" << std::endl;
+    std::string name;
+    if (!std::getline(input_, name) || name.empty()) {
+        return SelectAuthor();
+    }
+    try{
+        return use_cases_.GetAuthorId(name);
+    } catch (const std::exception&) {
+    }
+    output_ << "No author found. Do you want to add " << name << " (y/n)?" << std::endl;
+    std::string confirm;
+    if (!std::getline(input_, confirm) || confirm.empty()) {
+        return std::nullopt;
+    }
+    if (!(confirm == "Y" || confirm == "y"))
+        return std::nullopt;
+    try{
+        use_cases_.AddAuthor(std::move(name));
+        return use_cases_.GetAuthorId(name);
+    } catch (const std::exception&) {
+        output_ << "Failed to add author"sv << std::endl;
+    }
+    return std::nullopt;
+}
+
+std::set<std::string> View::GetBookTags() const {
+    auto del_space = [&](std::string& str) {
+        std::vector<std::string> splits;
+        boost::split(splits, str, boost::is_any_of(" "));
+        str.erase();
+        for (auto& split : splits) {
+            boost::algorithm::trim(split);
+            if (split.empty())
+                continue;
+            str += split + " ";
+        }
+        boost::algorithm::trim(str);
+        return str;
+    };
+    output_ << "Enter tags (comma separated):" << std::endl;
+    std::string tags_str;
+    if (!std::getline(input_, tags_str) || tags_str.empty()) {
+        return {};
+    }
+    std::vector<std::string> split_tags;
+    std::set<std::string> tags;
+    boost::split(split_tags, tags_str, boost::is_any_of(","));
+    for (auto& split_tag : split_tags) {
+        del_space(split_tag);
+        if (split_tag.empty())
+            continue;
+        tags.insert(split_tag);
+    }
+    std::cout << std::endl;
+    return tags;
 }
 
 std::vector<detail::AuthorInfo> View::GetAuthors() const {

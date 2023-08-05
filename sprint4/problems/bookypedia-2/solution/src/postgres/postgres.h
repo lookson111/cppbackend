@@ -3,6 +3,7 @@
 #include <pqxx/transaction>
 
 #include "../domain/book.h"
+#include "../domain/book_tags.h"
 
 namespace postgres {
 
@@ -14,6 +15,7 @@ public:
 
     void Save(const domain::Author& author) override;
     void GetAuthors(domain::Authors &autors) override;
+    domain::AuthorId GetAuthorId(const std::string& name) override;
 
 private:
     pqxx::connection& connection_;
@@ -34,16 +36,31 @@ private:
 
     domain::Books ConvertResponseToBooks(auto resp) {
         domain::Books books;
+        domain::Tags tags;
         for (const auto [id, author_id, title, year] : resp) {
             domain::Book book(domain::BookId::FromString(*id),
                 domain::AuthorId::FromString(*author_id), 
                 *title,
-                year
+                year,
+                tags
             );
             books.push_back(std::move(book));
         }
         return books;
     }
+};
+
+
+class BooksTagsRepositoryImpl : public domain::BooksTagsRepository {
+public:
+    explicit BooksTagsRepositoryImpl(pqxx::connection& connection)
+        : connection_{connection} {
+    }
+
+    void Save(const domain::BookTags& book) override;
+    
+private:
+    pqxx::connection& connection_;
 };
 
 class Database {
@@ -56,11 +73,15 @@ public:
     BookRepositoryImpl& GetBooks() & {
         return books_;
     }
+    BooksTagsRepositoryImpl& GetBooksTags() & {
+        return books_tags_;
+    }
 
 private:
     pqxx::connection connection_;
     AuthorRepositoryImpl authors_{connection_};
     BookRepositoryImpl books_{connection_};
+    BooksTagsRepositoryImpl books_tags_{connection_};
 };
 
 }  // namespace postgres

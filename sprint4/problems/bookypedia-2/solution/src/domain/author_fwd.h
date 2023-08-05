@@ -10,4 +10,8 @@ class Book;
 
 class BookRepository;
 
+class BookTags;
+
+class BooksTagsRepository;
+
 }  // namespace domain

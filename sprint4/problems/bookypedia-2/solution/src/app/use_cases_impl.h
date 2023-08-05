@@ -6,21 +6,29 @@ namespace app {
 
 class UseCasesImpl : public UseCases {
 public:
-    explicit UseCasesImpl(domain::AuthorRepository& authors, 
-        domain::BookRepository& book)
+    explicit UseCasesImpl(
+        domain::AuthorRepository& authors, 
+        domain::BookRepository& book,
+        domain::BooksTagsRepository& books_tags)
         : authors_{authors}
-        , books_{book} {
+        , books_{book} 
+        , books_tags_(books_tags) {
     }
 
     void AddAuthor(const std::string& name) override;
     void GetAuthors(ui::detail::AuthorsInfo& authors_info) override;
+    std::string GetAuthorId(const std::string& name) override;
+
     void AddBook(ui::detail::AddBookParams& book_params) override;
     ui::detail::BooksInfo GetAuthorBooks(const std::string& author_id) override;
     ui::detail::BooksInfo GetBooks() override;
 
+    void AddBookTags(ui::detail::BookTagsInfo& book_tags) override;
+
 private:
     domain::AuthorRepository& authors_;
     domain::BookRepository& books_;
+    domain::BooksTagsRepository& books_tags_;
 
     ui::detail::BooksInfo ConvertBooksToBooksInfo(auto&& callback) {
         ui::detail::BooksInfo books_info;

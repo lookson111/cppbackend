@@ -1,6 +1,7 @@
 #include "use_cases_impl.h"
 
 #include "../domain/book.h"
+#include "../domain/book_tags.h"
 
 namespace app {
 using namespace domain;
@@ -17,11 +18,18 @@ void UseCasesImpl::GetAuthors(ui::detail::AuthorsInfo& authors_info) {
         authors_info.push_back(std::move(author_info));
     }
 }
+
+std::string UseCasesImpl::GetAuthorId(const std::string& name) {
+    auto author_id = authors_.GetAuthorId(name);
+    return author_id.ToString();
+}
+
 void UseCasesImpl::AddBook(ui::detail::AddBookParams& book_params) {
     books_.Save({BookId::New(), 
         AuthorId::FromString(book_params.author_id), 
         book_params.title,
-        book_params.publication_year});
+        book_params.publication_year,
+        book_params.tags});
 }
 ui::detail::BooksInfo UseCasesImpl::GetAuthorBooks(const std::string& author_id) {
     return ConvertBooksToBooksInfo([&](){
@@ -32,6 +40,10 @@ ui::detail::BooksInfo UseCasesImpl::GetBooks() {
     return ConvertBooksToBooksInfo([&](){
         return books_.GetBooks();
     });
+}
+
+void UseCasesImpl::AddBookTags(ui::detail::BookTagsInfo& book_tags) {
+    books_tags_.Save({BookId::FromString(book_tags.book_id), book_tags.tags});
 }
 
 }  // namespace app
