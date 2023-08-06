@@ -19,6 +19,7 @@ public:
     void GetAuthors(ui::detail::AuthorsInfo& authors_info) override;
     std::string GetAuthorId(const std::string& name) override;
     void DeleteAuthor(const std::string& author_id) override;
+    void EditAuthor(ui::detail::AuthorInfo& author_info) override;
 
     void AddBook(ui::detail::AddBookParams& book_params) override;
     ui::detail::BooksInfo GetAuthorBooks(const std::string& author_id) override;

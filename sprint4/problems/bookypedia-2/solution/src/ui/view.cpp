@@ -39,10 +39,13 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
     , use_cases_{use_cases}
     , input_{input}
     , output_{output} {
-    menu_.AddAction(  //
+    menu_.AddAction( 
         "AddAuthor"s, "name"s, "Adds author"s, std::bind(&View::AddAuthor, this, ph::_1)
-        // or
-        // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
+        // or [this](auto& cmd_input) { return AddAuthor(cmd_input); }
+    );
+    menu_.AddAction( 
+        "EditAuthor"s, "name"s, "Edit author"s, std::bind(&View::EditAuthor, this, ph::_1)
+        // or [this](auto& cmd_input) { return AddAuthor(cmd_input); }
     );
     menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
         std::bind(&View::AddBook, this, ph::_1));
@@ -67,6 +70,24 @@ bool View::AddAuthor(std::istream& cmd_input) const {
     }
     return true;
 }
+bool View::EditAuthor(std::istream& cmd_input) const {
+    try {
+        auto author_id = GetAuthorId(cmd_input);
+        output_ << "Enter new name:" << std::endl;
+        std::string new_author_name;
+        if (!std::getline(input_, new_author_name) || new_author_name.empty()) {
+            throw std::logic_error("Name not enter");
+        }
+        boost::algorithm::trim(new_author_name);
+        detail::AuthorInfo new_author_info{*author_id, new_author_name};
+        use_cases_.EditAuthor(new_author_info);
+        return true;
+
+    } catch (const std::exception&) {
+    }
+    output_ << "Failed to edit author"sv << std::endl;
+    return true;
+}
 
 bool View::AddBook(std::istream& cmd_input) const {
     try {
@@ -87,23 +108,29 @@ bool View::ShowAuthors() const {
 
 bool View::DeleteAuthor(std::istream& cmd_input) const {
     try {
-        std::string author_name;
-        std::getline(cmd_input, author_name);
-        boost::algorithm::trim(author_name);
-        std::optional<std::string> author_id;
-        if (author_name.empty()) {
-            author_id = SelectAuthor();
-        } else {
-            author_id = use_cases_.GetAuthorId(author_name);
-        }
+        auto author_id = GetAuthorId(cmd_input);
         use_cases_.DeleteAuthor(*author_id);
         return true;
 
     } catch (const std::exception& ex) {
-        //std::cout << ex.what() << std::endl;
     }
     output_ << "Failed to delete author"sv << std::endl;
     return true;
+}
+
+std::optional<std::string> View::GetAuthorId(std::istream& cmd_input) const {
+    std::string author_name;
+    std::getline(cmd_input, author_name);
+    boost::algorithm::trim(author_name);
+    std::optional<std::string> author_id;
+    if (author_name.empty()) {
+        author_id = SelectAuthor();
+    } else {
+        author_id = use_cases_.GetAuthorId(author_name);
+    }
+    if (author_id == std::nullopt)
+        throw std::logic_error("Author id not entered.");
+    return author_id;
 }
 
 bool View::ShowBooks() const {
@@ -214,7 +241,6 @@ std::set<std::string> View::GetBookTags() const {
             continue;
         tags.insert(split_tag);
     }
-    std::cout << std::endl;
     return tags;
 }
 

@@ -25,8 +25,13 @@ std::string UseCasesImpl::GetAuthorId(const std::string& name) {
 }
 
 void UseCasesImpl::DeleteAuthor(const std::string& author_id) {
-    //authors_.DeleteBook(AuthorId::FromString{author_id});
     authors_.DeleteAuthor(AuthorId::FromString(author_id));
+}
+
+void UseCasesImpl::EditAuthor(ui::detail::AuthorInfo& author_info) {
+    authors_.EditAuthor({
+        AuthorId::FromString(author_info.id), 
+        author_info.name});
 }
 
 void UseCasesImpl::AddBook(ui::detail::AddBookParams& book_params) {

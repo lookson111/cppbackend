@@ -24,6 +24,18 @@ ON CONFLICT (id) DO UPDATE SET name=$2;
     work.commit();
 }
 
+void AuthorRepositoryImpl::EditAuthor(const domain::Author& author) {
+    pqxx::work work{connection_};
+    auto ret = work.exec_params(
+        R"(UPDATE authors SET name=$1 WHERE id=$2 RETURNING id;)"_zv,
+        author.GetName(),
+        author.GetId().ToString()
+    );
+    if (ret.size() != 1)
+        throw std::logic_error("Author deleted.");
+    work.commit();
+}
+
 void AuthorRepositoryImpl::GetAuthors(domain::Authors &autors) {
     pqxx::read_transaction r{connection_};
     auto query_text = R"(SELECT id, name FROM authors 
@@ -70,6 +82,7 @@ void AuthorRepositoryImpl::DeleteAuthor(const domain::AuthorId& author_id) {
     );
     work.commit();
 }
+
 
 void BookRepositoryImpl::Save(const domain::Book& book) {
     pqxx::work work{connection_};

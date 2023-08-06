@@ -12,6 +12,13 @@ struct MockAuthorRepository : domain::AuthorRepository {
     void Save(const domain::Author& author) override {
         saved_authors.emplace_back(author);
     }
+    void EditAuthor(const domain::Author& author) override {
+        for (auto& saved_author : saved_authors) {
+            if (saved_author.GetId() == author.GetId()) {
+                saved_author = author;
+            }
+        }
+    }
     void GetAuthors(domain::Authors& authors) override {
         saved_authors.clear();
         for (auto author : authors)
