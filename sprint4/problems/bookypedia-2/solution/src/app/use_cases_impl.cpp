@@ -52,6 +52,24 @@ ui::detail::BooksInfo UseCasesImpl::GetBooks() {
     });
 }
 
+ui::detail::BooksInfo UseCasesImpl::GetBooks(const std::string& start_with) {
+    return ConvertBooksToBooksInfo([&](){
+        return books_.GetBooks(start_with);
+    });
+}
+
+ui::detail::BookInfo UseCasesImpl::GetBook(const std::string& book_id) {
+    auto book = books_.GetBook(BookId::FromString(book_id));
+    return ui::detail::BookInfo(
+                book.GetBookId().ToString(),
+                book.GetTitle(),
+                book.GetAuthor().GetName(),
+                book.GetYear().value(),
+                book.GetTags()
+            );
+}
+
+
 void UseCasesImpl::AddBookTags(ui::detail::BookTagsInfo& book_tags) {
     books_tags_.Save({BookId::FromString(book_tags.book_id), book_tags.tags});
 }

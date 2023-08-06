@@ -53,6 +53,12 @@ struct MockBookRepository : domain::BookRepository {
     domain::Books GetBooks() override {
         return saved_books;
     }
+    domain::Books GetBooks(const std::string& start_with) {
+        return saved_books;
+    }
+    domain::Book GetBook(const domain::BookId& book_id) {
+        return saved_books.front();
+    }
 
 };
 

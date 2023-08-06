@@ -24,6 +24,8 @@ public:
     void AddBook(ui::detail::AddBookParams& book_params) override;
     ui::detail::BooksInfo GetAuthorBooks(const std::string& author_id) override;
     ui::detail::BooksInfo GetBooks() override;
+    ui::detail::BooksInfo GetBooks(const std::string& start_with) override;
+    ui::detail::BookInfo GetBook(const std::string& book_id) override;
 
     void AddBookTags(ui::detail::BookTagsInfo& book_tags) override;
 
@@ -37,9 +39,11 @@ private:
         auto books = callback();
         for (auto book : books) {
             ui::detail::BookInfo book_info(
+                book.GetBookId().ToString(),
                 book.GetTitle(),
                 book.GetAuthor().GetName(),
-                book.GetYear().value()
+                book.GetYear().value(),
+                book.GetTags()
             );
             books_info.push_back(std::move(book_info));
         }

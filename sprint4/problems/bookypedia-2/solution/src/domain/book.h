@@ -40,6 +40,9 @@ public:
     std::set<std::string> GetTags() const noexcept {
         return book_tags_;
     }
+    void AddTag(const std::string& tag) noexcept {
+        book_tags_.insert(tag);
+    }
 
 private:
     BookId book_id_;
@@ -56,6 +59,8 @@ public:
     virtual void Save(const Book& book) = 0;
     virtual Books GetAuthorBooks(const AuthorId& author_id) = 0;
     virtual Books GetBooks() = 0;
+    virtual domain::Books GetBooks(const std::string& start_with) = 0;
+    virtual domain::Book GetBook(const domain::BookId& book_id) = 0;
     //virtual void DeleteBooks(const AuthorId& author_id) = 0;
 
 protected:

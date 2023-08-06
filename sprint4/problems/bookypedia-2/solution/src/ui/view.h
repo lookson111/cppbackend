@@ -25,6 +25,7 @@ private:
     bool DeleteAuthor(std::istream& cmd_input) const;
     bool EditAuthor(std::istream& cmd_input) const;
     bool ShowBooks() const;
+    bool ShowBook(std::istream& cmd_input) const;
     bool ShowAuthorBooks() const;
 
     

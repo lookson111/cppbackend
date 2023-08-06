@@ -108,8 +108,6 @@ INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);
 }
 
 domain::Books BookRepositoryImpl::GetAuthorBooks(const domain::AuthorId& author_id) {
-    using o_str = std::optional<std::string>;
-    using o_int = std::optional<int>;
     pqxx::read_transaction r{connection_};
     auto query_text = "SELECT id, author_id, title, publication_year FROM books "
         "WHERE author_id=" + r.quote(author_id.ToString()) + 
@@ -129,8 +127,6 @@ domain::Books BookRepositoryImpl::GetAuthorBooks(const domain::AuthorId& author_
 }
 
 domain::Books BookRepositoryImpl::GetBooks() {
-    using o_str = std::optional<std::string>;
-    using o_int = std::optional<int>;
     pqxx::read_transaction r{connection_};
     domain::Books books;
     auto query_text = 
@@ -139,6 +135,38 @@ domain::Books BookRepositoryImpl::GetBooks() {
         "INNER JOIN authors a ON a.id = b.author_id "
         "ORDER BY b_title ASC, a_name ASC, b_year DESC;";
     return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_str, o_int>(query_text));
+}
+
+
+domain::Books BookRepositoryImpl::GetBooks(const std::string& start_with) {
+    pqxx::read_transaction r{connection_};
+    auto query_text = 
+        "SELECT b.id b_id, b.author_id a_id, a.name a_name, b.title b_title, "
+            "b.publication_year b_year FROM books b "
+        "INNER JOIN authors a ON a.id = b.author_id "
+        "WHERE b.title LIKE \'" + start_with + "%\' " 
+        "ORDER BY b_title ASC, a_name ASC, b_year DESC;";
+    return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_str, o_int>(query_text));
+}
+
+domain::Book BookRepositoryImpl::GetBook(const domain::BookId& book_id) {
+    pqxx::read_transaction r{connection_};
+    auto query_text = 
+        "SELECT b.id b_id, b.author_id a_id, a.name a_name, b.title b_title, "
+            "b.publication_year b_year FROM books b "
+        "INNER JOIN authors a ON a.id = b.author_id "
+        "WHERE b.id=" + r.quote(book_id.ToString()) + " " 
+        "ORDER BY b_title ASC, a_name ASC, b_year DESC;";
+    domain::Books books = ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_str, o_int>(query_text));
+    domain::Book book = books.front();
+    auto query_tag = "SELECT tag FROM book_tags "
+        "WHERE book_id=" + r.quote(book_id.ToString()) + " " 
+        "ORDER BY tag ASC;";
+    auto res =  r.query<std::string>(query_tag);
+    for (const auto& [tag] : res) {
+        book.AddTag(tag);
+    }
+    return book;
 }
 
 

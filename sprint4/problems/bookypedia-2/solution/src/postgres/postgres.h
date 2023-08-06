@@ -32,8 +32,12 @@ public:
     void Save(const domain::Book& book) override;
     domain::Books GetAuthorBooks(const domain::AuthorId& author_id) override;
     domain::Books GetBooks() override;
+    domain::Books GetBooks(const std::string& start_with) override;
+    domain::Book GetBook(const domain::BookId& book_id) override;
 
 private:
+    using o_str = std::optional<std::string>;
+    using o_int = std::optional<int>;
     pqxx::connection& connection_;
 
     domain::Books ConvertResponseToBooks(auto resp) {
