@@ -36,7 +36,7 @@ void UseCasesImpl::EditAuthor(ui::detail::AuthorInfo& author_info) {
 
 void UseCasesImpl::AddBook(ui::detail::AddBookParams& book_params) {
     books_.Save({BookId::New(), 
-        AuthorId::FromString(book_params.author_id), 
+        {AuthorId::FromString(book_params.author_id), ""}, 
         book_params.title,
         book_params.publication_year,
         book_params.tags});

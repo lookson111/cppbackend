@@ -39,9 +39,9 @@ private:
     domain::Books ConvertResponseToBooks(auto resp) {
         domain::Books books;
         domain::Tags tags;
-        for (const auto [id, author_id, title, year] : resp) {
+        for (const auto [id, author_id, author_name, title, year] : resp) {
             domain::Book book(domain::BookId::FromString(*id),
-                domain::AuthorId::FromString(*author_id), 
+                domain::Author{domain::AuthorId::FromString(*author_id), *author_name}, 
                 *title,
                 year,
                 tags

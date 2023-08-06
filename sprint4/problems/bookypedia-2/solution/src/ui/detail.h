@@ -22,6 +22,7 @@ struct AuthorInfo {
 
 struct BookInfo {
     std::string title;
+    std::string author_name;
     int publication_year;
 };
 

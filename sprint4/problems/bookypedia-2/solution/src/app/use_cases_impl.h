@@ -38,6 +38,7 @@ private:
         for (auto book : books) {
             ui::detail::BookInfo book_info(
                 book.GetTitle(),
+                book.GetAuthor().GetName(),
                 book.GetYear().value()
             );
             books_info.push_back(std::move(book_info));

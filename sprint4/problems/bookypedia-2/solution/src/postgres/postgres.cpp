@@ -91,7 +91,7 @@ void BookRepositoryImpl::Save(const domain::Book& book) {
 INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $4);
 )"_zv,
         book.GetBookId().ToString(), 
-        book.GetAuthorId().ToString(), 
+        book.GetAuthor().GetId().ToString(), 
         book.GetTitle(),
         book.GetYear()
     );
@@ -111,11 +111,21 @@ domain::Books BookRepositoryImpl::GetAuthorBooks(const domain::AuthorId& author_
     using o_str = std::optional<std::string>;
     using o_int = std::optional<int>;
     pqxx::read_transaction r{connection_};
-    domain::Books books;
     auto query_text = "SELECT id, author_id, title, publication_year FROM books "
         "WHERE author_id=" + r.quote(author_id.ToString()) + 
         "ORDER BY publication_year ASC, title ASC;";
-    return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_int>(query_text));
+    domain::Books books;
+    domain::Tags tags;
+    for (const auto [id, author_id, title, year] : r.query<o_str, o_str, o_str, o_int>(query_text)) {
+        domain::Book book(domain::BookId::FromString(*id),
+            domain::Author{domain::AuthorId::FromString(*author_id), ""}, 
+            *title,
+            year,
+            tags
+        );
+        books.push_back(std::move(book));
+    }
+    return books;
 }
 
 domain::Books BookRepositoryImpl::GetBooks() {
@@ -123,9 +133,12 @@ domain::Books BookRepositoryImpl::GetBooks() {
     using o_int = std::optional<int>;
     pqxx::read_transaction r{connection_};
     domain::Books books;
-    auto query_text = "SELECT id, author_id, title, publication_year FROM books "
-        "ORDER BY title ASC;";
-    return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_int>(query_text));
+    auto query_text = 
+        "SELECT b.id b_id, b.author_id a_id, a.name a_name, b.title b_title, "
+            "b.publication_year b_year FROM books b "
+        "INNER JOIN authors a ON a.id = b.author_id "
+        "ORDER BY b_title ASC, a_name ASC, b_year DESC;";
+    return ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_str, o_int>(query_text));
 }
 
 

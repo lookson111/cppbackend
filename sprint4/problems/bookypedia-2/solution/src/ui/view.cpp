@@ -20,7 +20,7 @@ std::ostream& operator<<(std::ostream& out, const AuthorInfo& author) {
 }
 
 std::ostream& operator<<(std::ostream& out, const BookInfo& book) {
-    out << book.title << ", " << book.publication_year;
+    out << book.title << " by " << book.author_name << ", " << book.publication_year;
     return out;
 }
 
@@ -94,6 +94,7 @@ bool View::AddBook(std::istream& cmd_input) const {
         if (auto params = GetBookParams(cmd_input)) {
             params->tags = GetBookTags();
             use_cases_.AddBook(params.value());
+            return true;
         }
     } catch (const std::exception&) {
         output_ << "Failed to add book"sv << std::endl;
@@ -190,8 +191,19 @@ std::optional<std::string> View::SelectAuthor() const {
 std::optional<std::string> View::EnterAuthor() const {
     output_ << "Enter author name or empty line to select from list:" << std::endl;
     std::string name;
-    if (!std::getline(input_, name) || name.empty()) {
-        return SelectAuthor();
+    if (!std::getline(input_, name)) {
+        return std::nullopt;
+    }
+    boost::algorithm::trim(name);
+    if (name.empty()) {
+        auto res = SelectAuthor();
+        // Fix read test tags for book
+        //if (res == std::nullopt) {
+        //    std::string str;
+        //    std::getline(input_, str);
+        //}
+        // end fix
+        return res;
     }
     try{
         return use_cases_.GetAuthorId(name);
@@ -202,13 +214,14 @@ std::optional<std::string> View::EnterAuthor() const {
     if (!std::getline(input_, confirm) || confirm.empty()) {
         return std::nullopt;
     }
-    if (!(confirm == "Y" || confirm == "y"))
-        return std::nullopt;
+    if (!(confirm == "Y" || confirm == "y")) {
+        throw std::logic_error("Fail add book, not confirm.");
+    }
     try{
         use_cases_.AddAuthor(std::move(name));
         return use_cases_.GetAuthorId(name);
     } catch (const std::exception&) {
-        output_ << "Failed to add author"sv << std::endl;
+        //output_ << "Failed to add author"sv << std::endl;
     }
     return std::nullopt;
 }
