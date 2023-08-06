@@ -18,6 +18,7 @@ public:
     virtual ui::detail::BooksInfo GetBooks() = 0;
     virtual ui::detail::BooksInfo GetBooks(const std::string& start_with) = 0;
     virtual ui::detail::BookInfo GetBook(const std::string& book_id) = 0;
+    virtual void DeleteBook(const std::string& book_id) = 0;
 
     virtual void AddBookTags(ui::detail::BookTagsInfo& book_tags) = 0;
 

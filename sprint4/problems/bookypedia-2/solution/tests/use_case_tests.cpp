@@ -59,6 +59,13 @@ struct MockBookRepository : domain::BookRepository {
     domain::Book GetBook(const domain::BookId& book_id) {
         return saved_books.front();
     }
+    void DeleteBook(const domain::BookId& book_id) {
+        for (auto it = saved_books.begin(); it != saved_books.end(); ++it)
+            if (it->GetBookId() == book_id) {
+                saved_books.erase(it);
+                break;
+            }
+    }
 
 };
 

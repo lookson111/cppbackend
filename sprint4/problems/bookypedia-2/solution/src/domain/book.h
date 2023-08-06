@@ -61,7 +61,7 @@ public:
     virtual Books GetBooks() = 0;
     virtual domain::Books GetBooks(const std::string& start_with) = 0;
     virtual domain::Book GetBook(const domain::BookId& book_id) = 0;
-    //virtual void DeleteBooks(const AuthorId& author_id) = 0;
+    virtual void DeleteBook(const domain::BookId& book_id) = 0;
 
 protected:
     ~BookRepository() = default;

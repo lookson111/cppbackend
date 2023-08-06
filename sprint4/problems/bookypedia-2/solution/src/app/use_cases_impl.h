@@ -26,6 +26,7 @@ public:
     ui::detail::BooksInfo GetBooks() override;
     ui::detail::BooksInfo GetBooks(const std::string& start_with) override;
     ui::detail::BookInfo GetBook(const std::string& book_id) override;
+    void DeleteBook(const std::string& book_id) override;
 
     void AddBookTags(ui::detail::BookTagsInfo& book_tags) override;
 

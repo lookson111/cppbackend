@@ -53,6 +53,7 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
         std::bind(&View::DeleteAuthor, this, ph::_1));
     menu_.AddAction("ShowBooks"s, {}, "Show books"s, std::bind(&View::ShowBooks, this));
     menu_.AddAction("ShowBook"s, "title"s, "Show book"s, std::bind(&View::ShowBook, this, ph::_1));
+    menu_.AddAction("DeleteBook"s, "title"s, "Delete book"s, std::bind(&View::DeleteBook, this, ph::_1));
     menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s,
         std::bind(&View::ShowAuthorBooks, this));
 }
@@ -139,30 +140,35 @@ bool View::ShowBooks() const {
     return true;
 }
 
+std::string View::GetBookId(std::istream& cmd_input) const {
+    std::string title;
+    std::getline(cmd_input, title);
+    boost::algorithm::trim(title);
+    auto books = use_cases_.GetBooks(title);
+    if (books.size() == 0)
+        throw std::logic_error("Book not found");
+    int book_idx = 0;
+    if (books.size() != 1) {
+        PrintVector(output_, books);
+        output_ << "Enter the book # or empty line to cancel:" << std::endl;
+        std::string str;
+        if (!std::getline(input_, str) || str.empty()) {
+            throw std::runtime_error("Bad book #");
+        }
+        try {
+            book_idx = std::stoi(str);
+        } catch (std::exception const&) {
+            throw std::runtime_error("Invalid book num");
+        }
+        book_idx--;
+    }
+    return books[book_idx].id;
+}
+
 bool View::ShowBook(std::istream& cmd_input) const {
     try {
-        std::string title;
-        std::getline(cmd_input, title);
-        boost::algorithm::trim(title);
-        auto books = use_cases_.GetBooks(title);
-        if (books.size() == 0)
-            return true;
-        int book_idx = 0;
-        if (books.size() != 1) {
-            PrintVector(output_, books);
-            output_ << "Enter the book # or empty line to cancel:" << std::endl;
-            std::string str;
-            if (!std::getline(input_, str) || str.empty()) {
-                return true;
-            }
-            try {
-                book_idx = std::stoi(str);
-            } catch (std::exception const&) {
-                throw std::runtime_error("Invalid author num");
-            }
-            book_idx--;
-        }
-        detail::BookInfo book = use_cases_.GetBook(books[book_idx].id);
+        auto book_id = GetBookId(cmd_input);
+        detail::BookInfo book = use_cases_.GetBook(book_id);
         output_ << "Title: "sv << book.title << std::endl;
         output_ << "Author: "sv << book.author_name << std::endl;
         output_ << "Publication year: "sv << book.publication_year << std::endl;
@@ -176,6 +182,19 @@ bool View::ShowBook(std::istream& cmd_input) const {
             output_ << std::endl;
         }
     } catch (const std::exception&) {
+    }
+    return true;
+}
+
+bool View::DeleteBook(std::istream& cmd_input) const {
+    try {
+        auto book_id = GetBookId(cmd_input);
+        use_cases_.DeleteBook(book_id);
+    }
+    catch (const std::logic_error& le) {
+        throw;
+    } catch (const std::exception&) {
+        throw std::runtime_error("Failed to delete book");
     }
     return true;
 }

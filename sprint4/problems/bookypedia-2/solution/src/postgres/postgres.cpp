@@ -169,6 +169,20 @@ domain::Book BookRepositoryImpl::GetBook(const domain::BookId& book_id) {
     return book;
 }
 
+void BookRepositoryImpl::DeleteBook(const domain::BookId& book_id) {
+    pqxx::work work{connection_};
+    // delete tags and books
+    work.exec_params(
+        R"(DELETE FROM book_tags WHERE book_id=$1;)"_zv,
+        book_id.ToString()
+    );
+    work.exec_params(
+        R"(DELETE FROM books WHERE id=$1;)"_zv,
+        book_id.ToString()
+    );
+    work.commit();
+}
+
 
 void BooksTagsRepositoryImpl::Save(const domain::BookTags& book_tags) {
     pqxx::work work{connection_};

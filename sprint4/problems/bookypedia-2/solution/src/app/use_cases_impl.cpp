@@ -69,6 +69,9 @@ ui::detail::BookInfo UseCasesImpl::GetBook(const std::string& book_id) {
             );
 }
 
+void UseCasesImpl::DeleteBook(const std::string& book_id) {
+    books_.DeleteBook(BookId::FromString(book_id));
+}
 
 void UseCasesImpl::AddBookTags(ui::detail::BookTagsInfo& book_tags) {
     books_tags_.Save({BookId::FromString(book_tags.book_id), book_tags.tags});

@@ -34,6 +34,7 @@ public:
     domain::Books GetBooks() override;
     domain::Books GetBooks(const std::string& start_with) override;
     domain::Book GetBook(const domain::BookId& book_id) override;
+    void DeleteBook(const domain::BookId& book_id) override;
 
 private:
     using o_str = std::optional<std::string>;

@@ -26,6 +26,7 @@ private:
     bool EditAuthor(std::istream& cmd_input) const;
     bool ShowBooks() const;
     bool ShowBook(std::istream& cmd_input) const;
+    bool DeleteBook(std::istream& cmd_input) const;
     bool ShowAuthorBooks() const;
 
     
@@ -39,6 +40,7 @@ private:
     std::vector<detail::BookInfo> GetAuthorBooks(const std::string& author_id) const;
 
     std::set<std::string> GetBookTags() const;
+    std::string GetBookId(std::istream& cmd_input) const;
 
     menu::Menu& menu_;
     app::UseCases& use_cases_;
