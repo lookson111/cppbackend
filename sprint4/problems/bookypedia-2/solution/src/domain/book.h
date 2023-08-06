@@ -57,6 +57,7 @@ using Books = std::vector<Book>;
 class BookRepository {
 public:
     virtual void Save(const Book& book) = 0;
+    virtual void Edit(const Book& book) = 0;
     virtual Books GetAuthorBooks(const AuthorId& author_id) = 0;
     virtual Books GetBooks() = 0;
     virtual domain::Books GetBooks(const std::string& start_with) = 0;

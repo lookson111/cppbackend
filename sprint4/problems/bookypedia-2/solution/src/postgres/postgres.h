@@ -30,6 +30,7 @@ public:
     }
 
     void Save(const domain::Book& book) override;
+    void Edit(const domain::Book& book) override;
     domain::Books GetAuthorBooks(const domain::AuthorId& author_id) override;
     domain::Books GetBooks() override;
     domain::Books GetBooks(const std::string& start_with) override;
@@ -41,6 +42,7 @@ private:
     using o_int = std::optional<int>;
     pqxx::connection& connection_;
 
+    void SaveTags(pqxx::work& work, const domain::BookId& book_id, std::set<std::string> tags);
     domain::Books ConvertResponseToBooks(auto resp) {
         domain::Books books;
         domain::Tags tags;

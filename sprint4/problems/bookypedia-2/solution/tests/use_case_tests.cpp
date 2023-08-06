@@ -47,6 +47,9 @@ struct MockBookRepository : domain::BookRepository {
     void Save(const domain::Book& book) override {
         saved_books.emplace_back(book);
     }
+    void Edit(const domain::Book& book) override {
+        saved_books.emplace_back(book);
+    }
     domain::Books GetAuthorBooks(const domain::AuthorId& author_id) override {
         return saved_books;
     }

@@ -24,6 +24,17 @@ std::ostream& operator<<(std::ostream& out, const BookInfo& book) {
     return out;
 }
 
+
+std::string TagsToString(const Tags& tags)  {
+    std::string str;
+    for (auto it = tags.begin(); it != tags.end(); ++it) {
+        str += *it;
+        if (std::next(it) != tags.end())
+            str += ", ";
+    }
+    return str;
+}
+
 }  // namespace detail
 
 template <typename T>
@@ -54,6 +65,7 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
     menu_.AddAction("ShowBooks"s, {}, "Show books"s, std::bind(&View::ShowBooks, this));
     menu_.AddAction("ShowBook"s, "title"s, "Show book"s, std::bind(&View::ShowBook, this, ph::_1));
     menu_.AddAction("DeleteBook"s, "title"s, "Delete book"s, std::bind(&View::DeleteBook, this, ph::_1));
+    menu_.AddAction("EditBook"s, "title"s, "Edit book"s, std::bind(&View::EditBook, this, ph::_1));
     menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s,
         std::bind(&View::ShowAuthorBooks, this));
 }
@@ -93,6 +105,7 @@ bool View::EditAuthor(std::istream& cmd_input) const {
 bool View::AddBook(std::istream& cmd_input) const {
     try {
         if (auto params = GetBookParams(cmd_input)) {
+            output_ << "Enter tags (comma separated):" << std::endl;
             params->tags = GetBookTags();
             use_cases_.AddBook(params.value());
             return true;
@@ -173,13 +186,7 @@ bool View::ShowBook(std::istream& cmd_input) const {
         output_ << "Author: "sv << book.author_name << std::endl;
         output_ << "Publication year: "sv << book.publication_year << std::endl;
         if (!book.tags.empty()) {
-            output_ << "Tags: "sv;
-            for (auto it = book.tags.begin(); it != book.tags.end(); ++it) {
-                output_ << *it;
-                if (std::next(it) != book.tags.end())
-                    output_ << ", ";
-            }
-            output_ << std::endl;
+            output_ << "Tags: "sv << detail::TagsToString(book.tags) << std::endl;
         }
     } catch (const std::exception&) {
     }
@@ -195,6 +202,37 @@ bool View::DeleteBook(std::istream& cmd_input) const {
         throw;
     } catch (const std::exception&) {
         throw std::runtime_error("Failed to delete book");
+    }
+    return true;
+}
+
+bool View::EditBook(std::istream& cmd_input) const {
+    auto get_param = [&]() { 
+        std::string text;
+        std::getline(input_, text);
+        boost::algorithm::trim(text);
+        return text;
+    };
+    try {
+        auto book_id = GetBookId(cmd_input);
+        detail::BookInfo book = use_cases_.GetBook(book_id);
+        output_ << "Enter new title or empty line to use the current one ("
+            << book.title << "):" << std::endl;
+        if (auto str = get_param(); !str.empty())
+            book.title = str;
+        output_ << "Enter publication year or empty line to use the current one ("
+            << std::to_string(book.publication_year) << "):" << std::endl;
+        if (auto str = get_param(); !str.empty())
+            book.publication_year = std::stoi(str);
+        output_ <<  "Enter tags (current tags: " << detail::TagsToString(book.tags)
+            << "):" << std::endl ;
+        if (auto tags = GetBookTags(); !tags.empty())
+            book.tags = tags;
+        use_cases_.EditBook(book);
+    }
+    catch (const std::logic_error& le) {
+        throw;
+    } catch (const std::exception&) {
     }
     return true;
 }
@@ -292,7 +330,6 @@ std::set<std::string> View::GetBookTags() const {
         boost::algorithm::trim(str);
         return str;
     };
-    output_ << "Enter tags (comma separated):" << std::endl;
     std::string tags_str;
     if (!std::getline(input_, tags_str) || tags_str.empty()) {
         return {};

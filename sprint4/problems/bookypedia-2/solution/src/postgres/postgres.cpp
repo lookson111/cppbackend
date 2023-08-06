@@ -95,15 +95,37 @@ INSERT INTO books (id, author_id, title, publication_year) VALUES ($1, $2, $3, $
         book.GetTitle(),
         book.GetYear()
     );
-    for (const auto& tag : book.GetTags()) {
+    SaveTags(work, book.GetBookId(), book.GetTags());
+    work.commit();
+}
+
+void BookRepositoryImpl::SaveTags(pqxx::work& work, const domain::BookId& book_id, std::set<std::string> tags) {
+    for (const auto& tag : tags) {
         work.exec_params(
             R"(
 INSERT INTO book_tags (book_id, tag) VALUES ($1, $2);
 )"_zv,
-            book.GetBookId().ToString(), 
+            book_id.ToString(), 
             tag
         );
     }
+}
+
+void BookRepositoryImpl::Edit(const domain::Book& book) {
+    pqxx::work work{connection_};
+    auto ret = work.exec_params(
+        R"(UPDATE books SET title=$1, publication_year=$2 WHERE id=$3 RETURNING id;)"_zv,
+        book.GetTitle(),
+        book.GetYear(),
+        book.GetBookId().ToString()
+    );
+    if (ret.size() != 1)
+        throw std::logic_error("Book edited.");
+    work.exec_params(
+        R"(DELETE FROM book_tags WHERE book_id=$1;)"_zv,
+        book.GetBookId().ToString()
+    );
+    SaveTags(work, book.GetBookId(), book.GetTags());
     work.commit();
 }
 

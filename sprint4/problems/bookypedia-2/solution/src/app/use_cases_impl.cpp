@@ -41,6 +41,15 @@ void UseCasesImpl::AddBook(ui::detail::AddBookParams& book_params) {
         book_params.publication_year,
         book_params.tags});
 }
+
+void UseCasesImpl::EditBook(ui::detail::BookInfo& book_info) {
+    books_.Edit({BookId::FromString(book_info.id), 
+        {AuthorId::New(), book_info.author_name}, 
+        book_info.title,
+        book_info.publication_year,
+        book_info.tags});
+}
+
 ui::detail::BooksInfo UseCasesImpl::GetAuthorBooks(const std::string& author_id) {
     return ConvertBooksToBooksInfo([&](){
         return books_.GetAuthorBooks(AuthorId::FromString(author_id));

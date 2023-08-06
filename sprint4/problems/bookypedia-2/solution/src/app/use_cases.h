@@ -14,6 +14,7 @@ public:
     virtual void EditAuthor(ui::detail::AuthorInfo& author_info) = 0;
 
     virtual void AddBook(ui::detail::AddBookParams& books_info) = 0;
+    virtual void EditBook(ui::detail::BookInfo& book_params) = 0;
     virtual ui::detail::BooksInfo GetAuthorBooks(const std::string& author_id) = 0;
     virtual ui::detail::BooksInfo GetBooks() = 0;
     virtual ui::detail::BooksInfo GetBooks(const std::string& start_with) = 0;

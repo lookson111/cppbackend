@@ -22,6 +22,7 @@ public:
     void EditAuthor(ui::detail::AuthorInfo& author_info) override;
 
     void AddBook(ui::detail::AddBookParams& book_params) override;
+    void EditBook(ui::detail::BookInfo& book_params) override;
     ui::detail::BooksInfo GetAuthorBooks(const std::string& author_id) override;
     ui::detail::BooksInfo GetBooks() override;
     ui::detail::BooksInfo GetBooks(const std::string& start_with) override;
