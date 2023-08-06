@@ -38,6 +38,7 @@ public:
     virtual void Save(const Author& author) = 0;
     virtual void GetAuthors(Authors &autors) = 0;
     virtual AuthorId GetAuthorId(const std::string& name) = 0;
+    virtual void DeleteAuthor(const AuthorId& author_id) = 0;
 
 protected:
     ~AuthorRepository() = default;

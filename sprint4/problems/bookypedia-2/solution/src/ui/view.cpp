@@ -45,11 +45,13 @@ View::View(menu::Menu& menu, app::UseCases& use_cases, std::istream& input, std:
         // [this](auto& cmd_input) { return AddAuthor(cmd_input); }
     );
     menu_.AddAction("AddBook"s, "<pub year> <title>"s, "Adds book"s,
-                    std::bind(&View::AddBook, this, ph::_1));
+        std::bind(&View::AddBook, this, ph::_1));
     menu_.AddAction("ShowAuthors"s, {}, "Show authors"s, std::bind(&View::ShowAuthors, this));
+    menu_.AddAction("DeleteAuthor"s, "name"s, "Delete author"s, 
+        std::bind(&View::DeleteAuthor, this, ph::_1));
     menu_.AddAction("ShowBooks"s, {}, "Show books"s, std::bind(&View::ShowBooks, this));
     menu_.AddAction("ShowAuthorBooks"s, {}, "Show author books"s,
-                    std::bind(&View::ShowAuthorBooks, this));
+        std::bind(&View::ShowAuthorBooks, this));
 }
 
 bool View::AddAuthor(std::istream& cmd_input) const {
@@ -83,13 +85,33 @@ bool View::ShowAuthors() const {
     return true;
 }
 
+bool View::DeleteAuthor(std::istream& cmd_input) const {
+    try {
+        std::string author_name;
+        std::getline(cmd_input, author_name);
+        boost::algorithm::trim(author_name);
+        std::optional<std::string> author_id;
+        if (author_name.empty()) {
+            author_id = SelectAuthor();
+        } else {
+            author_id = use_cases_.GetAuthorId(author_name);
+        }
+        use_cases_.DeleteAuthor(*author_id);
+        return true;
+
+    } catch (const std::exception& ex) {
+        //std::cout << ex.what() << std::endl;
+    }
+    output_ << "Failed to delete author"sv << std::endl;
+    return true;
+}
+
 bool View::ShowBooks() const {
     PrintVector(output_, GetBooks());
     return true;
 }
 
 bool View::ShowAuthorBooks() const {
-    // TODO: handle error
     try {
         if (auto author_id = SelectAuthor()) {
             PrintVector(output_, GetAuthorBooks(*author_id));
@@ -102,7 +124,6 @@ bool View::ShowAuthorBooks() const {
 
 std::optional<detail::AddBookParams> View::GetBookParams(std::istream& cmd_input) const {
     detail::AddBookParams params;
-
     cmd_input >> params.publication_year;
     std::getline(cmd_input, params.title);
     boost::algorithm::trim(params.title);
@@ -122,24 +143,20 @@ std::optional<std::string> View::SelectAuthor() const {
     auto authors = GetAuthors();
     PrintVector(output_, authors);
     output_ << "Enter author # or empty line to cancel" << std::endl;
-
     std::string str;
     if (!std::getline(input_, str) || str.empty()) {
         return std::nullopt;
     }
-
     int author_idx;
     try {
         author_idx = std::stoi(str);
     } catch (std::exception const&) {
         throw std::runtime_error("Invalid author num");
     }
-
     --author_idx;
     if (author_idx < 0 or author_idx >= authors.size()) {
         throw std::runtime_error("Invalid author num");
     }
-
     return authors[author_idx].id;
 }
 

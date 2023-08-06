@@ -16,6 +16,7 @@ public:
     void Save(const domain::Author& author) override;
     void GetAuthors(domain::Authors &autors) override;
     domain::AuthorId GetAuthorId(const std::string& name) override;
+    void DeleteAuthor(const domain::AuthorId& author_id) override;
 
 private:
     pqxx::connection& connection_;

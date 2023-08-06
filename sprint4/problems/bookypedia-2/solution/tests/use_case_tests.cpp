@@ -25,6 +25,13 @@ struct MockAuthorRepository : domain::AuthorRepository {
         }
         return {};
     }
+    void DeleteAuthor(const domain::AuthorId& author_id) override {
+        for (auto it = saved_authors.begin(); it != saved_authors.end(); ++it)
+            if (it->GetId() == author_id) {
+                saved_authors.erase(it);
+                break;
+            }
+    }
 };
 
 struct MockBookRepository : domain::BookRepository {

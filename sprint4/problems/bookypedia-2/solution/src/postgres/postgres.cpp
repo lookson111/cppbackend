@@ -45,6 +45,32 @@ domain::AuthorId AuthorRepositoryImpl::GetAuthorId(const std::string& name){
     return domain::AuthorId::FromString(author_id);
 }
 
+void AuthorRepositoryImpl::DeleteAuthor(const domain::AuthorId& author_id) {
+    pqxx::work work{connection_};
+    // get book list
+    std::string author = author_id.ToString();
+    auto query_text = "SELECT id FROM books "
+        "WHERE author_id=" + work.quote(author) + ";";
+    auto books =  work.query<std::string>(query_text);
+    // delete tags and books
+    for (auto &[book] : books) { 
+        work.exec_params(
+            R"(DELETE FROM book_tags WHERE book_id=$1;)"_zv,
+            book
+        );
+    }
+    work.exec_params(
+        R"(DELETE FROM books WHERE author_id=$1;)"_zv,
+        author
+    );
+    // delete authors
+    work.exec_params(
+        R"(DELETE FROM authors WHERE id=$1;)"_zv,
+        author
+    );
+    work.commit();
+}
+
 void BookRepositoryImpl::Save(const domain::Book& book) {
     pqxx::work work{connection_};
     work.exec_params(

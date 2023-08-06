@@ -56,6 +56,7 @@ public:
     virtual void Save(const Book& book) = 0;
     virtual Books GetAuthorBooks(const AuthorId& author_id) = 0;
     virtual Books GetBooks() = 0;
+    //virtual void DeleteBooks(const AuthorId& author_id) = 0;
 
 protected:
     ~BookRepository() = default;
