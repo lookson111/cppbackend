@@ -25,6 +25,17 @@ add_library(collision_detection_lib STATIC
 )
 target_link_libraries(collision_detection_lib PUBLIC CONAN_PKG::boost Threads::Threads)
 
+add_library(posgres_sql_lib STATIC
+    src/db/posgres.h
+    src/db/posgres.cpp
+	src/db/dog.h
+	src/db/dog.cpp
+	src/db/use_cases.h
+	src/db/use_cases_impl.h
+	src/db/use_cases_impl.cpp
+)
+target_link_libraries(posgres_sql_lib PUBLIC ${BOOST_LIB} ${ZLIB_LIB} CONAN_PKG::libpq CONAN_PKG::libpqxx)
+
 # Добавляем библиотеку, указывая, что она статическая.
 add_library(ModelLib STATIC     
 	src/model/model.h

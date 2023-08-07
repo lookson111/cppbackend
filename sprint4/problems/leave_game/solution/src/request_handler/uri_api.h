@@ -20,6 +20,19 @@ using FunctionWithAuthorize = std::function<http_handler::StringResponse(const s
 using FunctionWithoutAuthorize = std::function<http_handler::StringResponse(std::string_view body)>;
 using FunctionTargetProcessing = std::function<http_handler::StringResponse(std::string_view target, std::string_view body)>;
 
+template <typename Fn, typename Body, typename Allocator>
+http_handler::StringResponse ExecuteAuthorized(const boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>& req, Fn&& action) 
+{ 
+    if (auto token = ExtractTokenFromStringViewAndCheckIt(req.base()[boost::beast::http::field::authorization])) 
+    {
+        return action(*token, req.body());
+    }
+    else 
+    {
+        return http_handler::Response::MakeUnauthorizedErrorInvalidToken();
+    }
+}
+
 class UriElement
 {
     struct AllowedMethods
