@@ -180,6 +180,8 @@ domain::Book BookRepositoryImpl::GetBook(const domain::BookId& book_id) {
         "WHERE b.id=" + r.quote(book_id.ToString()) + " " 
         "ORDER BY b_title ASC, a_name ASC, b_year DESC;";
     domain::Books books = ConvertResponseToBooks(r.query<o_str, o_str, o_str, o_str, o_int>(query_text));
+    if (books.size() != 1)
+        throw std::logic_error("Book not found");
     domain::Book book = books.front();
     auto query_tag = "SELECT tag FROM book_tags "
         "WHERE book_id=" + r.quote(book_id.ToString()) + " " 

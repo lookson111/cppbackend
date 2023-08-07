@@ -199,9 +199,10 @@ bool View::DeleteBook(std::istream& cmd_input) const {
         use_cases_.DeleteBook(book_id);
     }
     catch (const std::logic_error& le) {
-        throw;
-    } catch (const std::exception&) {
-        throw std::runtime_error("Failed to delete book");
+        //throw;
+    } catch (const std::exception& ex) {
+        if (std::string(ex.what()) != "Bad book #"s)
+            throw std::runtime_error("Failed to delete book");
     }
     return true;
 }
@@ -226,13 +227,17 @@ bool View::EditBook(std::istream& cmd_input) const {
             book.publication_year = std::stoi(str);
         output_ <<  "Enter tags (current tags: " << detail::TagsToString(book.tags)
             << "):" << std::endl ;
-        if (auto tags = GetBookTags(); !tags.empty())
+        if (auto tags = GetBookTags(); true)//tags.empty())
             book.tags = tags;
         use_cases_.EditBook(book);
     }
     catch (const std::logic_error& le) {
+        //std::cout << "here 1" << le.what() << std::endl;
         throw;
-    } catch (const std::exception&) {
+    } catch (const std::exception& ex) {
+        //std::cout << "here 2" << ex.what() << std::endl;
+        if (std::string(ex.what()) == "Bad book #"s)
+            throw std::runtime_error("Book not found");
     }
     return true;
 }
