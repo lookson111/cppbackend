@@ -113,7 +113,7 @@ Dog* GameSession::AddDog(std::string_view nick_name) {
     if (randomize_spawn_points_)
         coord = GetRandomRoadCoord();
     auto dog_id = GetNextDogId();
-    Dog dog = Dog(dog_id, nick_name, coord);
+    Dog dog = Dog(dog_id, nick_name.data(), coord);
     MoveDogToContainerAndIndexing(std::move(dog));
     loots_.push_back(std::move(Loot{
         .id = GetNextLootId(),

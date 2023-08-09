@@ -8,7 +8,7 @@
 
 #include "defs.h"
 #include "response.h"
-#include "../token.h"
+#include "../util/token.h"
 #include "../http_server.h"
 
 namespace uri_api
@@ -21,22 +21,16 @@ using FunctionWithoutAuthorize = std::function<http_handler::StringResponse(std:
 using FunctionTargetProcessing = std::function<http_handler::StringResponse(std::string_view target, std::string_view body)>;
 
 template <typename Fn, typename Body, typename Allocator>
-http_handler::StringResponse ExecuteAuthorized(const boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>& req, Fn&& action) 
-{ 
-    if (auto token = ExtractTokenFromStringViewAndCheckIt(req.base()[boost::beast::http::field::authorization])) 
-    {
+http_handler::StringResponse ExecuteAuthorized(const http::request<Body, http::basic_fields<Allocator>>& req, Fn&& action) { 
+    if (auto token = security::ExtractTokenFromStringViewAndCheckIt(req.base()[http::field::authorization])) {
         return action(*token, req.body());
-    }
-    else 
-    {
+    } else {
         return http_handler::Response::MakeUnauthorizedErrorInvalidToken();
     }
 }
 
-class UriElement
-{
-    struct AllowedMethods
-    {
+class UriElement {
+    struct AllowedMethods {
         std::vector<http::verb> data_;
         std::string_view error_;
         std::string_view allowed_;
@@ -48,24 +42,21 @@ class UriElement
         {};
     };
 
-    struct AuthorizeData
-    {
+    struct AuthorizeData {
         bool need_;
         AuthorizeData()
         : need_(false)
         {};
     };
 
-    struct TargetProcessing
-    {
+    struct TargetProcessing {
         bool need_;
         TargetProcessing()
             : need_(false)
         {};
     };
 
-    struct ContentType
-    {
+    struct ContentType {
         bool need_to_check_;
         std::string_view value_;
         std::string_view error_;
@@ -81,8 +72,7 @@ public:
     , content_type_()
     , target_processing_()
     {};
-    UriElement& SetAllowedMethods(std::vector<http::verb> methods, std::string_view method_error_message, std::string_view allowed_methods)
-    {
+    UriElement& SetAllowedMethods(std::vector<http::verb> methods, std::string_view method_error_message, std::string_view allowed_methods) {
         methods_.data_ = std::move(methods);
         methods_.error_ = method_error_message;
         methods_.allowed_ = allowed_methods;
@@ -90,35 +80,32 @@ public:
         return *this;
     }
 
-    UriElement& SetNeedAuthorization(bool need_authorize_)
-    {
+    UriElement& SetNeedAuthorization(bool need_authorize_) {
         authorize_.need_ = need_authorize_;
         return *this;
     }
 
-    UriElement& SetNeedTargetProcessing(bool need_target_processing_)
-    {
+    UriElement& SetNeedTargetProcessing(bool need_target_processing_) {
         target_processing_.need_ = need_target_processing_;
         return *this;
     }
 
-    UriElement& SetProcessFunction(FunctionWithAuthorize f)
-    {
+    UriElement& SetProcessFunction(FunctionWithAuthorize f) {
         process_function_ = std::move(f);
         return *this;
     }
-    UriElement& SetProcessFunction(FunctionWithoutAuthorize f)
-    {
+
+    UriElement& SetProcessFunction(FunctionWithoutAuthorize f) {
         process_function_without_authorize_ = std::move(f);
         return *this;
     }
-    UriElement& SetProcessFunction(FunctionTargetProcessing f)
-    {
+
+    UriElement& SetProcessFunction(FunctionTargetProcessing f) {
         process_function_target_processing_ = std::move(f);
         return *this;
     }
-    UriElement& SetContentType(std::string_view type, std::string_view error_message)
-    {
+
+    UriElement& SetContentType(std::string_view type, std::string_view error_message) {
         content_type_.need_to_check_ = true;
         content_type_.value_ = type;
         content_type_.error_ = error_message;
@@ -126,8 +113,7 @@ public:
     }
 
     template <typename Body, typename Allocator>
-    http_handler::StringResponse ProcessRequest(const http::request<Body, http::basic_fields<Allocator>>& req)
-    {
+    http_handler::StringResponse ProcessRequest(const http::request<Body, http::basic_fields<Allocator>>& req) {
         if( methods_.data_.empty() || std::find(methods_.data_.begin(), 
             methods_.data_.end(), req.method()) != methods_.data_.end()) {
             //Check content type if necessary
@@ -137,7 +123,7 @@ public:
             }
             //Check authorization if necessary and call necessary processing function
             if(authorize_.need_) {
-                return security::ExecuteAuthorized(req, [&](const security::Token& token, std::string_view body){
+                return ExecuteAuthorized(req, [&](const security::Token& token, std::string_view body){
                     return process_function_(token, body);
                 }); 
             }
@@ -162,26 +148,22 @@ private:
     FunctionTargetProcessing process_function_target_processing_;
 };
 
-class UriData
-{
+class UriData {
 public:
     UriData() = default;
-    UriElement* AddEndpoint(std::string_view uri)
-    {
+    UriElement* AddEndpoint(std::string_view uri) {
         auto [it, ret] = data_.try_emplace(std::string(uri));
         return &it->second;
     }
     template <typename Body, typename Allocator>
-    http_handler::StringResponse Process(const http::request<Body, http::basic_fields<Allocator>>& req)
-    {
+    http_handler::StringResponse Process(const http::request<Body, http::basic_fields<Allocator>>& req) {
         std::string target = http_server::uriDecode(req.target());
         auto stop = target.find('?');
         target = std::string(target.substr(0, stop));
         if (target.find(Endpoint::MAPS) == 0)
             target = std::string{ Endpoint::MAPS };
         auto it = data_.find(target);
-        if(it != data_.end())
-        {
+        if(it != data_.end()) {
             return it->second.ProcessRequest(req);
         }
         return http_handler::Response::MakeJSON(http::status::bad_request, ErrorCode::BAD_REQUEST, ErrorMessage::INVALID_ENDPOINT);

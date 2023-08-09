@@ -2,22 +2,18 @@
 #include <pqxx/connection>
 #include <pqxx/transaction>
 
-#include "../domain/book.h"
-#include "../domain/book_tags.h"
+#include "player_repository.h"
 
 namespace postgres {
 
-class DogRepositoryImpl : public domain::DogRepository {
+class RetiredPlayerRepositoryImpl : public app::RetiredPlayerRepository {
 public:
-    explicit DogRepositoryImpl(pqxx::connection& connection)
+    explicit RetiredPlayerRepositoryImpl(pqxx::connection& connection)
         : connection_{connection} {
     }
 
-    void Save(const domain::Dog& dog) override;
-    void GetDogs(domain::Dogs &autors) override;
-    domain::DogId GetDogId(const std::string& name) override;
-    void DeleteDog(const domain::DogId& dog_id) override;
-    void EditDog(const domain::Dog& dog) override;
+    void Save(const app::RetiredPlayer& retired_player) override;
+    void GetRetiredPlayers(app::RetiredPlayers & retired_players) override;
 
 private:
     pqxx::connection& connection_;
@@ -28,13 +24,13 @@ class Database {
 public:
     explicit Database(pqxx::connection connection);
 
-    DogRepositoryImpl& GetDogs() & {
-        return dogs_;
+    RetiredPlayerRepositoryImpl& GetDogs() & {
+        return retired_players_;
     }
 
 private:
     pqxx::connection connection_;
-    DogRepositoryImpl dogs_{connection_};
+    RetiredPlayerRepositoryImpl retired_players_{connection_};
 };
 
 }  // namespace postgres

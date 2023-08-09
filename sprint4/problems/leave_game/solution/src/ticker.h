@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/asio/strand.hpp>
+#include <boost/asio.hpp>
 #include <chrono>
 
 namespace ticker {

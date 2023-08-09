@@ -12,32 +12,32 @@ add_definitions(-DBOOST_BEAST_USE_STD_STRING_VIEW)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-
-
 set(BOOST_LIB CONAN_PKG::boost)
 set(ZLIB_LIB Threads::Threads)
 set(CATCH2LIB CONAN_PKG::catch2)
-
 
 add_library(collision_detection_lib STATIC
     src/model/collision_detector.h
     src/model/collision_detector.cpp
 )
-target_link_libraries(collision_detection_lib PUBLIC CONAN_PKG::boost Threads::Threads)
-
-add_library(posgres_sql_lib STATIC
-    src/db/posgres.h
-    src/db/posgres.cpp
-	src/db/dog.h
-	src/db/dog.cpp
-	src/db/use_cases.h
-	src/db/use_cases_impl.h
-	src/db/use_cases_impl.cpp
+target_link_libraries(collision_detection_lib PUBLIC 
+	${BOOST_LIB} 
+	${ZLIB_LIB} 
 )
-target_link_libraries(posgres_sql_lib PUBLIC ${BOOST_LIB} ${ZLIB_LIB} CONAN_PKG::libpq CONAN_PKG::libpqxx)
+
+add_library(util_lib STATIC
+    src/util/tagged.h
+    src/util/token.h
+    src/util/tagged_uuid.h
+    src/util/tagged_uuid.cpp
+)
+target_link_libraries(util_lib PUBLIC 
+	${BOOST_LIB} 
+	${ZLIB_LIB} 
+)
 
 # Добавляем библиотеку, указывая, что она статическая.
-add_library(ModelLib STATIC     
+add_library(model_lib STATIC     
 	src/model/model.h
     src/model/model.cpp
     src/model/dog.h
@@ -47,14 +47,34 @@ add_library(ModelLib STATIC
     src/model/loot_generator.h
     src/model/loot_generator.cpp
     src/model/geom.h
-    src/tagged.h
 	src/sdk.h
 )
 
 # Добавляем сторонние библиотеки. Указываем видимость PUBLIC, т. к. 
-# они должны быть ввидны и в библиотеке ModelLib и в зависимостях.
-target_include_directories(ModelLib PUBLIC ${BOOST_LIB})
-target_link_libraries(ModelLib PUBLIC ${BOOST_LIB} ${ZLIB_LIB} collision_detection_lib)
+# они должны быть ввидны и в библиотеке model_lib и в зависимостях.
+target_include_directories(model_lib PUBLIC ${BOOST_LIB})
+target_link_libraries(model_lib PUBLIC 
+	${BOOST_LIB} 
+	${ZLIB_LIB} 
+	collision_detection_lib
+)
+
+add_library(posgres_sql_lib STATIC
+	src/player.h
+	src/player.cpp
+    src/db/postgres.h
+    src/db/postgres.cpp
+	src/db/player_repository.h
+	src/db/player_repository.cpp
+	src/db/pool_connection.h
+	src/db/pool_connection.cpp
+)
+target_link_libraries(posgres_sql_lib PUBLIC 
+	${BOOST_LIB} 
+	${ZLIB_LIB}
+	CONAN_PKG::libpq 
+	CONAN_PKG::libpqxx
+)
 
 
 add_executable(game_server
@@ -62,7 +82,6 @@ add_executable(game_server
 	src/http_server.cpp
 	src/http_server.h
 	src/sdk.h
-	src/tagged.h
 	src/json_loader.h
 	src/json_loader.cpp
 	src/request_handler/request_handler.cpp
@@ -81,15 +100,21 @@ add_executable(game_server
 	src/infrastructure/app_serialization.h
 	src/infrastructure/infrastructure.h
 	src/infrastructure/infrastructure.cpp
-	src/log.cpp
 	src/log.h
-	src/app.cpp
+	src/log.cpp
 	src/app.h
-	src/token.h
+	src/app.cpp
+	src/player.h
+	src/player.cpp
 	src/ticker.h
 )
 
-target_link_libraries(game_server PRIVATE ${BOOST_LIB} ${ZLIB_LIB} ModelLib) 
+target_link_libraries(game_server PRIVATE 
+	${BOOST_LIB} 
+	${ZLIB_LIB} 
+	model_lib
+	posgres_sql_lib
+) 
 
 add_executable(game_server_tests
     tests/model_tests.cpp
@@ -100,8 +125,16 @@ add_executable(game_server_tests
 	../src/json_loader.cpp
 	../src/app.cpp
 	../src/app.h
+	../src/player.cpp
+	../src/player.h
 )
 
-target_link_libraries(game_server_tests PRIVATE ${CATCH2LIB} ${BOOST_LIB} ${ZLIB_LIB} ModelLib collision_detection_lib) 
+target_link_libraries(game_server_tests PRIVATE 
+	${CATCH2LIB} 
+	${BOOST_LIB} 
+	${ZLIB_LIB} 
+	model_lib 
+	collision_detection_lib
+) 
 
 #catch_discover_tests(game_server_tests)

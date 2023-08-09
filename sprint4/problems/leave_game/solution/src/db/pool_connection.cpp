@@ -1,6 +1,6 @@
 #include "pool_connection.h"
 
-ConnectionWrapper ConnectionPool::GetConnection() {
+ConnectionPool::ConnectionWrapper ConnectionPool::GetConnection() {
 	std::unique_lock lock{mutex_};
 	// Блокируем текущий поток и ждём, пока cond_var_ не получит уведомление и не освободится
 	// хотя бы одно соединение

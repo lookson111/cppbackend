@@ -8,7 +8,7 @@
 #include <map>
 #include <memory>
 #include <chrono>
-#include "../tagged.h"
+#include "../util/tagged_uuid.h"
 #include "geom.h"
 
 namespace model {
@@ -49,9 +49,9 @@ class Dog {
 public:
     using Id = util::Tagged<uint64_t, Dog>;
 
-    Dog(Id id, std::string_view nickname, const Point2D& coord) :
-        nickname_(nickname.data(), nickname.size()), id_(id),
-        coord_(coord){
+    Dog(Id id, std::string nickname, Point2D coord) :
+        nickname_(std::move(nickname)), id_(std::move(id)),
+        coord_(std::move(coord)){
     }
     Dog(const Dog& other) 
         : id_(other.id_)

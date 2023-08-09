@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/uuid/nil_generator.hpp>
 #include <boost/uuid/uuid.hpp>
+#include <boost/functional/hash.hpp>
 #include <string>
 
 #include "tagged.h"
