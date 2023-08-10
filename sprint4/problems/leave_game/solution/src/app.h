@@ -53,8 +53,8 @@ public:
         : game_{ game } {
     }
     model::Game& GetGameModel();
-    void SetLastPlayerId(Player::Id id);
-    Player::Id GetLastPlayerId() const;
+    void SetLastPlayerId(PlayerId id);
+    PlayerId GetLastPlayerId() const;
     const Players& GetPlayers() const;
     const PlayerTokens& GetPlayerTokens() const;
     Players& EditPlayers();
@@ -78,7 +78,6 @@ private:
     model::Game& game_;
     Players players_;
     PlayerTokens player_tokens_;
-    Player::Id last_player_id_{0};
     Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
     auto GetJsonDogBag(const model::Dog& dog) const;

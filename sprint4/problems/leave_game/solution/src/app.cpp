@@ -102,14 +102,6 @@ model::Game& App::GetGameModel() {
     return game_;
 }
 
-void App::SetLastPlayerId(Player::Id last_id) {
-    last_player_id_ = last_id;
-}
-
-Player::Id App::GetLastPlayerId() const {
-    return last_player_id_;
-}
-
 const Players& App::GetPlayers() const {
     return players_;
 }
@@ -182,11 +174,9 @@ App::ResponseJoin(std::string_view jsonBody) {
             JoinError::MapNotFound
         );
     js::object msg;
-    std::string token;
-    uint64_t id;
     auto player = GetPlayer(userName, mapId);
-    token = *player_tokens_.AddPlayer(player);
-    id = *player->GetId();
+    std::string token = *player_tokens_.AddPlayer(player);
+    std::string id = player->GetId().ToString();
     msg["authToken"] = token;
     msg["playerId"]  = id;
     return std::make_pair(
@@ -342,10 +332,8 @@ Player* App::GetPlayer(std::string_view nickName, std::string_view mapId) {
     if (session == nullptr)
         session = game_.AddGameSession(map_id);
     model::Dog* dog = session->AddDog(nickName);
-    auto player = players_.Add(last_player_id_, dog, session);
-    (*last_player_id_)++;
+    auto player = players_.Add(app::PlayerId::New(), dog, session);
     return player;
 }
-
 
 };

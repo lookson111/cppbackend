@@ -73,7 +73,7 @@ std::string PlayerTokens::ToHex(uint64_t n) const {
 Player* Players::PushPlayer(PlayerContainer&& player) {
     const size_t index = players_.size();
     if (auto [it, inserted] = player_id_to_index_.emplace(player->GetId(), index); !inserted) {
-        throw std::invalid_argument("Player with id "s + std::to_string(*player->GetId()) + " already exists"s);
+        throw std::invalid_argument("Player with id "s + player->GetId().ToString() + " already exists"s);
     }
     else {
         try {
@@ -87,7 +87,7 @@ Player* Players::PushPlayer(PlayerContainer&& player) {
     return players_.back().get();
 }
 
-Player* Players::Add(Player::Id player_id, model::Dog* dog, model::GameSession* session) {
+Player* Players::Add(PlayerId player_id, model::Dog* dog, model::GameSession* session) {
     std::unique_ptr<Player> player = std::make_unique<Player>(player_id, session, dog);
     return PushPlayer(std::move(player));
 }
@@ -96,7 +96,7 @@ void Players::Add(PlayerContainer&& player) {
     PushPlayer(std::move(player));
 }
 
-Player* Players::FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcept {
+Player* Players::FindPlayer(PlayerId player_id, model::Map::Id map_id) noexcept {
     if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
         auto pl = players_.at(it->second).get();
         if (pl->MapId() == map_id)
@@ -104,7 +104,7 @@ Player* Players::FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcep
     }
     return nullptr;
 }
-const Player::Id* Players::FindPlayerId(std::string_view player_name) const noexcept {
+const PlayerId* Players::FindPlayerId(std::string_view player_name) const noexcept {
     for (const auto& player : players_) {
         if (player->GetName() == player_name) {
             return &player->GetId();
@@ -113,7 +113,7 @@ const Player::Id* Players::FindPlayerId(std::string_view player_name) const noex
     return nullptr;
 }
 
-Player* Players::FindPlayer(Player::Id player_id) const noexcept {
+Player* Players::FindPlayer(const PlayerId& player_id) const noexcept {
     if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
         auto pl = players_.at(it->second).get();
         return pl;

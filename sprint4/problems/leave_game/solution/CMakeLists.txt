@@ -72,10 +72,10 @@ add_library(posgres_sql_lib STATIC
 target_link_libraries(posgres_sql_lib PUBLIC 
 	${BOOST_LIB} 
 	${ZLIB_LIB}
+	util_lib
 	CONAN_PKG::libpq 
 	CONAN_PKG::libpqxx
 )
-
 
 add_executable(game_server
 	src/main.cpp
@@ -133,6 +133,7 @@ target_link_libraries(game_server_tests PRIVATE
 	${CATCH2LIB} 
 	${BOOST_LIB} 
 	${ZLIB_LIB} 
+	util_lib
 	model_lib 
 	collision_detection_lib
 ) 

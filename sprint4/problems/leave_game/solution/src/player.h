@@ -6,6 +6,7 @@
 #include <random>
 #include "model/model.h"
 #include "util/token.h"
+#include "util/tagged_uuid.h"
 #include "ticker.h"
 
 namespace app {
@@ -15,13 +16,19 @@ namespace sys = boost::system;
 using milliseconds = std::chrono::milliseconds;
 using Token = security::Token;
 
+namespace detail {
+    struct PlayerTag {};
+}  // namespace detail
+
+using PlayerId = util::TaggedUUID<detail::PlayerTag>;
+
 class Player {
 public:
-    using Id = util::Tagged<uint64_t, Player>;
+    //using Id = util::Tagged<uint64_t, Player>;
     Player() = default;
-    Player(Id id, model::GameSession* session, model::Dog* dog) : 
+    Player(PlayerId id, model::GameSession* session, model::Dog* dog) :
         session_(session), dog_(dog), id_(id) {}
-    const Id& GetId() const {
+    const PlayerId& GetId() const {
         return id_;
     }
     const model::Map::Id& MapId() const {
@@ -44,7 +51,7 @@ public:
         id_ = std::move(id_);
         session_ = other.session_;
         dog_ = other.dog_;
-    }    
+    }
     Player& operator=(const Player& other) {
         if (this == &other)
             return *this;
@@ -54,11 +61,22 @@ public:
         return *this;
     }
 private:
-    Id id_{0};
+    PlayerId id_;
     model::GameSession* session_ = nullptr;
     model::Dog* dog_ = nullptr;
 };
+} // namespace app
 
+namespace util {
+template<>
+struct TaggedHasher<app::PlayerId> {
+    size_t operator () (const app::PlayerId& value) const {
+        return boost::hash<typename app::PlayerId::ValueType>()(*value);
+    }
+};
+}
+
+namespace app {
 class PlayerTokens {
 public:
     using TokenToPlayerContainer = std::unordered_map<Token, Player*,
@@ -98,16 +116,16 @@ class Players {
 public:
     using PlayerContainer = std::shared_ptr<Player>;
     using PlayersContainer = std::deque<PlayerContainer>;
-    Player* Add(Player::Id player_id, model::Dog *dog, model::GameSession *session);
+    Player* Add(PlayerId player_id, model::Dog *dog, model::GameSession *session);
     void Add(PlayerContainer&& player);
-    Player* FindPlayer(Player::Id player_id, model::Map::Id map_id) noexcept;
-    const Player::Id* FindPlayerId(std::string_view player_name) const noexcept;
-    Player* FindPlayer(Player::Id player_id) const noexcept;
+    Player* FindPlayer(PlayerId player_id, model::Map::Id map_id) noexcept;
+    const PlayerId* FindPlayerId(std::string_view player_name) const noexcept;
+    Player* FindPlayer(const PlayerId& player_id) const noexcept;
     const PlayersContainer& GetPlayers() const;
     
 private:
-    using PlayerIdHasher = util::TaggedHasher<Player::Id>;
-    using PlayerIdToIndex = std::unordered_map<Player::Id, size_t, PlayerIdHasher>;
+    using PlayerIdHasher = util::TaggedHasher<PlayerId>;
+    using PlayerIdToIndex = std::unordered_map<PlayerId, size_t, PlayerIdHasher>;
     PlayersContainer players_;
     PlayerIdToIndex player_id_to_index_;
     Player* PushPlayer(PlayerContainer&& player);
@@ -115,21 +133,31 @@ private:
 
 class RetiredPlayer {
 public:
-    std::string GetId() const {
-        return "";
+    RetiredPlayer(PlayerId id, std::string name, model::Score score, milliseconds play_time)
+        : id_(std::move(id))
+        , name_(std::move(name))
+        , score_(score)
+        , play_time_(play_time) {
     }
-    std::string GetName() const {
-        return "";
+    const PlayerId& GetId() const {
+        return id_;
+    }
+    const std::string& GetName() const {
+        return name_;
     }
     model::Score GetScore() const {
-        return 0;
+        return score_;
     }
-    unsigned GetPlayTime() const {
-        return 0;
+    const milliseconds& GetPlayTime() const {
+        return play_time_;
     }
 
 private:
-
+    PlayerId id_;
+    std::string name_;
+    model::Score score_;
+    milliseconds play_time_;
+    
 };
 using RetiredPlayers = std::vector<RetiredPlayer>;
 

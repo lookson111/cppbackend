@@ -8,7 +8,7 @@
 namespace app {
 
     template <typename Archive>
-    void serialize(Archive& ar, Player::Id& player, [[maybe_unused]] const unsigned version) {
+    void serialize(Archive& ar, PlayerId& player, [[maybe_unused]] const unsigned version) {
         ar& (*player);
     }
 } // namespace app
@@ -20,7 +20,7 @@ public:
     PlayerRepr() = default;
 
     explicit PlayerRepr(const app::Player* player)
-        : player_id_(player->GetId())
+        : player_id_(player->GetId().ToString())
         , game_session_id_(player->GetSession()->MapId())
         , dog_id_(player->GetDog()->GetId())
     {        
@@ -29,7 +29,7 @@ public:
     void Restore(app::App& app) const {
         model::GameSession* session = app.GetGameModel().FindGameSession(game_session_id_);
         model::Dog* dog = session->FindDog(dog_id_);
-        app.EditPlayers().Add(player_id_, dog, session);
+        app.EditPlayers().Add(app::PlayerId::FromString(player_id_), dog, session);
     }
 
     template <typename Archive>
@@ -40,7 +40,7 @@ public:
     }
 
 private:
-    app::Player::Id player_id_{0};
+    std::string player_id_;
     model::Map::Id game_session_id_{""};
     model::Dog::Id dog_id_{0};
 };
@@ -76,14 +76,14 @@ public:
     explicit PlayerTokensRepr(const app::PlayerTokens& player_tokens)
     {
         for (auto &player_token : player_tokens.GetTokens()) {
-            player_tokens_[*player_token.first] = *player_token.second->GetId();
+            player_tokens_[*player_token.first] = player_token.second->GetId().ToString();
         }
     }
 
     void Restore(app::App& app) const {
         for (auto &player_token : player_tokens_) {
             app.EditPlayerTokens().AddToken(security::Token{ player_token.first },
-                app.EditPlayers().FindPlayer(app::Player::Id{ player_token.second}));
+                app.EditPlayers().FindPlayer(app::PlayerId::FromString(player_token.second)));
         }
     }
 
@@ -93,7 +93,7 @@ public:
     }
 
 private:
-    std::map<std::string, uint64_t> player_tokens_;
+    std::map<std::string, std::string> player_tokens_;
 };
 
 class AppRepr {
@@ -104,7 +104,6 @@ public:
         : game_repr_(app.GetGameModel())
         , players_repr_(app.GetPlayers())
         , player_tokens_repr_(app.GetPlayerTokens()) 
-        , last_player_id_(app.GetLastPlayerId())
     {
     }
 
@@ -112,7 +111,6 @@ public:
         game_repr_.Restore(app.GetGameModel());
         players_repr_.Restore(app);
         player_tokens_repr_.Restore(app);
-        app.SetLastPlayerId(last_player_id_);
     }
 
     template <typename Archive>
@@ -120,14 +118,12 @@ public:
         ar& game_repr_;
         ar& players_repr_;
         ar& player_tokens_repr_;
-        ar& last_player_id_;
     }
 
 private:
     GameRepr game_repr_;
     PlayersRepr players_repr_;
     PlayerTokensRepr player_tokens_repr_;
-    app::Player::Id last_player_id_{0};
 };
 
 }  // namespace serialization
