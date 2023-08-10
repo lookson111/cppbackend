@@ -69,7 +69,7 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
         }();
 		auto game_a =
 			json_loader::LoadGame("../tests/config_test.json"sv);
-        app::App t_app{ *game_a };
+        app::App t_app{*game_a, {""}};
         app::PlayerTokens &tokens = t_app.EditPlayerTokens();
         app::Players &players = t_app.EditPlayers();
 
@@ -135,7 +135,7 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
     AND_GIVEN("app") {
 		auto game_a =
 			json_loader::LoadGame("../tests/config_test.json"sv);
-        App t_app{ *game_a };
+        App t_app{ *game_a, {""}};
         PlayerTokens &tokens = t_app.EditPlayerTokens();
         Players &players = t_app.EditPlayers();
         WHEN("dog is serialized") {
@@ -150,7 +150,7 @@ SCENARIO_METHOD(Fixture, "Dog Serialization") {
                 input_archive >> repr;
                 auto game_r =
                     json_loader::LoadGame("../tests/config_test.json"sv);
-                App app_r{ *game_r };
+                App app_r{*game_r, {""}};
                 repr.Restore(app_r);
                 CHECK(t_app.EditPlayerTokens().GetTokens().size() == app_r.EditPlayerTokens().GetTokens().size());
             }

@@ -56,6 +56,7 @@ target_include_directories(model_lib PUBLIC ${BOOST_LIB})
 target_link_libraries(model_lib PUBLIC 
 	${BOOST_LIB} 
 	${ZLIB_LIB} 
+	util_lib
 	collision_detection_lib
 )
 
@@ -72,9 +73,9 @@ add_library(posgres_sql_lib STATIC
 target_link_libraries(posgres_sql_lib PUBLIC 
 	${BOOST_LIB} 
 	${ZLIB_LIB}
-	util_lib
 	CONAN_PKG::libpq 
 	CONAN_PKG::libpqxx
+	util_lib
 )
 
 add_executable(game_server
@@ -133,9 +134,8 @@ target_link_libraries(game_server_tests PRIVATE
 	${CATCH2LIB} 
 	${BOOST_LIB} 
 	${ZLIB_LIB} 
-	util_lib
 	model_lib 
-	collision_detection_lib
+	posgres_sql_lib
 ) 
 
 #catch_discover_tests(game_server_tests)

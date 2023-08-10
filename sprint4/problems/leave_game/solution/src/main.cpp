@@ -31,6 +31,18 @@ void RunThreads(unsigned number_of_threads, const Fn& fn) {
     }
     fn();
 }
+constexpr const char DB_URL_ENV_NAME[]{ "GAME_DB_URL" };
+
+app::AppConfig GetConfigFromEnv() {
+    app::AppConfig config;
+    if (const auto* url = std::getenv(DB_URL_ENV_NAME)) {
+        config.db_url = url;
+    }
+    else {
+        throw std::runtime_error(DB_URL_ENV_NAME + " environment variable not found"s);
+    }
+    return config;
+}
 
 struct Args {
     std::vector<std::string> source;
@@ -124,7 +136,7 @@ int main(int argc, const char* argv[]) {
         std::unique_ptr<model::Game> game = json_loader::LoadGame(args.config_file);
         game->SetRandomizeSpawnPoints(args.randomize_spawn_points);
         // 1. Инициализаруем аппу
-        auto app = std::make_shared<app::App>(*game);
+        auto app = std::make_shared<app::App>(*game, GetConfigFromEnv());
         // 1.a добавляем инфраструктрурные методы
         infrastructure::SerializingListiner ser_listiner(app, args.state_file, args.save_state_period);
         try {
@@ -134,7 +146,7 @@ int main(int argc, const char* argv[]) {
             auto gamer = json_loader::LoadGame(args.config_file);
             game.swap(gamer);
             game->SetRandomizeSpawnPoints(args.randomize_spawn_points);
-            app.reset(new app::App(*game));
+            app.reset(new app::App(*game, GetConfigFromEnv()));
         }
         auto conn = game->DoOnTick([&ser_listiner] (std::chrono::milliseconds delta) mutable {
             ser_listiner.OnTick(delta);

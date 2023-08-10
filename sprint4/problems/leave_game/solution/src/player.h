@@ -157,7 +157,6 @@ private:
     std::string name_;
     model::Score score_;
     milliseconds play_time_;
-    
 };
 using RetiredPlayers = std::vector<RetiredPlayer>;
 

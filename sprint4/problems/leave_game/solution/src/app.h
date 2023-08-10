@@ -8,6 +8,7 @@
 #include "util/token.h"
 #include "ticker.h"
 #include "player.h"
+#include "db/postgres.h"
 
 namespace app {
 namespace js = boost::json;
@@ -27,6 +28,10 @@ enum class error_code {
     InvalidToken,
     UnknownToken,
     InvalidArgument
+};
+
+struct AppConfig {
+    std::string db_url;
 };
 
 class ModelToJson {
@@ -49,8 +54,9 @@ std::string JsonMessage(std::string_view code, std::string_view message);
 class App
 {
 public:
-    explicit App(model::Game& game)
-        : game_{ game } {
+    explicit App(model::Game& game, const AppConfig& config)
+        : game_{ game }
+        , db_{ pqxx::connection{config.db_url} } {
     }
     model::Game& GetGameModel();
     void SetLastPlayerId(PlayerId id);
@@ -80,6 +86,7 @@ private:
     Players players_;
     PlayerTokens player_tokens_;
     RetiredPlayers retired_players_;
+    postgres::Database db_;
     Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
     auto GetJsonDogBag(const model::Dog& dog) const;
