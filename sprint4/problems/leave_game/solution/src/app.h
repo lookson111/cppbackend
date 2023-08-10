@@ -68,6 +68,7 @@ public:
     std::pair<std::string, error_code> GetPlayers(const Token& token) const;
     std::pair<std::string, error_code> GetState(const Token& token) const;
     std::pair<std::string, error_code> CheckToken(const Token& token) const;
+    std::pair<std::string, error_code> GetRecords(int start, int max_items) const;
     /*App(const App& other) {
         game_ = other.game_;
         players_ = other.players_;
@@ -78,6 +79,7 @@ private:
     model::Game& game_;
     Players players_;
     PlayerTokens player_tokens_;
+    RetiredPlayers retired_players_;
     Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);
     auto GetJsonDogBag(const model::Dog& dog) const;

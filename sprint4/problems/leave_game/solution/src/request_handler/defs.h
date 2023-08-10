@@ -95,6 +95,7 @@ struct Endpoint
     static inline constexpr std::string_view JOIN_GAME      = "/api/v1/game/join"sv;
     static inline constexpr std::string_view PLAYERS_LIST   = "/api/v1/game/players"sv;
     static inline constexpr std::string_view GAME_STATE     = "/api/v1/game/state"sv;
+    static inline constexpr std::string_view RECORDS        = "/api/v1/game/records"sv;
     static inline constexpr std::string_view GAME_ACTION    = "/api/v1/game/player/action"sv;
 };
 } // namespace defs

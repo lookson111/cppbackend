@@ -34,6 +34,8 @@ public:
         LinkGameState();
         //Add game action move
         LinkGameActionMove();
+        //Add retired players request
+        LinkRetiredPlayers();
         //Add tick if period tick is not specified
         if (on_tick_api)
             LinkGameTick();
@@ -93,6 +95,7 @@ private:
     void LinkGameState();
     void LinkGameActionMove();
     void LinkGameTick();
+    void LinkRetiredPlayers();
 
 };
 }

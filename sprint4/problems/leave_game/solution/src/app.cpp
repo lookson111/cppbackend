@@ -321,6 +321,28 @@ App::CheckToken(const Token& token) const {
     );
 }
 
+std::pair<std::string, error_code> App::GetRecords(int start, int max_items) const
+{
+    static const double ms_to_seconds = 1000;
+    int start_item = start* max_items;
+    int end_item = (start + 1) * max_items;
+    if (retired_players_.size() <= end_item)
+        return std::make_pair("", error_code::InvalidArgument);
+    js::array jarr;
+    for (size_t i = start_item; i < end_item; i++) {
+        js::object val;
+        val["name"]     = retired_players_[i].GetName();
+        val["score"]    = retired_players_[i].GetScore();
+        auto play_time = static_cast<double>(retired_players_[i].GetPlayTime().count());
+        val["playTime"] = play_time / ms_to_seconds;
+        jarr.emplace_back(std::move(val));
+    }
+    return std::make_pair(
+        std::move(serialize(jarr)),
+        error_code::None
+    );
+}
+
 Player* App::GetPlayer(const Token& token) const {
     Player* player = player_tokens_.FindPlayer(token);
     return player;
