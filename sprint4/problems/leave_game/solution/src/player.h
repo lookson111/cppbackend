@@ -125,6 +125,7 @@ public:
     const PlayerId* FindPlayerId(std::string_view player_name) const noexcept;
     Player* FindPlayer(const PlayerId& player_id) const noexcept;
     const PlayersContainer& GetPlayers() const;
+    void DeletePlayer(const PlayerId& player_id) noexcept;
     
     PlayersContainer players_;
     Player* PushPlayer(PlayerContainer&& player);

@@ -116,4 +116,10 @@ const Players::PlayersContainer& Players::GetPlayers() const {
     return players_;
 }
 
+void Players::DeletePlayer(const PlayerId& player_id) noexcept {
+    if (auto it = players_.find(player_id); it != players_.end()) {
+        players_.erase(it);
+    }
+}
+
 };
