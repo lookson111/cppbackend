@@ -17,6 +17,9 @@ class ApiRequestHandler
 {
     using Strand = net::strand<net::io_context::executor_type>;
     http::status ErrorCodeToStatus(app::error_code ec) const;
+    int GetIntUrlParam(const std::string& params, 
+        const std::string& name, int def_value) const;
+
 public:
     ApiRequestHandler(Strand api_strand, app::App& app, bool on_tick_api)
     : uri_handler_()

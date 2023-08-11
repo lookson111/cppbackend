@@ -98,4 +98,10 @@ struct Endpoint
     static inline constexpr std::string_view RECORDS        = "/api/v1/game/records"sv;
     static inline constexpr std::string_view GAME_ACTION    = "/api/v1/game/player/action"sv;
 };
+
+struct Param {
+    static inline constexpr int START     = 0;
+    static inline constexpr int MAX_ITEMS = 100;
+};
+
 } // namespace defs

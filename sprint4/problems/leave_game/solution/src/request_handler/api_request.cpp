@@ -1,4 +1,5 @@
 #include "api_request.h"
+#include <boost/regex.hpp>
 
 namespace http_handler
 {
@@ -111,16 +112,36 @@ void ApiRequestHandler::LinkRetiredPlayers() {
         ptr->SetNeedAuthorization(false)
             .SetAllowedMethods({ http::verb::get, http::verb::head }, ErrorMessage::GET_IS_EXPECTED, MiscMessage::ALLOWED_GET_HEAD_METHOD)
             .SetProcessFunction([&](std::string_view params) {
-            LOGSRV().Msg("requset", params);
-            int start = 0;
-            int max_items = 100;
+            std::string str{params.data(), params.size()};
+            int start = GetIntUrlParam(str, "start"s, Param::START);
+            int max_items = GetIntUrlParam(str, "maxItems"s, Param::MAX_ITEMS);
+            if (start == -1 || max_items == -1)
+                return Response::Make(http::status::bad_request, "");
             auto [text, err] = app_.GetRecords(start, max_items);
             return Response::Make(ErrorCodeToStatus(err), text);
         });
     }
 }
 
-StringResponse ApiRequestHandler::ProcessPostEndpoitWithoutAuthorization(std::string_view body) {
+int ApiRequestHandler::GetIntUrlParam(const std::string& params, 
+        const std::string& name, int def_value) const {
+    int res = def_value;
+    boost::regex expr{"(\\?|&|^|,)"s + name + "=(\\w+)(\\&|$)"s };
+    boost::smatch what;
+    if (boost::regex_search(params, what, expr)) {
+        try {
+            res = std::stoi(what[2]);
+        } catch (std::exception& ex) {
+            LOGSRV().Msg("error", "error parse uri params");
+            return -1;
+        }
+    }
+    return res;
+
+}
+
+StringResponse ApiRequestHandler::ProcessPostEndpoitWithoutAuthorization(
+        std::string_view body) {
     auto [text, err] = app_.ResponseJoin(body);
     http::status stat;
     switch (err) {
