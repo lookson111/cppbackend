@@ -50,7 +50,7 @@ public:
     PlayersRepr() = default;
 
     explicit PlayersRepr(const app::Players& players) {
-        for(auto &player : players.GetPlayers()) 
+        for(auto &[player_id, player] : players.GetPlayers()) 
             players_repr_.push_back(std::move(PlayerRepr(player.get())));
     }
 

@@ -72,23 +72,14 @@ std::string PlayerTokens::ToHex(uint64_t n) const {
 
 Player* Players::PushPlayer(PlayerContainer&& player) {
     const size_t index = players_.size();
-    if (auto [it, inserted] = player_id_to_index_.emplace(player->GetId(), index); !inserted) {
+    if (auto [it, inserted] = players_.emplace(player->GetId(), player); !inserted) {
         throw std::invalid_argument("Player with id "s + player->GetId().ToString() + " already exists"s);
     }
-    else {
-        try {
-            players_.emplace_back(std::move(player));
-        }
-        catch (...) {
-            player_id_to_index_.erase(it);
-            throw;
-        }
-    }
-    return players_.back().get();
+    return players_.at(player->GetId()).get();
 }
 
 Player* Players::Add(PlayerId player_id, model::Dog* dog, model::GameSession* session) {
-    std::unique_ptr<Player> player = std::make_unique<Player>(player_id, session, dog);
+    auto player = std::make_shared<Player>(player_id, session, dog);
     return PushPlayer(std::move(player));
 }
 
@@ -97,15 +88,15 @@ void Players::Add(PlayerContainer&& player) {
 }
 
 Player* Players::FindPlayer(PlayerId player_id, model::Map::Id map_id) noexcept {
-    if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
-        auto pl = players_.at(it->second).get();
+    if (auto it = players_.find(player_id); it != players_.end()) {
+        auto pl = players_.at(player_id).get();
         if (pl->MapId() == map_id)
             return pl;
     }
     return nullptr;
 }
 const PlayerId* Players::FindPlayerId(std::string_view player_name) const noexcept {
-    for (const auto& player : players_) {
+    for (const auto& [id, player] : players_) {
         if (player->GetName() == player_name) {
             return &player->GetId();
         }
@@ -114,8 +105,8 @@ const PlayerId* Players::FindPlayerId(std::string_view player_name) const noexce
 }
 
 Player* Players::FindPlayer(const PlayerId& player_id) const noexcept {
-    if (auto it = player_id_to_index_.find(player_id); it != player_id_to_index_.end()) {
-        auto pl = players_.at(it->second).get();
+    if (auto it = players_.find(player_id); it != players_.end()) {
+        auto pl = players_.at(player_id).get();
         return pl;
     }
     return nullptr;

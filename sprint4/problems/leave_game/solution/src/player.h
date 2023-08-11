@@ -24,7 +24,6 @@ using PlayerId = util::TaggedUUID<detail::PlayerTag>;
 
 class Player {
 public:
-    //using Id = util::Tagged<uint64_t, Player>;
     Player() = default;
     Player(PlayerId id, model::GameSession* session, model::Dog* dog) :
         session_(session), dog_(dog), id_(id) {}
@@ -113,9 +112,13 @@ private:
 };
 
 class Players {
+private:
+    using PlayerIdHasher = util::TaggedHasher<PlayerId>;
+    //using PlayerIdToIndex = std::unordered_map<PlayerId, size_t, PlayerIdHasher>;
+
 public:
     using PlayerContainer = std::shared_ptr<Player>;
-    using PlayersContainer = std::deque<PlayerContainer>;
+    using PlayersContainer = std::unordered_map<PlayerId, PlayerContainer, PlayerIdHasher>;
     Player* Add(PlayerId player_id, model::Dog *dog, model::GameSession *session);
     void Add(PlayerContainer&& player);
     Player* FindPlayer(PlayerId player_id, model::Map::Id map_id) noexcept;
@@ -123,11 +126,7 @@ public:
     Player* FindPlayer(const PlayerId& player_id) const noexcept;
     const PlayersContainer& GetPlayers() const;
     
-private:
-    using PlayerIdHasher = util::TaggedHasher<PlayerId>;
-    using PlayerIdToIndex = std::unordered_map<PlayerId, size_t, PlayerIdHasher>;
     PlayersContainer players_;
-    PlayerIdToIndex player_id_to_index_;
     Player* PushPlayer(PlayerContainer&& player);
 };
 
