@@ -10,8 +10,6 @@ RUN apt update && \
     && \
     pip3 install conan==1.* 
 
-RUN apt install -y postgresql postgresql-contrib 
-
 # копируем conanfile.txt в контейнер и запускаем conan install
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
@@ -44,8 +42,8 @@ USER www
 COPY --from=build /app/build/game_server /app/
 COPY ./data /app/data
 COPY ./static /app/static
-EXPOSE 30432
-ENV GAME_DB_URL='postgres://postgres:Mys3Cr3t@localhost:30432'
+#EXPOSE 30432
+#ENV GAME_DB_URL='postgres://postgres:Mys3Cr3t@localhost:30432'
 
 
 # Запускаем игровой сервер
