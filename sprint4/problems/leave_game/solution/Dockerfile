@@ -35,6 +35,8 @@ RUN apt update && \
 # Создадим пользователя www
 RUN groupadd -r www && useradd -r -g www www 
 RUN usermod -a -G syslog www
+RUN mkdir -p /app/save
+RUN chmod a+w /app/save
 USER www
 
 # Скопируем приложение со сборочного контейнера в директорию /app.
@@ -42,7 +44,9 @@ USER www
 COPY --from=build /app/build/game_server /app/
 COPY ./data /app/data
 COPY ./static /app/static
-#ENV GAME_DB_URL='postgres://postgres:Mys3Cr3t@localhost:5432'
+EXPOSE 30432
+ENV GAME_DB_URL='postgres://postgres:Mys3Cr3t@localhost:30432'
+
 
 # Запускаем игровой сервер
-ENTRYPOINT ["./app/game_server", "-c", "/app/data/config.json", "-w", "/app/static/", "-t", "50", "--randomize-spawn-points", "--save-state-period", "1000", "--state-file", "/app/state.save"] 
+ENTRYPOINT ["./app/game_server", "-c", "/app/data/config.json", "-w", "/app/static/", "-t", "50", "--randomize-spawn-points", "--save-state-period", "1000", "--state-file", "/app/save/state.save"] 

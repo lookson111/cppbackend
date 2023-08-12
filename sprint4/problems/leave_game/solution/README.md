@@ -64,6 +64,7 @@ cmake --build .
 ```
 docker build -t my_http_server .
 docker run --rm -p 80:8080 my_http_server
+docker run --rm -p 80:8080 --network=host leave_game
 ```
 
 Это каноничный способ запуска, которым будут пользоваться студенты. Если он не работает, значит, мы что-то не так делаем.
