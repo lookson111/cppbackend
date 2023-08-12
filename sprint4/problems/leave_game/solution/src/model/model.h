@@ -269,6 +269,7 @@ public:
     Dog* FindDog(std::string_view nick_name);
     Dog* FindDog(Dog::Id dog_id);
     Dog* AddDog(std::string_view nick_name);
+    void DeleteDog(const Dog::Id& dog_id);
     void SetDogs(const Dogs& dogs);
     const Dogs& GetDogs() const;
     void SetLoots(const Loots& loots) ;

@@ -44,6 +44,15 @@ void PlayerTokens::AddToken(Token token, Player* player) {
     token_to_player[token] = player;
 }
 
+void PlayerTokens::DeleteToken(const PlayerId& player_id) {
+    for (const auto& [token, player] : token_to_player) {
+        if (player->GetId() == player_id) {
+            token_to_player.erase(token);
+            return;
+        }
+    }
+}
+
 const PlayerTokens::TokenToPlayerContainer& PlayerTokens::GetTokens() const {
     return token_to_player;
 }

@@ -127,8 +127,14 @@ void App::RetirPlayers(milliseconds delta) {
             to_delete.push_back(player.GetId());
         }
     }
-    for (auto &id : to_delete)
+    for (auto& id : to_delete) {
+        for (auto session : game_.GetGameSessions()) {
+            auto dog_id = players_.FindPlayer(id)->GetDog()->GetId();
+            session.DeleteDog(dog_id);
+        }
+        player_tokens_.DeleteToken(id);
         players_.DeletePlayer(id);
+    }
 }
 
 const PlayerTokens& App::GetPlayerTokens() const {

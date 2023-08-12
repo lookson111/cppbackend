@@ -122,6 +122,15 @@ Dog* GameSession::AddDog(std::string_view nick_name) {
     return &dogs_.back();
 }
 
+void GameSession::DeleteDog(const Dog::Id& dog_id)
+{
+    if (dogs_id_to_index_.contains(dog_id)) {
+        auto idx = dogs_id_to_index_.at(dog_id);
+        dogs_.erase(dogs_.begin() + idx);
+        dogs_id_to_index_.erase(dog_id);
+    }
+}
+
 void GameSession::MoveDogToContainerAndIndexing(Dog &&dog) {
     const size_t index = dogs_.size();
     auto &o = dogs_.emplace_back(std::move(dog));
@@ -163,10 +172,14 @@ Dog* GameSession::FindDog(std::string_view nick_name) {
 
 Dog* GameSession::FindDog(Dog::Id dog_id)
 {
-    for (auto& dog : dogs_) {
+    if (dogs_id_to_index_.contains(dog_id)) {
+        auto idx = dogs_id_to_index_.at(dog_id);
+        return &dogs_[idx];
+    }
+    /*for (auto& dog : dogs_) {
         if (dog.GetId() == dog_id)
             return &dog;
-    }
+    }*/
     return {};
 }
 

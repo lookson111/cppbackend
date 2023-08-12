@@ -83,6 +83,7 @@ public:
     Player* FindPlayer(Token token) const;
     Token AddPlayer(Player* player);
     void AddToken(Token token, Player* player);
+    void DeleteToken(const PlayerId& player_id);
     const TokenToPlayerContainer& GetTokens() const;
     PlayerTokens() = default;
     PlayerTokens(const PlayerTokens& other) {
@@ -114,7 +115,6 @@ private:
 class Players {
 private:
     using PlayerIdHasher = util::TaggedHasher<PlayerId>;
-    //using PlayerIdToIndex = std::unordered_map<PlayerId, size_t, PlayerIdHasher>;
 
 public:
     using PlayerContainer = std::shared_ptr<Player>;
