@@ -193,7 +193,7 @@ App::ResponseJoin(std::string_view jsonBody) {
     js::object msg;
     auto player = GetPlayer(userName, mapId);
     std::string token = *player_tokens_.AddPlayer(player);
-    std::string id = player->GetId().ToString();
+    auto id = *player->GetDog()->GetId();
     msg["authToken"] = token;
     msg["playerId"]  = id;
     return std::make_pair(
