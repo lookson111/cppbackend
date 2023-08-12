@@ -10,6 +10,8 @@ RUN apt update && \
     && \
     pip3 install conan==1.* 
 
+RUN apt install -y postgresql postgresql-contrib 
+
 # копируем conanfile.txt в контейнер и запускаем conan install
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
@@ -40,6 +42,7 @@ USER www
 COPY --from=build /app/build/game_server /app/
 COPY ./data /app/data
 COPY ./static /app/static
+#ENV GAME_DB_URL='postgres://postgres:Mys3Cr3t@localhost:5432'
 
 # Запускаем игровой сервер
 ENTRYPOINT ["./app/game_server", "-c", "/app/data/config.json", "-w", "/app/static/", "-t", "50", "--randomize-spawn-points", "--save-state-period", "1000", "--state-file", "/app/state.save"] 

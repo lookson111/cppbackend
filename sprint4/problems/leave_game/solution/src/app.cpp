@@ -116,18 +116,19 @@ PlayerTokens& App::EditPlayerTokens() {
 
 void App::RetirPlayers(milliseconds delta) {
     auto players = players_.GetPlayers();
-    for (auto it = players.begin(); it != players.end();) {
+    std::vector<PlayerId> to_delete;
+    for (auto it = players.begin(); it != players.end(); ++it) {
         auto player = *it->second;
         auto dog = *player.GetDog();
         if (dog.GetStayTime() > game_.GetDogRetirementTime()) {
-            RetiredPlayer retired_player_{player.GetId(), dog.GetName(), 
+            RetiredPlayer retired_player{player.GetId(), dog.GetName(), 
                 dog.GetScore(), dog.GetLifetime() };
-            it = players.erase(it);
-        }
-        else {
-            it++;
+            db_.GetRetiredPlayers().Save(retired_player);
+            to_delete.push_back(player.GetId());
         }
     }
+    for (auto &id : to_delete)
+        players_.DeletePlayer(id);
 }
 
 const PlayerTokens& App::GetPlayerTokens() const {
@@ -338,12 +339,18 @@ App::CheckToken(const Token& token) const {
 }
 
 std::pair<std::string, error_code> 
-App::GetRecords(int start, int max_items) const {
+App::GetRecords(int start, int max_items) {
     static const double ms_to_seconds = 1000;
     int start_item = start* max_items;
-    int end_item = (start + 1) * max_items;
-    if (retired_players_.size() <= end_item)
+    int end_item;
+    db_.GetRetiredPlayers().Get(retired_players_);
+    if (retired_players_.size() <= start_item)
         return std::make_pair("", error_code::InvalidArgument);
+    if (retired_players_.size()-start_item < max_items)
+        end_item = (start + 1) * max_items;
+    else 
+        end_item = retired_players_.size()-start_item;
+
     js::array jarr;
     for (size_t i = start_item; i < end_item; i++) {
         js::object val;

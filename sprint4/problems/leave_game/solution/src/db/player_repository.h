@@ -10,7 +10,7 @@ namespace app {
 class RetiredPlayerRepository {
 public:
     virtual void Save(const app::RetiredPlayer& dog) = 0;
-    virtual void GetRetiredPlayers(app::RetiredPlayers& autors) = 0;
+    virtual void Get(app::RetiredPlayers& autors) = 0;
 
 protected:
     ~RetiredPlayerRepository() = default;

@@ -14,7 +14,7 @@ public:
     }
 
     void Save(const app::RetiredPlayer& retired_player) override;
-    void GetRetiredPlayers(app::RetiredPlayers & retired_players) override;
+    void Get(app::RetiredPlayers & retired_players) override;
 
 private:
     ConnectionPool& conn_pool_;
@@ -25,7 +25,7 @@ class Database {
 public:
     explicit Database(size_t capacity, const std::string& db_url);
 
-    RetiredPlayerRepositoryImpl& GetDogs() & {
+    RetiredPlayerRepositoryImpl& GetRetiredPlayers() & {
         return retired_players_;
     }
 

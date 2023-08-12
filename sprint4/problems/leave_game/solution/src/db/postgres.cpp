@@ -19,7 +19,7 @@ void RetiredPlayerRepositoryImpl::Save(const app::RetiredPlayer& retired_player)
     work.exec_params(
         R"(
 INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4)
-ON CONFLICT (id);
+ON CONFLICT (id) DO NOTHING;
 )"_zv,
         retired_player.GetId().ToString(), 
         retired_player.GetName(),
@@ -29,11 +29,11 @@ ON CONFLICT (id);
     work.commit();
 }
 
-void RetiredPlayerRepositoryImpl::GetRetiredPlayers(app::RetiredPlayers& retired_players) {
+void RetiredPlayerRepositoryImpl::Get(app::RetiredPlayers& retired_players) {
     auto conn = conn_pool_.GetConnection();
     pqxx::read_transaction r{*conn};
-    auto query_text = R"(SELECT id, name FROM dogs 
-ORDER BY name ASC;
+    auto query_text = R"(SELECT id, name, score, play_time_ms FROM retired_players 
+ORDER BY score DESC, play_time_ms ASC, name ASC;
 )"_zv;
     auto res =  r.query<std::string, std::string, unsigned, unsigned>(query_text);
     for (const auto [id, name, score, play_time] : res) {
@@ -50,9 +50,9 @@ Database::Database(size_t capacity, const std::string& db_url)
     pqxx::work work{*conn};
     work.exec(R"(
 CREATE TABLE IF NOT EXISTS retired_players (
-    id UUID CONSTRAINT dog_id_constraint PRIMARY KEY,
-    name varchar(100) NOT NULL
-    score integer NOT NULL
+    id UUID CONSTRAINT player_id_constraint PRIMARY KEY,
+    name varchar(100) NOT NULL,
+    score integer NOT NULL,
     play_time_ms integer NOT NULL
 );
 )"_zv);

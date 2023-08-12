@@ -264,6 +264,7 @@ Point2D GameSession::MoveDog(Point2D start_pos, Point2D end_pos) {
 
 void GameSession::MoveDogsInMap(milliseconds time_delta_ms) {
     for (auto& dog : dogs_) {
+        dog.IncLifetime(time_delta_ms);
         if (dog.IsStanding())
             continue;
         auto start_pos = dog.GetPoint();
@@ -273,7 +274,6 @@ void GameSession::MoveDogsInMap(milliseconds time_delta_ms) {
         // if the dog is on the edge, it is necessery to stop him
         if (move_pos != end_pos)
             dog.Stop();
-        dog.IncLifetime(time_delta_ms);
     }
 }
 
