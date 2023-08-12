@@ -80,6 +80,8 @@ public:
         , direction_(dog.GetDir())
         , score_(dog.GetScore())
         , bag_content_(dog.GetLoots()) 
+        , lifetime_(dog.GetLifetime().count())
+        , stay_time_(dog.GetStayTime().count())
     {
     }
 
@@ -88,6 +90,8 @@ public:
         dog.SetSpeed(speed_);
         dog.SetDirection(direction_);
         dog.AddScore(score_);
+        dog.SetLastMoveTime(std::chrono::milliseconds(lifetime_-stay_time_));
+        dog.SetLifeTime(std::chrono::milliseconds(lifetime_));
         model::Loots bag_content = bag_content_;
         for (auto it = bag_content.begin(), itn = bag_content.begin(); it != bag_content.end(); it = itn) {
             itn = std::next(it);
@@ -112,11 +116,12 @@ private:
     model::Dog::Id id_ = model::Dog::Id{0u};
     std::string name_;
     geom::Point2D pos_;
-    //size_t bag_capacity_ = 0;
     geom::Speed2D speed_;
     model::Direction direction_ = model::Direction::NORTH;
     model::Score score_ = 0;
     model::Loots bag_content_;
+    long long stay_time_;
+    long long lifetime_;
 };
 
 class GameSessionRepr {

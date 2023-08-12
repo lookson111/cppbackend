@@ -63,6 +63,8 @@ public:
         , dir_(other.dir_)
         , loots_(other.loots_)
         , score_(other.score_)
+        , last_move_time_(other.last_move_time_)
+        , lifetime_(other.lifetime_)
     {}
     Dog(Dog&& other) noexcept 
         : id_(std::move(other.id_))
@@ -73,6 +75,8 @@ public:
         , dir_(std::move(other.dir_))
         , loots_(std::move(other.loots_))
         , score_(std::move(other.score_))
+        , last_move_time_(std::move(other.last_move_time_))
+        , lifetime_(std::move(other.lifetime_))
     {}
     Dog &operator=(const Dog& other) {
         if (this == &other)
@@ -85,6 +89,8 @@ public:
         dir_        = other.dir_;
         loots_      = other.loots_;
         score_      = other.score_;
+        last_move_time_ = other.last_move_time_;
+        lifetime_ = other.lifetime_;
         return *this;
     }
     const Id& GetId() const {
@@ -154,6 +160,12 @@ public:
             last_move_time_ = lifetime_;
         }
     }
+    void SetLastMoveTime(milliseconds time_ms) {
+        last_move_time_ = time_ms;
+    }
+    void SetLifeTime(milliseconds time_ms) {
+        lifetime_ = time_ms;
+    }
 private:
     static Speed2D zero_speed_;
     Id id_ = Id{0};
@@ -164,8 +176,8 @@ private:
     Direction dir_ = Direction::NORTH;
     Loots loots_; 
     Score score_ = 0;
-    milliseconds last_move_time_;
-    milliseconds lifetime_;    
+    milliseconds last_move_time_{0};
+    milliseconds lifetime_{0};
 };
 
 }  // namespace model
