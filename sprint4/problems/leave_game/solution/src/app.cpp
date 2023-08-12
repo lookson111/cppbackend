@@ -114,6 +114,22 @@ PlayerTokens& App::EditPlayerTokens() {
     return player_tokens_;
 }
 
+void App::RetirPlayers(milliseconds delta) {
+    auto players = players_.GetPlayers();
+    for (auto it = players.begin(); it != players.end();) {
+        auto player = *it->second;
+        auto dog = *player.GetDog();
+        if (dog.GetStayTime() > game_.GetDogRetirementTime()) {
+            RetiredPlayer retired_player_{player.GetId(), dog.GetName(), 
+                dog.GetScore(), dog.GetLifetime() };
+            it = players.erase(it);
+        }
+        else {
+            it++;
+        }
+    }
+}
+
 const PlayerTokens& App::GetPlayerTokens() const {
     return player_tokens_;
 }
@@ -321,8 +337,8 @@ App::CheckToken(const Token& token) const {
     );
 }
 
-std::pair<std::string, error_code> App::GetRecords(int start, int max_items) const
-{
+std::pair<std::string, error_code> 
+App::GetRecords(int start, int max_items) const {
     static const double ms_to_seconds = 1000;
     int start_item = start* max_items;
     int end_item = (start + 1) * max_items;

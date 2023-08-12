@@ -33,15 +33,14 @@ void RunThreads(unsigned number_of_threads, const Fn& fn) {
 }
 constexpr const char DB_URL_ENV_NAME[]{ "GAME_DB_URL" };
 
-app::AppConfig GetConfigFromEnv() {
-    app::AppConfig config;
+std::string GetConfigFromEnv() {
+    std::string db_url;
     if (const auto* url = std::getenv(DB_URL_ENV_NAME)) {
-        config.db_url = url;
-    }
-    else {
+        db_url = url;
+    } else {
         throw std::runtime_error(DB_URL_ENV_NAME + " environment variable not found"s);
     }
-    return config;
+    return db_url;
 }
 
 struct Args {
@@ -132,11 +131,14 @@ int main(int argc, const char* argv[]) {
     }
     server_logging::InitBoostLogFilter();
     try {
+        // Получаем количество допустимых потоков.
+        const unsigned num_threads = std::thread::hardware_concurrency();
+        app::AppConfig app_config{ num_threads, GetConfigFromEnv() };
         // 1. Загружаем карту из файла и построить модель игры
         std::unique_ptr<model::Game> game = json_loader::LoadGame(args.config_file);
         game->SetRandomizeSpawnPoints(args.randomize_spawn_points);
         // 1. Инициализаруем аппу
-        auto app = std::make_shared<app::App>(*game, GetConfigFromEnv());
+        auto app = std::make_shared<app::App>(*game, app_config);
         // 1.a добавляем инфраструктрурные методы
         infrastructure::SerializingListiner ser_listiner(app, args.state_file, args.save_state_period);
         try {
@@ -146,13 +148,14 @@ int main(int argc, const char* argv[]) {
             auto gamer = json_loader::LoadGame(args.config_file);
             game.swap(gamer);
             game->SetRandomizeSpawnPoints(args.randomize_spawn_points);
-            app.reset(new app::App(*game, GetConfigFromEnv()));
+            app.reset(new app::App(*game, app_config));
         }
-        auto conn = game->DoOnTick([&ser_listiner] (std::chrono::milliseconds delta) mutable {
+        auto conn = game->DoOnTick([&ser_listiner, &app] (std::chrono::milliseconds delta) mutable {
             ser_listiner.OnTick(delta);
+            //
+            app->RetirPlayers(delta);
         });
         // 2. Инициализируем io_context
-        const unsigned num_threads = std::thread::hardware_concurrency();
         net::io_context ioc(num_threads);
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         net::signal_set signals(ioc, SIGINT, SIGTERM);
@@ -170,6 +173,10 @@ int main(int argc, const char* argv[]) {
         // Настраиваем вызов метода Application::Tick каждые delta миллисекунд внутри strand
         auto ticker = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
             [&game](std::chrono::milliseconds delta) { game->Tick(delta); }
+        );
+        // Настраиваем вызов метода Application::RetirPlayers каждые delta миллисекунд внутри strand
+        auto ticker_retir = std::make_shared<ticker::Ticker>(api_strand, args.tick_period,
+            [app](std::chrono::milliseconds delta) { app->RetirPlayers(delta); }
         );
         // Оборачиваем его в логирующий декоратор
         server_logging::LoggingRequestHandler logging_handler {

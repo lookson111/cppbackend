@@ -13,17 +13,6 @@
 #include "extra_data.h"
 #include "loot_generator.h"
 
-
-/*
-namespace util {
-    template<>
-    struct TaggedHasher<model::DogId> {
-        size_t operator () (const model::DogId& value) const {
-            return boost::hash<typename model::DogId::ValueType>()(*value);
-        }
-    };
-}*/
-
 namespace model {
 
 namespace sig = boost::signals2;
@@ -337,13 +326,19 @@ private:
     void MoveDogToContainerAndIndexing(Dog &&dog);
 };
 
+struct GameParam {
+    milliseconds dog_retirement_time;
+    LootGeneratorConfig loot_generator_config_;
+};
+
 class Game {
 public:
     using Maps = std::vector<Map>;
     using GameSessions = std::deque<GameSession>;
     using TickSignal = sig::signal<void(milliseconds delta)>;
     Game() = default;
-    Game(const LootGeneratorConfig& loot_generator_config) : loot_generator_config_(std::move(loot_generator_config)){
+    Game(const GameParam& game_param) 
+        : game_param_(std::move(game_param)){
     }
     void AddMap(const Map& map);
     void AddExtraData(const ExtraData& extra_data) {
@@ -373,7 +368,10 @@ public:
         return tick_signal_.connect(handler);
     }
     const LootGeneratorConfig& GetLootGeneratorConfig() const {
-        return loot_generator_config_;
+        return game_param_.loot_generator_config_;
+    }
+    const milliseconds& GetDogRetirementTime() {
+        return game_param_.dog_retirement_time;
     }
     Game(const Game& other) {
         *this = other;
@@ -384,7 +382,7 @@ public:
         randomize_spawn_points_ = other.randomize_spawn_points_;
         maps_ = other.maps_;
         extra_data_ = other.extra_data_;
-        loot_generator_config_ = other.loot_generator_config_;
+        game_param_ = other.game_param_;
         game_sessions_ = other.game_sessions_;
         map_id_to_index_ = other.map_id_to_index_;
         map_id_to_game_sessions_index_ = other.map_id_to_game_sessions_index_;
@@ -398,7 +396,7 @@ private:
     bool randomize_spawn_points_ = true;
     Maps maps_;
     ExtraData extra_data_;
-    LootGeneratorConfig loot_generator_config_;
+    GameParam game_param_;
     GameSessions game_sessions_;
     MapIdToIndex map_id_to_index_;
     MapIdToIndex map_id_to_game_sessions_index_;

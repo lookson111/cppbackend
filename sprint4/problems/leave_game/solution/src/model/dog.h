@@ -13,6 +13,7 @@
 
 namespace model {
 using namespace geom;
+using milliseconds = std::chrono::milliseconds;
 
 using LootParam = int;
 using LootsParam = std::vector<LootParam>;
@@ -106,7 +107,7 @@ public:
         return dir_;
     }
     void Diraction(Move move, Dimension2D speed);
-    Point2D GetEndPoint(std::chrono::milliseconds move_time_ms);
+    Point2D GetEndPoint(milliseconds move_time_ms);
     void SetPoint(Point2D coord) {
         std::swap(prev_coord_, coord_);
         coord_ = coord;
@@ -141,6 +142,18 @@ public:
     void AddScore(Score score) {
         score_ = score;
     }
+    milliseconds GetStayTime() const {
+        return lifetime_-last_move_time_;
+    }
+    milliseconds GetLifetime() const {
+        return lifetime_;
+    }
+    void IncLifetime(milliseconds time_delta_ms) {
+        lifetime_ += time_delta_ms;
+        if (speed_ != zero_speed_) {
+            last_move_time_ = lifetime_;
+        }
+    }
 private:
     static Speed2D zero_speed_;
     Id id_ = Id{0};
@@ -149,8 +162,10 @@ private:
     Point2D prev_coord_;
     Speed2D speed_ = zero_speed_;
     Direction dir_ = Direction::NORTH;
-    Loots loots_;
+    Loots loots_; 
     Score score_ = 0;
+    milliseconds last_move_time_;
+    milliseconds lifetime_;    
 };
 
 }  // namespace model

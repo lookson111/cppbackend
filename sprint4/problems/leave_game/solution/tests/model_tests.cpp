@@ -63,7 +63,8 @@ Is2dMatcher<T> Is2D(T val) {
 SCENARIO("Game model") {
 	using model::Game;
 	GIVEN("empty game model") {
-		Game game(model::LootGeneratorConfig{});
+		model::GameParam game_param;
+		Game game(game_param);
 		WHEN("maps not added") {
 			CHECK(game.GetMaps().empty());
 		}

@@ -31,6 +31,7 @@ enum class error_code {
 };
 
 struct AppConfig {
+    size_t capacity;
     std::string db_url;
 };
 
@@ -56,15 +57,14 @@ class App
 public:
     explicit App(model::Game& game, const AppConfig& config)
         : game_{ game }
-        , db_{ pqxx::connection{config.db_url} } {
+        , db_{ config.capacity, config.db_url } {
     }
     model::Game& GetGameModel();
-    void SetLastPlayerId(PlayerId id);
-    PlayerId GetLastPlayerId() const;
     const Players& GetPlayers() const;
     const PlayerTokens& GetPlayerTokens() const;
     Players& EditPlayers();
     PlayerTokens& EditPlayerTokens();
+    void RetirPlayers(milliseconds delta);
 
     std::pair<std::string, bool> GetMapBodyJson(std::string_view requestTarget) const;
     std::pair<std::string, JoinError> ResponseJoin(std::string_view jsonBody);
@@ -75,12 +75,7 @@ public:
     std::pair<std::string, error_code> GetState(const Token& token) const;
     std::pair<std::string, error_code> CheckToken(const Token& token) const;
     std::pair<std::string, error_code> GetRecords(int start, int max_items) const;
-    /*App(const App& other) {
-        game_ = other.game_;
-        players_ = other.players_;
-        player_tokens_ = other.player_tokens_;
-        last_player_id_ = other.last_player_id_;
-    }*/
+
 private:
     model::Game& game_;
     Players players_;

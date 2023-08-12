@@ -14,7 +14,8 @@ void RetiredPlayerRepositoryImpl::Save(const app::RetiredPlayer& retired_player)
     // В будущих уроках вы узнаете про паттерн Unit of Work, при помощи которого сможете несколько
     // запросов выполнить в рамках одной транзакции.
     // Вы также может самостоятельно почитать информацию про этот паттерн и применить его здесь.
-    pqxx::work work{connection_};
+    auto conn = conn_pool_.GetConnection();
+    pqxx::work work{*conn};
     work.exec_params(
         R"(
 INSERT INTO retired_players (id, name, score, play_time_ms) VALUES ($1, $2, $3, $4)
@@ -29,7 +30,8 @@ ON CONFLICT (id);
 }
 
 void RetiredPlayerRepositoryImpl::GetRetiredPlayers(app::RetiredPlayers& retired_players) {
-    pqxx::read_transaction r{connection_};
+    auto conn = conn_pool_.GetConnection();
+    pqxx::read_transaction r{*conn};
     auto query_text = R"(SELECT id, name FROM dogs 
 ORDER BY name ASC;
 )"_zv;
@@ -40,9 +42,12 @@ ORDER BY name ASC;
     }
 }
 
-Database::Database(pqxx::connection connection)
-    : connection_{std::move(connection)} {
-    pqxx::work work{connection_};
+Database::Database(size_t capacity, const std::string& db_url)
+    : conn_pool_{capacity, [db_url] {
+        return std::make_shared<pqxx::connection>(db_url);
+     }} {
+    auto conn = conn_pool_.GetConnection();
+    pqxx::work work{*conn};
     work.exec(R"(
 CREATE TABLE IF NOT EXISTS retired_players (
     id UUID CONSTRAINT dog_id_constraint PRIMARY KEY,

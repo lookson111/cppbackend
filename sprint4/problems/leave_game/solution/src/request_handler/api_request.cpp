@@ -105,7 +105,6 @@ void ApiRequestHandler::LinkGameTick() {
     }
 }
 
-
 void ApiRequestHandler::LinkRetiredPlayers() {
     auto ptr = uri_handler_.AddEndpoint(Endpoint::RECORDS);
     if (ptr) {
@@ -131,7 +130,7 @@ int ApiRequestHandler::GetIntUrlParam(const std::string& params,
     if (boost::regex_search(params, what, expr)) {
         try {
             res = std::stoi(what[2]);
-        } catch (std::exception& ex) {
+        } catch (std::exception&) {
             LOGSRV().Msg("error", "error parse uri params");
             return -1;
         }

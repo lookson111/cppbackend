@@ -3,34 +3,35 @@
 #include <pqxx/transaction>
 
 #include "player_repository.h"
+#include "pool_connection.h"
 
 namespace postgres {
 
 class RetiredPlayerRepositoryImpl : public app::RetiredPlayerRepository {
 public:
-    explicit RetiredPlayerRepositoryImpl(pqxx::connection& connection)
-        : connection_{connection} {
+    explicit RetiredPlayerRepositoryImpl(ConnectionPool& conn_pool)
+        : conn_pool_{conn_pool} {
     }
 
     void Save(const app::RetiredPlayer& retired_player) override;
     void GetRetiredPlayers(app::RetiredPlayers & retired_players) override;
 
 private:
-    pqxx::connection& connection_;
+    ConnectionPool& conn_pool_;
 };
 
 
 class Database {
 public:
-    explicit Database(pqxx::connection connection);
+    explicit Database(size_t capacity, const std::string& db_url);
 
     RetiredPlayerRepositoryImpl& GetDogs() & {
         return retired_players_;
     }
 
 private:
-    pqxx::connection connection_;
-    RetiredPlayerRepositoryImpl retired_players_{connection_};
+    ConnectionPool conn_pool_;
+    RetiredPlayerRepositoryImpl retired_players_{ conn_pool_ };
 };
 
 }  // namespace postgres

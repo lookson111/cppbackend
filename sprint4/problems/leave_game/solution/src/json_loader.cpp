@@ -130,10 +130,16 @@ std::unique_ptr<model::Game> LoadGame(const fs::path& json_path) {
     }
     try {
         model::DefaultMapParam def_param;
+        model::GameParam def_game_param;
+        static const int seconds_to_milliseconds = 1000;
         def_param.dog_speed = pt.get<double>("defaultDogSpeed");
         def_param.bag_capacity = GetDefaultParam(pt, "defaultBagCapacity", default_bag_capacity);
-
-        std::unique_ptr<model::Game> game = std::make_unique<model::Game>(LoadLootGenConfig(pt));
+        auto retire_time_ms = static_cast<int>(
+            pt.get<double>("dogRetirementTime") * seconds_to_milliseconds);
+        def_game_param.dog_retirement_time = std::chrono::milliseconds(retire_time_ms);
+        def_game_param.loot_generator_config_ = std::move(LoadLootGenConfig(pt));
+        std::unique_ptr<model::Game> game = 
+            std::make_unique<model::Game>(def_game_param);
         ptree jmaps = pt.get_child("maps");
         BOOST_FOREACH(ptree::value_type &jmap, jmaps) {
             game->AddMap(LoadMap(jmap.second, def_param));
