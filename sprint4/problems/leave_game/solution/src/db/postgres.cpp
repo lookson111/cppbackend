@@ -48,6 +48,7 @@ Database::Database(size_t capacity, const std::string& db_url)
      }} {
     auto conn = conn_pool_.GetConnection();
     pqxx::work work{*conn};
+    std::cout << "Create table" << std::endl;
     work.exec(R"(
 CREATE TABLE IF NOT EXISTS retired_players (
     id UUID CONSTRAINT player_id_constraint PRIMARY KEY,

@@ -18,7 +18,9 @@ SerializingListiner::SerializingListiner(std::shared_ptr<app::App> &app,
     time_since_save_ = 0ms;
 }
 void SerializingListiner::OnTick(milliseconds time_delta_ms) {
-    using namespace std::chrono_literals;
+    using namespace std::chrono_literals;    
+    if (save_period_ == 0ms)
+        return;
     time_since_save_ += time_delta_ms;
     if (time_since_save_ >= save_period_) {
         LOGSRV().Msg("Tick", "serializing "s + std::to_string(time_since_save_.count()) +
@@ -50,6 +52,8 @@ void SerializingListiner::Load() {
 }
 
 void SerializingListiner::Save() {
+    if (state_file_.empty())
+        return;
     try {
         std::ofstream archive_{state_file_};
         OutputArchive output_archive{archive_};

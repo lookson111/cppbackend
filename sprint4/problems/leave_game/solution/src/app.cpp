@@ -120,7 +120,7 @@ void App::RetirPlayers(milliseconds delta) {
     for (auto it = players.begin(); it != players.end(); ++it) {
         auto player = *it->second;
         auto dog = *player.GetDog();
-        if (dog.GetStayTime() > game_.GetDogRetirementTime()) {
+        if (dog.GetStayTime() >= game_.GetDogRetirementTime()) {
             RetiredPlayer retired_player{player.GetId(), dog.GetName(), 
                 dog.GetScore(), dog.GetLifetime() };
             db_.GetRetiredPlayers().Save(retired_player);
