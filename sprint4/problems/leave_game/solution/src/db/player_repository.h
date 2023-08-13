@@ -13,7 +13,7 @@ public:
     virtual app::RetiredPlayers Get(unsigned offset, unsigned limit) = 0;
 
 protected:
-    ~RetiredPlayerRepository() = default;
+    virtual ~RetiredPlayerRepository() = default;
 };
 
 }  // namespace domain

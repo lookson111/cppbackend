@@ -108,7 +108,6 @@ model::ExtraData LoadExtraData(const fs::path& json_path) {
 }
 
 model::LootGeneratorConfig LoadLootGenConfig(ptree& ptree) {
-    static const double sec_to_ms = 1000.0;
     auto loot_conf = ptree.get_child("lootGeneratorConfig");
     model::LootGeneratorConfig lgc;
     lgc.period = std::chrono::milliseconds(
@@ -131,11 +130,10 @@ std::unique_ptr<model::Game> LoadGame(const fs::path& json_path) {
     try {
         model::DefaultMapParam def_param;
         model::GameParam def_game_param;
-        static const int seconds_to_milliseconds = 1000;
         def_param.dog_speed = pt.get<double>("defaultDogSpeed");
         def_param.bag_capacity = GetDefaultParam(pt, "defaultBagCapacity", default_bag_capacity);
         auto retire_time_ms = static_cast<int>(
-            pt.get<double>("dogRetirementTime") * seconds_to_milliseconds);
+            pt.get<double>("dogRetirementTime") * sec_to_ms);
         def_game_param.dog_retirement_time = std::chrono::milliseconds(retire_time_ms);
         def_game_param.loot_generator_config_ = std::move(LoadLootGenConfig(pt));
         std::unique_ptr<model::Game> game = 
