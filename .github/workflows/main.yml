@@ -15,7 +15,6 @@ permissions:
 jobs:
   sprint_1:
     runs-on: ubuntu-22.04
-    if: false
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       volumes:
@@ -90,7 +89,6 @@ jobs:
 
   sprint_2:
     runs-on: ubuntu-22.04
-    if: false
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       volumes:
@@ -158,7 +156,6 @@ jobs:
 
   sprint_3:
     runs-on: ubuntu-22.04
-    if: false
     steps:
 
       - name: Checkout code
@@ -279,7 +276,6 @@ jobs:
 
   sprint_4:
     runs-on: ubuntu-22.04
-    if: false
     steps:
 
       - name: Checkout code
@@ -313,7 +309,6 @@ jobs:
 
   sprint_3_with_server:
     runs-on: ubuntu-22.04
-    if: false
     container:
       image: praktikumcpp/practicum_cpp_backend_server:latest
       options: --privileged
