@@ -80,7 +80,6 @@ private:
     model::Game& game_;
     Players players_;
     PlayerTokens player_tokens_;
-    RetiredPlayers retired_players_;
     postgres::Database db_;
     Player* GetPlayer(const Token& token) const;
     Player* GetPlayer(std::string_view nick, std::string_view mapId);

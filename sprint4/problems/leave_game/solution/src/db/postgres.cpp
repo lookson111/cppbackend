@@ -29,17 +29,19 @@ ON CONFLICT (id) DO NOTHING;
     work.commit();
 }
 
-void RetiredPlayerRepositoryImpl::Get(app::RetiredPlayers& retired_players) {
+app::RetiredPlayers RetiredPlayerRepositoryImpl::Get(uint offset, uint limit) {
     auto conn = conn_pool_.GetConnection();
     pqxx::read_transaction r{*conn};
-    auto query_text = R"(SELECT id, name, score, play_time_ms FROM retired_players 
-ORDER BY score DESC, play_time_ms ASC, name ASC;
-)"_zv;
+    app::RetiredPlayers retired_players;
+    auto query_text = "SELECT id, name, score, play_time_ms FROM retired_players "
+        "ORDER BY score DESC, play_time_ms ASC, name ASC "
+        "LIMIT " + std::to_string(limit) + " OFFSET " + std::to_string(offset) + ";";
     auto res =  r.query<std::string, std::string, unsigned, unsigned>(query_text);
     for (const auto [id, name, score, play_time] : res) {
         app::RetiredPlayer retired_player(app::PlayerId::FromString(id), name, score, app::milliseconds{play_time});
         retired_players.push_back(std::move(retired_player));
     }
+    return retired_players;
 }
 
 Database::Database(size_t capacity, const std::string& db_url)

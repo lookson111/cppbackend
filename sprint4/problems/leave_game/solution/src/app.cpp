@@ -347,22 +347,18 @@ App::CheckToken(const Token& token) const {
 std::pair<std::string, error_code> 
 App::GetRecords(int start, int max_items) {
     static const double ms_to_seconds = 1000;
-    int start_item = start* max_items;
-    int end_item;
-    db_.GetRetiredPlayers().Get(retired_players_);
-    if (retired_players_.size() <= start_item)
+    RetiredPlayers retired_players;
+    try {
+        retired_players = db_.GetRetiredPlayers().Get(start, max_items);
+    } catch (std::exception&){
         return std::make_pair("", error_code::InvalidArgument);
-    if (retired_players_.size()-start_item < max_items)
-        end_item = (start + 1) * max_items;
-    else 
-        end_item = retired_players_.size()-start_item;
-
+    }
     js::array jarr;
-    for (size_t i = start_item; i < end_item; i++) {
+    for (const auto& retired_player : retired_players) {
         js::object val;
-        val["name"]     = retired_players_[i].GetName();
-        val["score"]    = retired_players_[i].GetScore();
-        auto play_time = static_cast<double>(retired_players_[i].GetPlayTime().count());
+        val["name"]     = retired_player.GetName();
+        val["score"]    = retired_player.GetScore();
+        auto play_time = static_cast<double>(retired_player.GetPlayTime().count());
         val["playTime"] = play_time / ms_to_seconds;
         jarr.emplace_back(std::move(val));
     }

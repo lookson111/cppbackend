@@ -113,8 +113,8 @@ void ApiRequestHandler::LinkRetiredPlayers() {
             .SetProcessFunction([&](std::string_view params) {
             std::string str{params.data(), params.size()};
             int start = GetIntUrlParam(str, "start"s, Param::START);
-            int max_items = GetIntUrlParam(str, "maxItems"s, Param::MAX_ITEMS);
-            if (start == -1 || max_items == -1)
+            int max_items = GetIntUrlParam(str, "max[Ii]tems"s, Param::MAX_ITEMS);
+            if (start == -1 || max_items == -1 || max_items > Param::MAX_ITEMS)
                 return Response::Make(http::status::bad_request, "");
             auto [text, err] = app_.GetRecords(start, max_items);
             return Response::Make(ErrorCodeToStatus(err), text);
