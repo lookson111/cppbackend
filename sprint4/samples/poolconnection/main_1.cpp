@@ -4,7 +4,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <mutex>
-#include <cstdlib>
 
 
 class ConnectionPool {
@@ -83,6 +82,65 @@ private:
     std::vector<ConnectionPtr> pool_;
     size_t used_connections_ = 0;
 };
+/*
+int main() {
+    using namespace std::chrono;
+    try {
+        const char* db_url = std::getenv("DB_URL");
+        if (!db_url) {
+            throw std::runtime_error("DB URL is not specified");
+        }
+        const auto start_time = steady_clock::now();
+        ConnectionPool conn_pool{10, [db_url] {
+                                     auto conn = std::make_shared<pqxx::connection>(db_url);
+                                     conn->prepare("select_one", "SELECT 1;");
+                                     return conn;
+                                 }};
+        auto pool_creation_time = steady_clock::now();
+        steady_clock::time_point conn_time;
+        steady_clock::time_point tx_construction_time;
+        steady_clock::time_point query_end_time;
+        steady_clock::time_point tx_end_time;
+        steady_clock::time_point conn_end_time;
+        {
+            auto conn = conn_pool.GetConnection();
+            conn_time = steady_clock::now();
+            {
+                pqxx::read_transaction tx{*conn};
+                tx_construction_time = steady_clock::now();
+                std::ignore = tx.exec_prepared1("select_one").as<int>();
+                query_end_time = steady_clock::now();
+            }
+            tx_end_time = steady_clock::now();
+        }
+        conn_end_time = steady_clock::now();
+
+        std::cout << "Pool creation time: "
+                  << duration_cast<duration<double> >(pool_creation_time - start_time).count()
+                  << std::endl
+                  << "-------------" << std::endl;
+        std::cout << "Getting connection time: "
+                  << duration_cast<duration<double> >(conn_time - pool_creation_time).count()
+                  << std::endl;
+        std::cout << "Create transaction time: "
+                  << duration_cast<duration<double> >(tx_construction_time - conn_time).count()
+                  << std::endl;
+        std::cout << "Query time: "
+                  << duration_cast<duration<double> >(query_end_time - tx_construction_time).count()
+                  << std::endl;
+        std::cout << "Destroy transaction time: "
+                  << duration_cast<duration<double> >(tx_end_time - query_end_time).count()
+                  << std::endl;
+        std::cout << "Close connection time: "
+                  << duration_cast<duration<double> >(conn_end_time - tx_end_time).count()
+                  << std::endl;
+        std::cout << "Total time: "
+                  << duration_cast<duration<double> >(conn_end_time - pool_creation_time).count()
+                  << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+    }
+} */
 
 int main() {
     const char* db_url = std::getenv("DB_URL");
