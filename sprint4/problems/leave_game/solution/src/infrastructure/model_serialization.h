@@ -44,13 +44,6 @@ template <typename Archive>
 void serialize(Archive& ar, Dog::Id& obj, [[maybe_unused]] const unsigned version) {
     ar& (*obj);
 }
-/*
-template <typename Archive>
-void serialize(Archive& ar, Loots& obj, [[maybe_unused]] const unsigned version) {
-    for (auto &loot : obj)
-        ar& (loot);
-}
-*/
 template <typename Archive>
 void serialize(Archive& ar, GameSession::Dogs& obj, [[maybe_unused]] const unsigned version) {
     for (auto &dog : obj)
@@ -75,7 +68,6 @@ public:
         : id_(dog.GetId())
         , name_(dog.GetName())
         , pos_(dog.GetPoint())
-        //, bag_capacity_(dog.GetBagCapacity())
         , speed_(dog.GetSpeed())
         , direction_(dog.GetDir())
         , score_(dog.GetScore())
@@ -105,7 +97,6 @@ public:
         ar&* id_;
         ar& name_;
         ar& pos_;
-        //ar& bag_capacity_;
         ar& speed_;
         ar& direction_;
         ar& score_;

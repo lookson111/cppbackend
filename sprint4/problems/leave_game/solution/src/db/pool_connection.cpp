@@ -8,7 +8,6 @@ ConnectionPool::ConnectionWrapper ConnectionPool::GetConnection() {
 		return used_connections_ < pool_.size();
 	});
 	// После выхода из цикла ожидания мьютекс остаётся захваченным
-
 	return {std::move(pool_[used_connections_++]), *this};
 }
 

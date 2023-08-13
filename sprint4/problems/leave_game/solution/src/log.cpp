@@ -37,7 +37,7 @@ void InitBoostLogFilter() {
         logging::trivial::severity >= logging::trivial::info
     );
     logging::add_common_attributes();
-    /*logging::add_file_log(
+    logging::add_file_log(
         keywords::file_name = "/var/log/sample_%N.log",
         keywords::format = &JsonFormatter,
         keywords::open_mode = std::ios_base::app | std::ios_base::out,
@@ -45,7 +45,7 @@ void InitBoostLogFilter() {
         keywords::rotation_size = 10 * 1024 * 1024,
         // ротируем ежедневно в полдень
         keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
-    );*/
+    );
     logging::add_console_log(
         std::cout,
         keywords::format = &JsonFormatter,

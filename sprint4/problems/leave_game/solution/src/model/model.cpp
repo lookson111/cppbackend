@@ -176,10 +176,6 @@ Dog* GameSession::FindDog(Dog::Id dog_id)
         auto idx = dogs_id_to_index_.at(dog_id);
         return &dogs_[idx];
     }
-    /*for (auto& dog : dogs_) {
-        if (dog.GetId() == dog_id)
-            return &dog;
-    }*/
     return {};
 }
 
