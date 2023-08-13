@@ -29,7 +29,7 @@ ON CONFLICT (id) DO NOTHING;
     work.commit();
 }
 
-app::RetiredPlayers RetiredPlayerRepositoryImpl::Get(uint offset, uint limit) {
+app::RetiredPlayers RetiredPlayerRepositoryImpl::Get(unsigned offset, unsigned limit) {
     auto conn = conn_pool_.GetConnection();
     pqxx::read_transaction r{*conn};
     app::RetiredPlayers retired_players;

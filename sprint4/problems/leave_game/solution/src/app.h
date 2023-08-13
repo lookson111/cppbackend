@@ -74,7 +74,7 @@ public:
     std::pair<std::string, error_code> GetPlayers(const Token& token) const;
     std::pair<std::string, error_code> GetState(const Token& token) const;
     std::pair<std::string, error_code> CheckToken(const Token& token) const;
-    std::pair<std::string, error_code> GetRecords(int start, int max_items);
+    std::pair<std::string, error_code> GetRecords(unsigned start, unsigned max_items);
 
 private:
     model::Game& game_;

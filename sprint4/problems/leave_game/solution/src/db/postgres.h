@@ -14,7 +14,7 @@ public:
     }
 
     void Save(const app::RetiredPlayer& retired_player) override;
-    app::RetiredPlayers Get(uint offset, uint limit) override;
+    app::RetiredPlayers Get(unsigned offset, unsigned limit) override;
 
 private:
     ConnectionPool& conn_pool_;

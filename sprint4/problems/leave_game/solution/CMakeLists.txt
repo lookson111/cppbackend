@@ -122,6 +122,7 @@ add_executable(game_server_tests
     tests/loot_generator_tests.cpp
 	tests/collision-detector-tests.cpp
 	tests/state-serialization-tests.cpp
+	tests/tagged_uuid_tests.cpp
 	../src/json_loader.h
 	../src/json_loader.cpp
 	../src/app.cpp

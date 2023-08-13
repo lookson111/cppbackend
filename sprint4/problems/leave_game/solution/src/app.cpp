@@ -345,7 +345,7 @@ App::CheckToken(const Token& token) const {
 }
 
 std::pair<std::string, error_code> 
-App::GetRecords(int start, int max_items) {
+App::GetRecords(unsigned start, unsigned max_items) {
     static const double ms_to_seconds = 1000;
     RetiredPlayers retired_players;
     try {
