@@ -128,7 +128,7 @@ void App::RetirPlayers(milliseconds delta) {
         }
     }
     for (auto& id : to_delete) {
-        for (auto session : game_.GetGameSessions()) {
+        for (auto& session : game_.GetGameSessions()) {
             auto dog_id = players_.FindPlayer(id)->GetDog()->GetId();
             session.DeleteDog(dog_id);
         }
@@ -269,7 +269,7 @@ App::GetPlayers(const Token& token) const {
     Player* player = player_tokens_.FindPlayer(token);
     auto session = player->GetSession();
     const auto &dogs = session->GetDogs();
-    for (const auto& dog : dogs) {
+    for (const auto& [dog_id, dog] : dogs) {
         js::object jname;
         jname["name"] = to_booststr(dog.GetName());
         msg[std::to_string(*dog.GetId())] = jname;
@@ -303,7 +303,7 @@ App::GetState(const Token& token) const {
     js::object state;
     auto session = player->GetSession();
     const auto &dogs = session->GetDogs();
-    for (const auto &dog : dogs) {
+    for (const auto &[dog_id, dog] : dogs) {
         js::object dog_param;
         dog_param["pos"] = put_array(dog.GetPoint().x, dog.GetPoint().y);
         dog_param["speed"] = put_array(dog.GetSpeed().x, dog.GetSpeed().y);
@@ -367,6 +367,7 @@ App::GetRecords(unsigned start, unsigned max_items) {
         error_code::None
     );
 }
+
 
 Player* App::GetPlayer(const Token& token) const {
     Player* player = player_tokens_.FindPlayer(token);

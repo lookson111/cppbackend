@@ -250,8 +250,9 @@ class GameSession {
 private:
     using RoadMap = std::unordered_multimap<Point, const Road*, PointKeyHash, PointKeyEqual>;
     using RoadMapIter = decltype(RoadMap{}.equal_range(Point{}));
+    using DogsIdHasher = util::TaggedHasher<Dog::Id>;
 public:
-    using Dogs = std::deque<Dog>;
+    using Dogs = std::unordered_map<Dog::Id, Dog, DogsIdHasher>;
 
     GameSession(const Map* map, bool randomize_spawn_points,
         const LootGeneratorConfig loot_generator_config)
@@ -266,15 +267,15 @@ public:
     const Map::Id& MapId() const {
         return map_->GetId();
     } 
-    Dog* FindDog(std::string_view nick_name);
-    Dog* FindDog(Dog::Id dog_id);
+   // Dog* FindDog(std::string_view nick_name);
+    Dog* FindDog(const Dog::Id& dog_id);
     Dog* AddDog(std::string_view nick_name);
     void DeleteDog(const Dog::Id& dog_id);
     void SetDogs(const Dogs& dogs);
     const Dogs& GetDogs() const;
     void SetLoots(const Loots& loots) ;
     const Loots& GetLoots() const;
-    void MoveDog(Dog::Id id, Move move);
+    void MoveDog(const Dog::Id& dog_id, Move move);
     void Tick(milliseconds time_delta_ms);
     const Loot::Id& GetLastLootId() const;
     void SetLastLootId(const Loot::Id& loot_id);
@@ -288,7 +289,6 @@ public:
         dog_id_ = other.dog_id_;
         dogs_ = other.dogs_;
         loots_ = other.loots_;
-        dogs_id_to_index_ = other.dogs_id_to_index_;
         map_ = other.map_;
         randomize_spawn_points_ = other.randomize_spawn_points_;
         road_map = other.road_map;
@@ -299,13 +299,10 @@ public:
     }
 
 private:
-    using DogsIdHasher = util::TaggedHasher<Dog::Id>;
-    using DogsIdToIndex = std::unordered_map<Dog::Id, size_t, DogsIdHasher>;
     Loot::Id loot_id_{ 0 };
     Dog::Id dog_id_{ 0 };
     Dogs dogs_;
     Loots loots_;
-    DogsIdToIndex dogs_id_to_index_;
     const Map* map_;
     bool randomize_spawn_points_ = true;
     RoadMap road_map;
@@ -324,7 +321,7 @@ private:
     void PushLootsToMap(milliseconds time_delta_ms);
     Dog::Id GetNextDogId();
     Loot::Id GetNextLootId();
-    void MoveDogToContainerAndIndexing(Dog &&dog);
+    void MoveDogToContainer(Dog &&dog);
 };
 
 struct GameParam {

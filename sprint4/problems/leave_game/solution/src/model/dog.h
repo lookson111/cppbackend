@@ -54,45 +54,6 @@ public:
         nickname_(std::move(nickname)), id_(std::move(id)),
         coord_(std::move(coord)){
     }
-    Dog(const Dog& other) 
-        : id_(other.id_)
-        , nickname_(other.nickname_)
-        , coord_(other.coord_)
-        , prev_coord_(other.prev_coord_)
-        , speed_(other.speed_)
-        , dir_(other.dir_)
-        , loots_(other.loots_)
-        , score_(other.score_)
-        , last_move_time_(other.last_move_time_)
-        , lifetime_(other.lifetime_)
-    {}
-    Dog(Dog&& other) noexcept 
-        : id_(std::move(other.id_))
-        , nickname_(std::move(other.nickname_))
-        , coord_(std::move(other.coord_))
-        , prev_coord_(std::move(other.prev_coord_))
-        , speed_(std::move(other.speed_))
-        , dir_(std::move(other.dir_))
-        , loots_(std::move(other.loots_))
-        , score_(std::move(other.score_))
-        , last_move_time_(std::move(other.last_move_time_))
-        , lifetime_(std::move(other.lifetime_))
-    {}
-    Dog &operator=(const Dog& other) {
-        if (this == &other)
-            return *this;
-        id_         = other.id_;
-        nickname_   = other.nickname_;
-        coord_      = other.coord_;
-        prev_coord_ = other.prev_coord_;
-        speed_      = other.speed_;
-        dir_        = other.dir_;
-        loots_      = other.loots_;
-        score_      = other.score_;
-        last_move_time_ = other.last_move_time_;
-        lifetime_ = other.lifetime_;
-        return *this;
-    }
     const Id& GetId() const {
         return id_;
     }

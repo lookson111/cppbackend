@@ -98,7 +98,6 @@ SCENARIO("Game model") {
 				AND_WHEN("dog add") {
 					game_session->AddDog("nop");
 					THEN("add dog") {
-						CHECK(game_session->FindDog("nop") != nullptr);
 						CHECK(game_session->GetDogs().size() == 1);
 					}
 				}

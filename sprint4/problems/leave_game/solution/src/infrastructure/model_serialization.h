@@ -125,7 +125,7 @@ public:
         , last_dog_id_(game_session.GetLastDogId())
         , loots_(game_session.GetLoots())
     {
-        for (auto &dog : game_session.GetDogs())
+        for (auto &[id, dog] : game_session.GetDogs())
             dogs_repr_.push_back(DogRepr(dog));
     }
 
@@ -136,8 +136,11 @@ public:
         model::GameSession game_session(map, randomize_spawn_points, loot_generator_config);
         game_session.SetLastLootId(last_loot_id_);
         model::GameSession::Dogs dogs;
-        for (auto &dog_repr : dogs_repr_)
-            dogs.push_back(dog_repr.Restore());
+        for (auto &dog_repr : dogs_repr_) {
+            auto dog = dog_repr.Restore();
+            auto id = dog.GetId();
+            dogs.emplace(id, dog);
+        }
         game_session.SetDogs(dogs);
         game_session.SetLoots(loots_);
         game_session.SetLastLootId(last_loot_id_);

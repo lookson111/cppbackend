@@ -114,39 +114,35 @@ Dog* GameSession::AddDog(std::string_view nick_name) {
         coord = GetRandomRoadCoord();
     auto dog_id = GetNextDogId();
     Dog dog = Dog(dog_id, nick_name.data(), coord);
-    MoveDogToContainerAndIndexing(std::move(dog));
+    MoveDogToContainer(std::move(dog));
     loots_.push_back(std::move(Loot{
         .id = GetNextLootId(),
         .type = GetRandomInt(0, static_cast<int>(map_->GetLootsParam().size() - 1)),
         .pos = GetRandomRoadCoord() }));
-    return &dogs_.back();
+    return &dogs_.at(dog_id);
 }
 
 void GameSession::DeleteDog(const Dog::Id& dog_id)
 {
-    if (dogs_id_to_index_.contains(dog_id)) {
-        auto idx = dogs_id_to_index_.at(dog_id);
-        dogs_.erase(dogs_.begin() + idx);
-        dogs_id_to_index_.erase(dog_id);
+    if (dogs_.contains(dog_id)) {
+        dogs_.erase(dog_id);
     }
 }
 
-void GameSession::MoveDogToContainerAndIndexing(Dog &&dog) {
-    const size_t index = dogs_.size();
-    auto &o = dogs_.emplace_back(std::move(dog));
+void GameSession::MoveDogToContainer(Dog &&dog) {
     try {
-        dogs_id_to_index_.emplace(o.GetId(), index);
+        auto id = dog.GetId();
+        dogs_.emplace(id, std::move(dog));
     }
     catch (...) {
-        dogs_.pop_back();
         throw std::bad_alloc(); //"failed to allocate memory for Dog"
     }
 }
 
 void GameSession::SetDogs(const Dogs& dogs) {
     for (auto it = dogs.begin(); it != dogs.end(); ++it) {
-        auto dog = *it;
-        MoveDogToContainerAndIndexing(std::move(dog));
+        auto [id, dog] = *it;
+        MoveDogToContainer(std::move(dog));
     }
 }
 
@@ -161,20 +157,19 @@ void GameSession::SetLoots(const Loots& loots) {
 const Loots& GameSession::GetLoots() const {
     return loots_;
 }
-
+/*
 Dog* GameSession::FindDog(std::string_view nick_name) {
-    for (auto &dog : dogs_) {
+    for (auto &[dog_id, dog] : dogs_) {
         if (dog.GetName() == nick_name)
             return &dog;
     }
     return nullptr;
-}
+}*/
 
-Dog* GameSession::FindDog(Dog::Id dog_id)
+Dog* GameSession::FindDog(const Dog::Id& dog_id)
 {
-    if (dogs_id_to_index_.contains(dog_id)) {
-        auto idx = dogs_id_to_index_.at(dog_id);
-        return &dogs_[idx];
+    if (dogs_.contains(dog_id)) {
+        return &dogs_.at(dog_id);
     }
     return {};
 }
@@ -241,9 +236,10 @@ void GameSession::LoadRoadMap() {
     }
 }
 
-void GameSession::MoveDog(Dog::Id id, Move move) {
-    auto& dog = dogs_[dogs_id_to_index_[id]];
-    dog.Diraction(move, map_->GetDogSpeed());
+void GameSession::MoveDog(const Dog::Id& id, Move move) {
+    if (auto it_dog = dogs_.find(id); it_dog != dogs_.end()) {
+        it_dog->second.Diraction(move, map_->GetDogSpeed());
+    }
 }
 
 Point2D GameSession::MoveDog(Point2D start_pos, Point2D end_pos) {
@@ -272,7 +268,7 @@ Point2D GameSession::MoveDog(Point2D start_pos, Point2D end_pos) {
 }
 
 void GameSession::MoveDogsInMap(milliseconds time_delta_ms) {
-    for (auto& dog : dogs_) {
+    for (auto& [dog_id, dog] : dogs_) {
         dog.IncLifetime(time_delta_ms);
         if (dog.IsStanding())
             continue;
@@ -293,7 +289,7 @@ void GameSession::CollectAndReturnLoots() {
     std::map<size_t, decltype(loots_.begin())> loot_numb_to_item;
     size_t dog_idx = 0;
     size_t loot_idx = 0;
-    for (auto& dog : dogs_) {
+    for (auto& [dog_id, dog] : dogs_) {
         dog_numb_to_gather[dog_idx++] = &dog;
         item_gatherer.Add(cd::Gatherer{ 
             .start_pos = dog.GetPrevPoint(), 
